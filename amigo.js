@@ -2,14 +2,14 @@ class Amigo extends Persona {
   constructor(x, y, juego) {
     super(x, y, juego);
 
-    this.aceleracionMaxima = 0.1 + Math.random() * 0.05;
-    this.velocidadMaxima = 2 + Math.random() * 1;
     this.bando = 1;
 
     // Parámetros para el Arrival Behaviour
     this.radioLlegadaAlLider = 50; // Radio donde empieza a desacelerar
-    this.radioParaBajarLaVelocidad = 500;
-    this.factorSeguirAlLider = 0.25;
+    this.radioParaBajarLaVelocidad = this.vision * 0.5;
+    this.factorSeguirAlLider = 0.63;
+    this.factorCohesion = 0.1; //a los amigos les bajo la cohesion pq igual estan siguiendo al lider
+    this.factorAlineacion = 0.05; //a los amigos les bajo la alineacion pq igual estan siguiendo al lider
     this.crearSpritesheetAnimado(this.bando);
   }
 
@@ -27,17 +27,23 @@ class Amigo extends Persona {
     const vectorNuevo = limitarVector({ x: difX, y: difY }, 1);
 
     if (dist < this.radioLlegadaAlLider) {
-      vectorNuevo.x *= -2;
-      vectorNuevo.y *= -2;
+      //esta muy cerca, se aleja
+      vectorNuevo.x *= -this.radioLlegadaAlLider / dist;
+      vectorNuevo.y *= -this.radioLlegadaAlLider / dist;
     } else if (
-      dist > this.radioLlegadaAlLider &&
-      dist < this.radioParaBajarLaVelocidad
+      dist < this.radioParaBajarLaVelocidad &&
+      dist > this.radioLlegadaAlLider
     ) {
+      //si estoy a una distancia q no es al ladito y tampoco es tan lejos.
+      return;
+
       // Reducción más pronunciada cuando están muy cerca
-      const factor = (dist / this.radioParaBajarLaVelocidad) ** 2;
+      const factor = (dist / this.radioParaBajarLaVelocidad) ** 3;
 
       vectorNuevo.x *= factor;
       vectorNuevo.y *= factor;
+    } else if (dist < this.vision && dist > this.radioParaBajarLaVelocidad) {
+      //esta lejos, va de una
     }
 
     this.aceleracion.x += vectorNuevo.x * this.factorSeguirAlLider;
@@ -45,10 +51,31 @@ class Amigo extends Persona {
   }
 
   tick() {
+    if (this.muerto) return;
     this.seguirAlLider();
-    super.tick();
+
+    this.cohesion();
+
+    this.alineacion();
+    this.separacion();
+
+    // this.escapar();
+    // this.perseguir();
+
+    this.aplicarFisica();
+
+    this.verificarSiEstoyMuerto();
+
+    this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
+    this.amigos = this.buscarPersonasDeMiBando();
+    this.enemigoMasCerca = this.buscarEnemigoMasCerca();
+
+    // this.pegarSiEstaEnMiRango();
+
+    this.calcularAnguloYVelocidadLineal();
+
     if (this.enemigoMasCerca) {
-      this.asignarTarget(this.enemigoMasCerca);
+      // this.asignarTarget(this.enemigoMasCerca);
     }
   }
 }

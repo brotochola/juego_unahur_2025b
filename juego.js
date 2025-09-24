@@ -76,7 +76,11 @@ class Juego {
     await this.cargarTexturas();
     this.crearFondo();
     this.crearProtagonista();
-    this.crearEnemigos();
+    this.crearEnemigos(30, 2);
+    this.crearEnemigos(40, 3);
+    this.crearEnemigos(40, 4);
+    this.crearEnemigos(40, 5);
+    this.crearEnemigos(40, 6);
     this.crearAmigos();
     this.crearArboles();
     this.crearAutos();
@@ -86,8 +90,8 @@ class Juego {
   }
   crearEnemigos(cant, bando) {
     for (let i = 0; i < cant; i++) {
-      const x = Math.random() * this.width;
-      const y = Math.random() * this.height;
+      const x = Math.random() * this.anchoDelMapa;
+      const y = Math.random() * this.altoDelMapa;
       const persona = new Enemigo(x, y, this, bando);
       this.personas.push(persona);
       this.enemigos.push(persona);
@@ -114,9 +118,9 @@ class Juego {
     }
   }
   crearAmigos() {
-    for (let i = 0; i < 10; i++) {
-      const x = Math.random() * this.width;
-      const y = Math.random() * this.height;
+    for (let i = 0; i < 30; i++) {
+      const x = Math.random() * this.anchoDelMapa;
+      const y = Math.random() * this.altoDelMapa;
       const persona = new Amigo(x, y, this);
       this.personas.push(persona);
       this.amigos.push(persona);

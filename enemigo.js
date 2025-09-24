@@ -6,7 +6,31 @@ class Enemigo extends Persona {
   }
 
   tick() {
-    super.tick();
-    this.asignarTarget(this.enemigoMasCerca);
+    if (this.muerto) return;
+    // this.seguirAlLider();
+
+    this.cohesion();
+
+    this.alineacion();
+    this.separacion();
+
+    // this.escapar();
+    this.perseguir();
+
+    this.aplicarFisica();
+
+    this.verificarSiEstoyMuerto();
+
+    this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
+    this.amigos = this.buscarPersonasDeMiBando();
+    this.enemigoMasCerca = this.buscarEnemigoMasCerca();
+
+    // this.pegarSiEstaEnMiRango();
+
+    this.calcularAnguloYVelocidadLineal();
+
+    if (this.enemigoMasCerca) {
+      // this.asignarTarget(this.enemigoMasCerca);
+    }
   }
 }
