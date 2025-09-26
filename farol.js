@@ -1,7 +1,7 @@
-class Arbol extends EntidadEstatica {
+class Farol extends EntidadEstatica {
   constructor(x, y, juego, tipo) {
     super(x, y, juego);
-    this.vida = 1;
+
     this.radio = 10;
     this.tipo = tipo || Math.floor(Math.random() * 2) + 1;
     this.container.label = "arbol" + this.id;
@@ -10,7 +10,7 @@ class Arbol extends EntidadEstatica {
 
   async crearSprite() {
     this.sprite = new PIXI.Sprite(
-      await PIXI.Assets.load("/assets/pixelart/arbol" + this.tipo + ".png")
+      await PIXI.Assets.load("/assets/pixelart/farol" + this.tipo + ".png")
     );
     this.sprite.anchor.set(0.5, 1);
     this.container.addChild(this.sprite);

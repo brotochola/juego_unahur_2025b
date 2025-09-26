@@ -1,9 +1,10 @@
 class Auto extends EntidadEstatica {
-  constructor(x, y, juego) {
+  constructor(x, y, juego, tipo) {
     super(x, y, juego);
+    console.log("auto", x, y, tipo);
     this.vida = 1;
     this.radio = 10;
-    this.tipo = Math.floor(Math.random() * 4) + 1;
+    this.tipo = tipo || Math.floor(Math.random() * 4) + 1;
     this.container.label = "auto" + this.id;
     this.crearSprite();
   }

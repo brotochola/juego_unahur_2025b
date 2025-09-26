@@ -3,6 +3,7 @@ class Juego {
   personas = [];
   amigos = [];
   enemigos = [];
+  faroles = [];
   arboles = [];
   autos = [];
   objetosInanimados = [];
@@ -64,7 +65,7 @@ class Juego {
 
   async crearFondo() {
     this.fondo = new PIXI.TilingSprite(await PIXI.Assets.load("assets/bg.jpg"));
-    this.fondo.zIndex = -1;
+    this.fondo.zIndex = -999999999999999999999;
     this.fondo.tileScale.set(0.5);
     this.fondo.width = this.anchoDelMapa;
     this.fondo.height = this.altoDelMapa;
@@ -75,15 +76,20 @@ class Juego {
     this.pixiApp.stage.addChild(this.containerPrincipal);
     await this.cargarTexturas();
     this.crearFondo();
+
+    this.nivel = new Nivel("assets/pixelart/plaza_de_mayo_4.json", this);
+
     this.crearProtagonista();
     this.crearEnemigos(30, 2);
     this.crearEnemigos(40, 3);
     this.crearEnemigos(40, 4);
     this.crearEnemigos(40, 5);
     this.crearEnemigos(40, 6);
+    this.crearEnemigos(40, 7);
+
     this.crearAmigos();
-    this.crearArboles();
-    this.crearAutos();
+    // this.crearArboles();
+    // this.crearAutos();
   }
   async cargarTexturas() {
     await PIXI.Assets.load(["assets/bg.jpg"]);

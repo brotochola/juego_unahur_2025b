@@ -318,9 +318,9 @@ class AnimatedCharacter extends PIXI.AnimatedSprite {
     // console.log(`   Animaciones: ${animationNames.length}`);
 
     if (totalRows < expectedRows) {
-      console.warn(
-        `⚠️  El spritesheet podría ser insuficiente! Esperadas: ${expectedRows}, Encontradas: ${totalRows}`
-      );
+      // console.warn(
+      //   `⚠️  El spritesheet podría ser insuficiente! Esperadas: ${expectedRows}, Encontradas: ${totalRows}`
+      // );
     }
 
     const loadResults = {
