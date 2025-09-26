@@ -13,7 +13,7 @@ class Juego {
   height;
 
   constructor() {
-    this.iluminacion = true;
+    this.iluminacion = false;
     this.updateDimensions();
     this.anchoDelMapa = 5000;
     this.altoDelMapa = 3000;
@@ -75,6 +75,7 @@ class Juego {
   }
   async crearNivel() {
     this.containerPrincipal = new PIXI.Container();
+
     this.pixiApp.stage.addChild(this.containerPrincipal);
     await this.cargarTexturas();
     this.crearFondo();
@@ -89,7 +90,7 @@ class Juego {
     this.crearEnemigos(40, 6);
     this.crearEnemigos(40, 7);
 
-    this.crearAmigos();
+    this.crearAmigos(50);
 
     this.crearSistemaDeIluminacion(); // Sistema nuevo de sprites individuales
   }
@@ -125,8 +126,8 @@ class Juego {
       this.objetosInanimados.push(arbol);
     }
   }
-  crearAmigos() {
-    for (let i = 0; i < 30; i++) {
+  crearAmigos(cant) {
+    for (let i = 0; i < cant; i++) {
       const x = Math.random() * this.anchoDelMapa;
       const y = Math.random() * this.altoDelMapa;
       const persona = new Amigo(x, y, this);
@@ -168,9 +169,24 @@ class Juego {
   }
 
   crearSistemaDeIluminacion() {
+    this.graficoSombrasProyectadas = new PIXI.Graphics();
+    this.graficoSombrasProyectadas.zIndex = 3;
+    this.graficoSombrasProyectadas.label = "graficoSombrasProyectadas";
+    this.graficoSombrasProyectadas.blendMode = "multiply";
+    this.containerPrincipal.addChild(this.graficoSombrasProyectadas);
+
+    this.blurParaElGraficoDeSombrasProyectadas = new PIXI.BlurFilter({
+      strength: 8,
+      quality: 2,
+      kernelSize: 5,
+    });
+    this.graficoSombrasProyectadas.filters = [
+      this.blurParaElGraficoDeSombrasProyectadas,
+    ];
+
     setTimeout(() => {
       this.containerDeIluminacion = new PIXI.Container();
-      this.containerDeIluminacion.name = "containerDeIluminacion";
+      this.containerDeIluminacion.label = "containerDeIluminacion";
       this.containerDeIluminacion.sortableChildren = true; // Para que funcione el zIndex
 
       this.containerPrincipal.addChild(this.containerDeIluminacion);
@@ -180,7 +196,7 @@ class Juego {
         this.anchoDelMapa * 2,
         this.altoDelMapa * 2
       );
-      spriteNegro.name = "spriteNegro";
+      spriteNegro.label = "spriteNegro";
       spriteNegro.x = -this.anchoDelMapa;
       spriteNegro.y = -this.altoDelMapa;
       spriteNegro.zIndex = 1; // Debajo del gradiente
@@ -200,10 +216,17 @@ class Juego {
       this.containerDeIluminacion.alpha = 0.8;
       this.containerDeIluminacion.cacheAsBitmap = true;
       this.containerDeIluminacion.blendMode = "multiply";
+      this.containerDeIluminacion.visible = this.iluminacion;
     }, 1000);
   }
 
   gameLoop(time) {
+    if (this.graficoSombrasProyectadas) this.graficoSombrasProyectadas.clear();
+    if (this.iluminacion) {
+      for (let farol of this.faroles) {
+        farol.actualizarLineas();
+      }
+    }
     //iteramos por todos los personas
     for (let unpersona of this.personas) {
       //ejecutamos el metodo tick de cada persona
@@ -216,10 +239,6 @@ class Juego {
 
   toggleIluminacion() {
     this.iluminacion = !this.iluminacion;
-
-    // Alternar visibilidad del sistema de iluminación original
-    if (this.spriteIluminacion)
-      this.spriteIluminacion.visible = this.iluminacion;
 
     // Alternar visibilidad del sistema de sprites individuales
     if (this.containerDeIluminacion)

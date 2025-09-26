@@ -9,7 +9,7 @@ class Persona extends GameObject {
     this.vision = Math.random() * 400 + 200;
 
     this.fuerzaDeAtaque = 0.01 + Math.random() * 0.01;
-    this.radio = 13 + Math.random() * 2;
+    this.radio = 13 + Math.random() * 4;
     this.rangoDeAtaque = this.radio * 3;
 
     this.factorPerseguir = 0.15;
