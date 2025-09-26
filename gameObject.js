@@ -279,6 +279,10 @@ class GameObject {
   }
 
   cambiarTintParaSimularIluminacion() {
+    if (!this.juego.iluminacion) {
+      this.container.tint = 0xffffff;
+      return;
+    }
     const luz = this.calcularLuz();
     // Convertir luz (0-1) a valor de gris (0-255)
     const valorGris = Math.floor(luz * 255);

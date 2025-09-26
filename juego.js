@@ -13,6 +13,7 @@ class Juego {
   height;
 
   constructor() {
+    this.iluminacion = true;
     this.updateDimensions();
     this.anchoDelMapa = 5000;
     this.altoDelMapa = 3000;
@@ -235,11 +236,6 @@ class Juego {
     this.containerPrincipal.addChild(this.spriteIluminacion);
   }
 
-  actualizarPosicionLuces() {
-    // Solo actualizar si hay un protagonista con luz
-    // Los faroles son estáticos, no necesitan actualización
-  }
-
   gameLoop(time) {
     //iteramos por todos los personas
     for (let unpersona of this.personas) {
@@ -248,10 +244,23 @@ class Juego {
       unpersona.render();
     }
 
-    // Actualizar posiciones de luces si es necesario
-    this.actualizarPosicionLuces();
-
     this.hacerQLaCamaraSigaAlProtagonista();
+  }
+
+  toggleIluminacion() {
+    this.iluminacion = !this.iluminacion;
+
+    if (this.spriteIluminacion)
+      this.spriteIluminacion.visible = this.iluminacion;
+
+    for (let obj of [
+      ...this.autos,
+      ...this.personas,
+      ...this.arboles,
+      ...this.monumentos,
+    ]) {
+      obj.cambiarTintParaSimularIluminacion();
+    }
   }
 
   hacerQLaCamaraSigaAlProtagonista() {
