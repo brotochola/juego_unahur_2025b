@@ -90,10 +90,8 @@ class Juego {
     this.crearEnemigos(40, 7);
 
     this.crearAmigos();
-    // this.crearArboles();
-    // this.crearAutos();
 
-    this.crearSistemaDeIluminacion();
+    this.crearSistemaDeIluminacion(); // Sistema nuevo de sprites individuales
   }
   async cargarTexturas() {
     await PIXI.Assets.load(["assets/bg.jpg"]);
@@ -170,70 +168,39 @@ class Juego {
   }
 
   crearSistemaDeIluminacion() {
-    // Crear el canvas de iluminación del tamaño del mapa
     setTimeout(() => {
-      this.crearCanvasIluminacion();
-    }, 1000);
-  }
+      this.containerDeIluminacion = new PIXI.Container();
+      this.containerDeIluminacion.name = "containerDeIluminacion";
+      this.containerDeIluminacion.sortableChildren = true; // Para que funcione el zIndex
 
-  crearCanvasIluminacion() {
-    // 1. Crear un canvas con margen (3x el tamaño del mapa)
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = this.anchoDelMapa * 3;
-    canvas.height = this.altoDelMapa * 3;
+      this.containerPrincipal.addChild(this.containerDeIluminacion);
 
-    // 2. Pintarlo todo de negro
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // 3. Hacer círculos de gradiente blanco a transparente donde están los faroles
-    for (let farol of this.faroles) {
-      if (!farol.sprite) return console.warn("No hay sprite para el farol");
-
-      // Ajustar las coordenadas para el canvas con margen
-      const centroX = farol.posicion.x + this.anchoDelMapa;
-      const centroY = farol.posicion.y - farol.sprite.height + this.altoDelMapa;
-      const radio = 600;
-
-      // Crear gradiente radial: blanco en el centro, transparente en el borde
-      const gradient = ctx.createRadialGradient(
-        centroX,
-        centroY,
-        0,
-        centroX,
-        centroY,
-        radio
+      // Primero crear el sprite negro de fondo
+      const spriteNegro = crearSpriteNegro(
+        this.anchoDelMapa * 2,
+        this.altoDelMapa * 2
       );
-      gradient.addColorStop(0, "white"); // Centro blanco (sin oscuridad)
-      gradient.addColorStop(0.2, "rgba(255,255,255,0.5)"); // Transición
-      gradient.addColorStop(0.4, "rgba(255,255,255,0.25)"); // Más transición
-      gradient.addColorStop(0.6, "rgba(255,255,255,0.125)"); // Más transición
-      gradient.addColorStop(0.8, "rgba(255,255,255,0.0625)"); // Más transición
-      gradient.addColorStop(1, "rgba(255,255,255,0)"); // Borde transparente
+      spriteNegro.name = "spriteNegro";
+      spriteNegro.x = -this.anchoDelMapa;
+      spriteNegro.y = -this.altoDelMapa;
+      spriteNegro.zIndex = 1; // Debajo del gradiente
+      this.containerDeIluminacion.addChild(spriteNegro);
 
-      // Dibujar el círculo con gradiente
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.arc(centroX, centroY, radio, 0, Math.PI * 2);
-      ctx.fill();
-    }
+      // Crear sprites individuales para cada farol usando sus propios métodos
+      for (let farol of this.faroles) {
+        const spriteGradiente = crearSpriteConGradiente(700);
+        spriteGradiente.x = farol.posicion.x;
+        spriteGradiente.y = farol.posicion.y;
+        spriteGradiente.zIndex = 2; // Encima del sprite negro
 
-    // 4. Crear un sprite a partir de la textura del canvas
-    const texturaIluminacion = PIXI.Texture.from(canvas);
-    this.spriteIluminacion = new PIXI.Sprite(texturaIluminacion);
+        this.containerDeIluminacion.addChild(spriteGradiente);
+      }
 
-    // 5. Posicionar el sprite para que el margen quede en la posición correcta
-    this.spriteIluminacion.x = -this.anchoDelMapa;
-    this.spriteIluminacion.y = -this.altoDelMapa;
-
-    // 6. Configurar el sprite con zIndex alto y modo multiply
-    this.spriteIluminacion.zIndex = 2;
-    this.spriteIluminacion.blendMode = "multiply";
-    this.spriteIluminacion.alpha = 0.8;
-
-    // 7. Agregar al container principal
-    this.containerPrincipal.addChild(this.spriteIluminacion);
+      this.containerDeIluminacion.zIndex = 2;
+      this.containerDeIluminacion.alpha = 0.8;
+      this.containerDeIluminacion.cacheAsBitmap = true;
+      this.containerDeIluminacion.blendMode = "multiply";
+    }, 1000);
   }
 
   gameLoop(time) {
@@ -250,8 +217,13 @@ class Juego {
   toggleIluminacion() {
     this.iluminacion = !this.iluminacion;
 
+    // Alternar visibilidad del sistema de iluminación original
     if (this.spriteIluminacion)
       this.spriteIluminacion.visible = this.iluminacion;
+
+    // Alternar visibilidad del sistema de sprites individuales
+    if (this.containerDeIluminacion)
+      this.containerDeIluminacion.visible = this.iluminacion;
 
     for (let obj of [
       ...this.autos,

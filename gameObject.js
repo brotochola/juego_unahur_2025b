@@ -145,9 +145,10 @@ class GameObject {
   }
 
   calcularZindex() {
+    const base = 5000;
     return this.isometric
-      ? this.posicion.y - this.sprite.width * 0.29
-      : this.posicion.y;
+      ? this.posicion.y - this.sprite.width * 0.29 + base
+      : this.posicion.y + base;
   }
 
   rebotar() {
@@ -293,7 +294,7 @@ class GameObject {
 
   calcularLuz() {
     let luz = 0;
-    const distanciaALaQueTieneTodaLaLuz = 75 + this.radio * 3;
+    const distanciaALaQueTieneTodaLaLuz = 100;
     for (let farol of this.juego.faroles) {
       const dist = calcularDistancia(farol.posicion, this.posicion);
       luz += distanciaALaQueTieneTodaLaLuz ** 2 / dist ** 2;
