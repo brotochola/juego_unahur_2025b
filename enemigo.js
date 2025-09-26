@@ -7,7 +7,6 @@ class Enemigo extends Persona {
 
   tick() {
     if (this.muerto) return;
-    // this.seguirAlLider();
 
     this.cohesion();
 
@@ -25,12 +24,12 @@ class Enemigo extends Persona {
     this.amigos = this.buscarPersonasDeMiBando();
     this.enemigoMasCerca = this.buscarEnemigoMasCerca();
 
-    // this.pegarSiEstaEnMiRango();
+    this.pegarSiEstaEnMiRango();
 
     this.calcularAnguloYVelocidadLineal();
 
     if (this.enemigoMasCerca) {
-      // this.asignarTarget(this.enemigoMasCerca);
+      this.asignarTarget(this.enemigoMasCerca);
     }
   }
 }

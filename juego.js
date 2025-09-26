@@ -18,6 +18,13 @@ class Juego {
     this.anchoDelMapa = 5000;
     this.altoDelMapa = 3000;
     this.mouse = { posicion: { x: 0, y: 0 } };
+
+    // Variables para el zoom
+    this.zoom = 1;
+    this.minZoom = 0.5;
+    this.maxZoom = 2;
+    this.zoomStep = 0.1;
+
     this.initPIXI();
     this.setupResizeHandler();
   }
@@ -45,6 +52,8 @@ class Juego {
       background: "#1099bb",
       width: this.width,
       height: this.height,
+      antialias: true,
+      resolution: 1,
       resizeTo: window,
     };
 
@@ -136,8 +145,8 @@ class Juego {
     }
   }
   crearProtagonista() {
-    const x = this.width / 2;
-    const y = this.height / 2;
+    const x = this.anchoDelMapa / 2;
+    const y = this.altoDelMapa / 2;
     const protagonista = new Protagonista(x, y, this);
     this.personas.push(protagonista);
     this.protagonista = protagonista;
@@ -146,25 +155,54 @@ class Juego {
   agregarInteractividadDelMouse() {
     // Escuchar el evento mousemove
     this.pixiApp.canvas.onmousemove = (event) => {
-      this.mouse.posicion = {
-        x: event.x - this.containerPrincipal.x,
-        y: event.y - this.containerPrincipal.y,
-      };
+      this.mouse.posicion = this.convertirCoordenadaDelMouse(event.x, event.y);
     };
 
     this.pixiApp.canvas.onmousedown = (event) => {
-      this.mouse.down = {
-        x: event.x - this.containerPrincipal.x,
-        y: event.y - this.containerPrincipal.y,
-      };
+      this.mouse.down = this.convertirCoordenadaDelMouse(event.x, event.y);
       this.mouse.apretado = true;
     };
     this.pixiApp.canvas.onmouseup = (event) => {
-      this.mouse.up = {
-        x: event.x - this.containerPrincipal.x,
-        y: event.y - this.containerPrincipal.y,
-      };
+      this.mouse.up = this.convertirCoordenadaDelMouse(event.x, event.y);
       this.mouse.apretado = false;
+    };
+
+    // Event listener para la rueda del mouse (zoom)
+    this.pixiApp.canvas.addEventListener("wheel", (event) => {
+      event.preventDefault(); // Prevenir el scroll de la página
+
+      const zoomDelta = event.deltaY > 0 ? -this.zoomStep : this.zoomStep;
+      const nuevoZoom = Math.max(
+        this.minZoom,
+        Math.min(this.maxZoom, this.zoom + zoomDelta)
+      );
+
+      if (nuevoZoom !== this.zoom) {
+        // Obtener la posición del mouse antes del zoom
+        const mouseX = event.x;
+        const mouseY = event.y;
+
+        // Calcular el punto en coordenadas del mundo antes del zoom
+        const worldPosX = (mouseX - this.containerPrincipal.x) / this.zoom;
+        const worldPosY = (mouseY - this.containerPrincipal.y) / this.zoom;
+
+        // Aplicar el nuevo zoom
+        this.zoom = nuevoZoom;
+        this.containerPrincipal.scale.set(this.zoom);
+
+        // Ajustar la posición del contenedor para mantener el mouse en el mismo punto del mundo
+        this.containerPrincipal.x = mouseX - worldPosX * this.zoom;
+        this.containerPrincipal.y = mouseY - worldPosY * this.zoom;
+      }
+    });
+  }
+
+  convertirCoordenadaDelMouse(mouseX, mouseY) {
+    // Convertir coordenadas del mouse del viewport a coordenadas del mundo
+    // teniendo en cuenta la posición y escala del containerPrincipal
+    return {
+      x: (mouseX - this.containerPrincipal.x) / this.zoom,
+      y: (mouseY - this.containerPrincipal.y) / this.zoom,
     };
   }
 
@@ -256,8 +294,11 @@ class Juego {
 
   hacerQLaCamaraSigaAlProtagonista() {
     if (!this.protagonista) return;
-    this.containerPrincipal.x = -this.protagonista.posicion.x + this.width / 2;
-    this.containerPrincipal.y = -this.protagonista.posicion.y + this.height / 2;
+    // Ajustar la posición considerando el zoom actual
+    this.containerPrincipal.x =
+      -this.protagonista.posicion.x * this.zoom + this.width / 2;
+    this.containerPrincipal.y =
+      -this.protagonista.posicion.y * this.zoom + this.height / 2;
   }
 
   finDelJuego() {

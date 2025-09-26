@@ -8,8 +8,8 @@ class Nivel {
 
     this.cargarNivel();
 
-    this.offsetX = -4000;
-    this.offsetY = -4000;
+    // this.offsetX = 0;
+    // this.offsetY = 0;
   }
 
   /**
@@ -27,6 +27,35 @@ class Nivel {
     const data = await response.json();
     this.parsearDatos(data);
     this.loaded = true;
+  }
+
+  detectarLimites() {
+    const changuiX = 500;
+    const changuiY = 500;
+    // Si no hay items, usar offsets por defecto
+    if (!this.items || this.items.length === 0) {
+      this.offsetX = -4000;
+      this.offsetY = -4000;
+      return;
+    }
+
+    // Encontrar las coordenadas mínimas
+    let minX = this.items[0].x;
+    let minY = this.items[0].y;
+
+    this.items.forEach((item) => {
+      if (item.x < minX) {
+        minX = item.x;
+      }
+      if (item.y < minY) {
+        minY = item.y;
+      }
+    });
+
+    // Calcular offsets para centrar o posicionar correctamente
+    // El offset negativo mueve los elementos hacia el origen
+    this.offsetX = -minX + changuiX;
+    this.offsetY = -minY + changuiY;
   }
 
   /**
@@ -47,6 +76,9 @@ class Nivel {
         isometric: !!item.isometric,
       }));
     }
+
+    // Detectar límites y calcular offsets automáticamente
+    this.detectarLimites();
 
     for (let item of this.items) {
       if (item.type.toLowerCase().startsWith("auto")) {
@@ -103,7 +135,8 @@ class Nivel {
         item.type.toLowerCase().startsWith("ministerio_economia") ||
         item.type.toLowerCase().startsWith("monumento_belgrano") ||
         item.type.toLowerCase().startsWith("piramide") ||
-        item.type.toLowerCase().startsWith("banco_nacion")
+        item.type.toLowerCase().startsWith("banco_nacion") ||
+        item.type.toLowerCase().startsWith("casa_rosada")
       ) {
         // const tipoDeMonumento = parseInt(item.type.replace("monumento", ""));
         const monumento = new Monumento(

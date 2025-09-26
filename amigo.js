@@ -60,7 +60,7 @@ class Amigo extends Persona {
     this.separacion();
 
     // this.escapar();
-    // this.perseguir();
+    this.perseguir();
 
     this.aplicarFisica();
 
@@ -70,12 +70,12 @@ class Amigo extends Persona {
     this.amigos = this.buscarPersonasDeMiBando();
     this.enemigoMasCerca = this.buscarEnemigoMasCerca();
 
-    // this.pegarSiEstaEnMiRango();
+    this.pegarSiEstaEnMiRango();
 
     this.calcularAnguloYVelocidadLineal();
 
     if (this.enemigoMasCerca) {
-      // this.asignarTarget(this.enemigoMasCerca);
+      this.asignarTarget(this.enemigoMasCerca);
     }
   }
 }
