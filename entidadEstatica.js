@@ -9,13 +9,4 @@ class EntidadEstatica extends GameObject {
   }
 
   tick() {}
-
-  render() {
-    if (!this.container)
-      return console.warn("entidadEstatica no tiene container");
-
-    this.container.x = this.posicion.x;
-    this.container.y = this.posicion.y;
-    this.container.zIndex = this.posicion.y;
-  }
 }

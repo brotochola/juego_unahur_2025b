@@ -27,8 +27,6 @@ class Nivel {
     const data = await response.json();
     this.parsearDatos(data);
     this.loaded = true;
-
-    console.log(`Nivel cargado exitosamente desde: ${this.jsonUrl}`);
   }
 
   /**
@@ -45,7 +43,8 @@ class Nivel {
         y: item.y,
         scaleX: item.scaleX || 1,
         scaleY: item.scaleY || 1,
-        background: item.background || false,
+        background: !!item.background,
+        isometric: !!item.isometric,
       }));
     }
 
@@ -56,7 +55,8 @@ class Nivel {
           item.x + this.offsetX,
           item.y + this.offsetY,
           this.juego,
-          tipoDeAuto
+          tipoDeAuto,
+          item.scaleX
         );
         this.juego.autos.push(auto);
       } else if (item.type.toLowerCase().startsWith("arbol")) {
@@ -65,10 +65,57 @@ class Nivel {
           item.x + this.offsetX,
           item.y + this.offsetY,
           this.juego,
-          tipoDeArbol
+          tipoDeArbol,
+          item.scaleX
         );
         this.juego.arboles.push(arbol);
+      } else if (item.type.toLowerCase().startsWith("palmera")) {
+        const palmera = new Arbol(
+          item.x + this.offsetX,
+          item.y + this.offsetY,
+          this.juego,
+          3,
+          item.scaleX
+        );
+        this.juego.arboles.push(palmera);
+      } else if (item.type.toLowerCase().startsWith("farol")) {
+        const tipoDeFarol = parseInt(item.type.replace("farol", ""));
+        const farol = new Farol(
+          item.x + this.offsetX,
+          item.y + this.offsetY,
+          this.juego,
+          tipoDeFarol,
+          item.scaleX
+        );
+        this.juego.faroles.push(farol);
+      } else if (item.type.toLowerCase().startsWith("bondi")) {
+        const tipoDeBondi = parseInt(item.type.replace("bondi", ""));
+        const bondi = new Bondi(
+          item.x + this.offsetX,
+          item.y + this.offsetY,
+          this.juego,
+          tipoDeBondi,
+          item.scaleX
+        );
+        this.juego.autos.push(bondi);
+      } else if (
+        item.type.toLowerCase().startsWith("fuente_agua") ||
+        item.type.toLowerCase().startsWith("ministerio_economia") ||
+        item.type.toLowerCase().startsWith("monumento_belgrano") ||
+        item.type.toLowerCase().startsWith("piramide") ||
+        item.type.toLowerCase().startsWith("banco_nacion")
+      ) {
+        // const tipoDeMonumento = parseInt(item.type.replace("monumento", ""));
+        const monumento = new Monumento(
+          item.x + this.offsetX,
+          item.y + this.offsetY,
+          this.juego,
+          item.type,
+          item.scaleX
+        );
+        this.juego.monumentos.push(monumento);
       } else if (item.background) {
+        //cualquier item que tenga puesto backgroudn:true es un fondo y es solo un sprite, no una instancia de ninguna clase nuestra
         const sprite = new PIXI.Sprite(
           await PIXI.Assets.load("/assets/pixelart/" + item.type + ".png")
         );
@@ -78,15 +125,6 @@ class Nivel {
         this.juego.containerPrincipal.addChild(sprite);
         sprite.label = item.type;
         sprite.zIndex = -999999999 + item.y;
-      } else if (item.type.toLowerCase().startsWith("farol")) {
-        const tipoDeFarol = parseInt(item.type.replace("farol", ""));
-        const farol = new Farol(
-          item.x + this.offsetX,
-          item.y + this.offsetY,
-          this.juego,
-          tipoDeFarol
-        );
-        this.juego.faroles.push(farol);
       }
     }
   }

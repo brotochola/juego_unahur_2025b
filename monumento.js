@@ -1,18 +1,20 @@
-class Farol extends EntidadEstatica {
+class Monumento extends EntidadEstatica {
   constructor(x, y, juego, tipo, scaleX) {
-    super(x, y, juego);
+    super(x, y, juego, tipo);
 
-    this.radio = 10;
-    this.tipo = tipo || Math.floor(Math.random() * 2) + 1;
     this.scaleX = scaleX || 1;
-    this.container.label = "arbol" + this.id;
+    this.tipo = tipo;
+    this.container.label = "monumento_" + this.tipo + "_" + this.id;
+    this.isometric = true;
     this.crearSprite();
   }
 
   async crearSprite() {
     this.sprite = new PIXI.Sprite(
-      await PIXI.Assets.load("/assets/pixelart/farol" + this.tipo + ".png")
+      await PIXI.Assets.load("/assets/pixelart/" + this.tipo + ".png")
     );
+
+    this.radio = this.sprite.width * 0.71; //creo q este ratio va bien
     this.sprite.anchor.set(0.5, 1);
     this.container.addChild(this.sprite);
     this.sprite.scale.x = this.scaleX;

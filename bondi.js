@@ -1,4 +1,4 @@
-class Auto extends EntidadEstatica {
+class Bondi extends EntidadEstatica {
   constructor(x, y, juego, tipo, scaleX) {
     super(x, y, juego);
     console.log("auto", x, y, tipo);
@@ -6,7 +6,7 @@ class Auto extends EntidadEstatica {
     this.radio = 10;
     this.scaleX = scaleX || 1;
     this.tipo = tipo || Math.floor(Math.random() * 4) + 1;
-    this.container.label = "auto" + this.id;
+    this.container.label = "bondi" + this.id;
     this.isometric = true;
     this.crearSprite();
   }
@@ -14,7 +14,7 @@ class Auto extends EntidadEstatica {
   async crearSprite() {
     // Load the full spritesheet
     const texture = await PIXI.Assets.load(
-      "/assets/pixelart/auto" + this.tipo + ".png"
+      "/assets/pixelart/bondi" + this.tipo + ".png"
     );
 
     // Create sprite with the specific car texture

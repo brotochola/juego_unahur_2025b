@@ -19,6 +19,7 @@ class GameObject {
   // Sistema de objetivos para IA
   target; // Objeto que este GameObject está persiguiendo
   perseguidor; // Objeto que está persiguiendo a este GameObject
+  isometric = false;
 
   constructor(x, y, juego) {
     // Rango de visión aleatorio entre 400-700 píxeles
@@ -141,6 +142,12 @@ class GameObject {
 
     this.velocidad.x *= friccionAplicada;
     this.velocidad.y *= friccionAplicada;
+  }
+
+  calcularZindex() {
+    return this.isometric
+      ? this.posicion.y - this.sprite.width * 0.29
+      : this.posicion.y;
   }
 
   rebotar() {
@@ -267,5 +274,28 @@ class GameObject {
     if (!this.container || this.muerto) return;
     this.container.x = this.posicion.x;
     this.container.y = this.posicion.y;
+    this.container.zIndex = this.calcularZindex();
+    this.cambiarTintParaSimularIluminacion();
+  }
+
+  cambiarTintParaSimularIluminacion() {
+    const luz = this.calcularLuz();
+    // Convertir luz (0-1) a valor de gris (0-255)
+    const valorGris = Math.floor(luz * 255);
+    // Crear color hexadecimal: 0xRRGGBB donde RR=GG=BB para gris
+    const colorGris = (valorGris << 16) | (valorGris << 8) | valorGris;
+    this.container.tint = colorGris;
+  }
+
+  calcularLuz() {
+    let luz = 0;
+    const distanciaALaQueTieneTodaLaLuz = 75 + this.radio * 3;
+    for (let farol of this.juego.faroles) {
+      const dist = calcularDistancia(farol.posicion, this.posicion);
+      luz += distanciaALaQueTieneTodaLaLuz ** 2 / dist ** 2;
+    }
+
+    if (luz > 1) luz = 1;
+    return luz;
   }
 }

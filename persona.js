@@ -357,17 +357,11 @@ class Persona extends GameObject {
      * 1. Verificaciones de seguridad
      * 2. Sincronización física-visual (super.render())
      * 3. Actualización del sistema de animación
-     * 4. Z-Index dinámico para perspectiva isométrica:
-     *    - zIndex = posición.y
-     *    - Objetos con Y mayor aparecen "más cerca" (delante)
-     *    - Esto simula profundidad en la vista isométrica
+
      */
     if (!this.container || !this.sprite) return;
     super.render();
 
     this.cambiarDeAnimacionSegunLaVelocidadYAngulo();
-
-    // Ordenamiento en profundidad para perspectiva isométrica
-    this.container.zIndex = this.posicion.y;
   }
 }
