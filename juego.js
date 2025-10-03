@@ -5,6 +5,7 @@ class Juego {
   enemigos = [];
   faroles = [];
   monumentos = [];
+  obstaculos = [];
   arboles = [];
   autos = [];
   objetosInanimados = [];
@@ -16,12 +17,12 @@ class Juego {
     this.iluminacion = false;
     this.updateDimensions();
     this.anchoDelMapa = 5000;
-    this.altoDelMapa = 3000;
+    this.altoDelMapa = 5000;
     this.mouse = { posicion: { x: 0, y: 0 } };
 
     // Variables para el zoom
     this.zoom = 1;
-    this.minZoom = 0.5;
+    this.minZoom = 0.1;
     this.maxZoom = 2;
     this.zoomStep = 0.1;
 
@@ -69,9 +70,19 @@ class Juego {
     //es decir: en cada frame vamos a ejecutar el metodo this.gameLoop
     this.pixiApp.ticker.add(this.gameLoop.bind(this));
 
+    this.agregarListenersDeTeclado();
+
     this.agregarInteractividadDelMouse();
     this.pixiApp.stage.sortableChildren = true;
     this.crearNivel();
+  }
+
+  agregarListenersDeTeclado() {
+    window.onkeyup = (event) => {
+      if (event.key.toLowerCase() == "u") {
+        this.hacerQueLaCamaraSigaAalguienRandom();
+      }
+    };
   }
 
   async crearFondo() {
@@ -85,24 +96,51 @@ class Juego {
   async crearNivel() {
     this.containerPrincipal = new PIXI.Container();
 
+    this.graficoDebug = new PIXI.Graphics();
+    this.graficoDebug.zIndex = 51231231231;
+    this.graficoDebug.label = "graficoDebug";
+    this.containerPrincipal.addChild(this.graficoDebug);
+
     this.pixiApp.stage.addChild(this.containerPrincipal);
     await this.cargarTexturas();
     this.crearFondo();
 
-    this.nivel = new Nivel("assets/pixelart/plaza_de_mayo_5.json", this);
+    this.nivel = new Nivel("assets/pixelart/plaza_de_mayo_15.json", this);
 
+    // this.crearArboles();
+    // this.crearCasitasRandom();
     this.crearProtagonista();
-    this.crearEnemigos(30, 2);
-    this.crearEnemigos(40, 3);
-    this.crearEnemigos(40, 4);
-    this.crearEnemigos(40, 5);
-    this.crearEnemigos(40, 6);
-    this.crearEnemigos(40, 7);
+    this.targetCamara = this.protagonista;
+    // this.crearEnemigos(200, 2);
+    // this.crearEnemigos(40, 3);
+    // this.crearEnemigos(40, 4);
+    // this.crearEnemigos(40, 5);
+    // this.crearEnemigos(40, 6);
+    // this.crearEnemigos(40, 7);
 
-    this.crearAmigos(50);
+    // this.crearArbolesRAndom
+
+    this.crearAmigos(400);
 
     this.crearSistemaDeIluminacion(); // Sistema nuevo de sprites individuales
   }
+  crearCasitasRandom() {
+    for (let i = 0; i < 100; i++) {
+      const monumento = new Monumento(
+        Math.random() * this.anchoDelMapa,
+        Math.random() * this.altoDelMapa,
+        this,
+        "casa" + Math.floor(Math.random() * 2 + 1),
+        1
+      );
+      this.obstaculos.push(monumento);
+    }
+  }
+
+  hacerQueLaCamaraSigaAalguienRandom() {
+    this.targetCamara = this.getPersonaRandom();
+  }
+
   async cargarTexturas() {
     await PIXI.Assets.load(["assets/bg.jpg"]);
   }
@@ -132,6 +170,7 @@ class Juego {
       const y = Math.random() * this.altoDelMapa;
       const arbol = new Arbol(x, y, this);
       this.arboles.push(arbol);
+      this.obstaculos.push(arbol);
       this.objetosInanimados.push(arbol);
     }
   }
@@ -207,6 +246,7 @@ class Juego {
   }
 
   crearSistemaDeIluminacion() {
+    console.log("crearSistemaDeIluminacion");
     this.graficoSombrasProyectadas = new PIXI.Graphics();
     this.graficoSombrasProyectadas.zIndex = 3;
     this.graficoSombrasProyectadas.label = "graficoSombrasProyectadas";
@@ -222,44 +262,53 @@ class Juego {
       this.blurParaElGraficoDeSombrasProyectadas,
     ];
 
+    // Solo crear el sistema de iluminación una vez
     setTimeout(() => {
-      this.containerDeIluminacion = new PIXI.Container();
-      this.containerDeIluminacion.label = "containerDeIluminacion";
-      this.containerDeIluminacion.sortableChildren = true; // Para que funcione el zIndex
+      // Solo crear si no existe ya
+      if (!this.containerDeIluminacion) {
+        this.containerDeIluminacion = new PIXI.Container();
+        this.containerDeIluminacion.label = "containerDeIluminacion";
+        this.containerDeIluminacion.sortableChildren = true; // Para que funcione el zIndex
 
-      this.containerPrincipal.addChild(this.containerDeIluminacion);
+        this.containerPrincipal.addChild(this.containerDeIluminacion);
 
-      // Primero crear el sprite negro de fondo
-      const spriteNegro = crearSpriteNegro(
-        this.anchoDelMapa * 2,
-        this.altoDelMapa * 2
-      );
-      spriteNegro.label = "spriteNegro";
-      spriteNegro.x = -this.anchoDelMapa;
-      spriteNegro.y = -this.altoDelMapa;
-      spriteNegro.zIndex = 1; // Debajo del gradiente
-      this.containerDeIluminacion.addChild(spriteNegro);
+        // Primero crear el sprite negro de fondo
+        const spriteNegro = crearSpriteNegro(
+          this.anchoDelMapa,
+          this.altoDelMapa
+        );
+        spriteNegro.label = "spriteNegro";
+        // spriteNegro.x = -this.anchoDelMapa;
+        // spriteNegro.y = -this.altoDelMapa;
+        spriteNegro.zIndex = 1; // Debajo del gradiente
+        this.containerDeIluminacion.addChild(spriteNegro);
 
-      // Crear sprites individuales para cada farol usando sus propios métodos
-      for (let farol of this.faroles) {
-        const spriteGradiente = crearSpriteConGradiente(700);
-        spriteGradiente.x = farol.posicion.x;
-        spriteGradiente.y = farol.posicion.y;
-        spriteGradiente.zIndex = 2; // Encima del sprite negro
+        // Crear sprites individuales para cada farol usando sus propios métodos
+        for (let farol of this.faroles) {
+          const spriteGradiente = crearSpriteConGradiente(700);
+          spriteGradiente.x = farol.posicion.x;
+          spriteGradiente.y = farol.posicion.y;
+          spriteGradiente.zIndex = 2; // Encima del sprite negro
 
-        this.containerDeIluminacion.addChild(spriteGradiente);
+          this.containerDeIluminacion.addChild(spriteGradiente);
+        }
+
+        this.containerDeIluminacion.zIndex = 2;
+        this.containerDeIluminacion.alpha = 0.8;
+        this.containerDeIluminacion.cacheAsBitmap = true;
+        this.containerDeIluminacion.blendMode = "multiply";
       }
 
-      this.containerDeIluminacion.zIndex = 2;
-      this.containerDeIluminacion.alpha = 0.8;
-      this.containerDeIluminacion.cacheAsBitmap = true;
-      this.containerDeIluminacion.blendMode = "multiply";
+      // Siempre actualizar la visibilidad basada en el estado actual
       this.containerDeIluminacion.visible = this.iluminacion;
     }, 1000);
   }
 
   gameLoop(time) {
+    //borrar lo q hay en los graficos debug y sombras proyectadas
     if (this.graficoSombrasProyectadas) this.graficoSombrasProyectadas.clear();
+    if (this.graficoDebug) this.graficoDebug.clear();
+
     if (this.iluminacion) {
       for (let farol of this.faroles) {
         farol.actualizarLineas();
@@ -270,6 +319,10 @@ class Juego {
       //ejecutamos el metodo tick de cada persona
       unpersona.tick();
       unpersona.render();
+    }
+
+    for (let obstaculo of this.obstaculos) {
+      obstaculo.dibujarCirculo();
     }
 
     this.hacerQLaCamaraSigaAlProtagonista();
@@ -293,12 +346,16 @@ class Juego {
   }
 
   hacerQLaCamaraSigaAlProtagonista() {
-    if (!this.protagonista) return;
+    if (!this.targetCamara) return;
     // Ajustar la posición considerando el zoom actual
-    this.containerPrincipal.x =
-      -this.protagonista.posicion.x * this.zoom + this.width / 2;
-    this.containerPrincipal.y =
-      -this.protagonista.posicion.y * this.zoom + this.height / 2;
+    let targetX = -this.targetCamara.posicion.x * this.zoom + this.width / 2;
+    let targetY = -this.targetCamara.posicion.y * this.zoom + this.height / 2;
+
+    const x = (targetX - this.containerPrincipal.x) * 0.1;
+    const y = (targetY - this.containerPrincipal.y) * 0.1;
+
+    this.containerPrincipal.x += x;
+    this.containerPrincipal.y += y;
   }
 
   finDelJuego() {

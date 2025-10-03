@@ -23,7 +23,9 @@ class Enemigo extends Persona {
     this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
     this.amigos = this.buscarPersonasDeMiBando();
     this.enemigoMasCerca = this.buscarEnemigoMasCerca();
-
+    this.buscarObstaculosBienCerquitaMio();
+    this.noChocarConObstaculos();
+    this.repelerSuavementeObstaculos();
     this.pegarSiEstaEnMiRango();
 
     this.calcularAnguloYVelocidadLineal();

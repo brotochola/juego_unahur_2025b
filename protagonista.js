@@ -16,6 +16,7 @@ class Protagonista extends Persona {
     this.vision = Infinity; // Visión ilimitada
     this.bando = 1; // Bando del jugador
     this.crearSpritesheetAnimado(this.bando);
+    this.container.label = "prota";
   }
 
   morir() {
@@ -50,6 +51,9 @@ class Protagonista extends Persona {
     this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
     this.amigos = this.buscarPersonasDeMiBando();
     this.enemigoMasCerca = this.buscarEnemigoMasCerca();
+    this.buscarObstaculosBienCerquitaMio();
+    this.noChocarConObstaculos();
+    this.repelerSuavementeObstaculos();
 
     // Datos para animación
     this.calcularAnguloYVelocidadLineal();

@@ -7,6 +7,7 @@ class Arbol extends EntidadEstatica {
     this.tipo = tipo || Math.floor(Math.random() * 2) + 1;
     this.container.label = "arbol" + this.id;
     this.crearSprite();
+    this.juego.obstaculos.push(this);
   }
 
   async crearSprite() {

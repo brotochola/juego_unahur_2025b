@@ -1,7 +1,7 @@
 class Bondi extends EntidadEstatica {
   constructor(x, y, juego, tipo, scaleX) {
     super(x, y, juego);
-    console.log("auto", x, y, tipo);
+
     this.vida = 1;
     this.radio = 10;
     this.scaleX = scaleX || 1;

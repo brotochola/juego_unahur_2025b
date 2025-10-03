@@ -151,6 +151,19 @@ class GameObject {
       : this.posicion.y + base;
   }
 
+  getPosicionCentral() {
+    if (!this.container) return this.posicion;
+    return {
+      x: this.posicion.x,
+      y: this.posicion.y + this.calcularOffsetY() - this.radio * 0.25,
+    };
+  }
+
+  calcularOffsetY() {
+    if (!this.container) return 0;
+    return this.isometric ? -this.container.width * 0.29 : 0;
+  }
+
   rebotar() {
     /**
      * SISTEMA DE REBOTE CON PÉRDIDA DE ENERGÍA
@@ -261,22 +274,27 @@ class GameObject {
   }
 
   render() {
-    /**
-     * SINCRONIZACIÓN FÍSICA-VISUAL
-     *
-     * Transfiere la posición calculada por el sistema de física
-     * al sistema de renderizado de PIXI.js
-     *
-     * La separación física/visual permite:
-     * - Cálculos de física independientes del renderizado
-     * - Interpolación visual futura si es necesaria
-     * - Debugging más fácil
-     */
+    this.dibujarCirculo();
     if (!this.container || this.muerto) return;
+
     this.container.x = this.posicion.x;
     this.container.y = this.posicion.y;
     this.container.zIndex = this.calcularZindex();
     this.cambiarTintParaSimularIluminacion();
+  }
+
+  dibujarCirculo() {
+    if (!this.juego.graficoDebug) return console.warn("no hay grafico debug");
+
+    // Calcular el offset Y para centrar el círculo con el sprite
+
+    const posicionCentral = this.getPosicionCentral();
+    this.juego.graficoDebug.circle(
+      posicionCentral.x,
+      posicionCentral.y,
+      this.radio
+    );
+    this.juego.graficoDebug.stroke({ color: 0x000000, width: 1 });
   }
 
   cambiarTintParaSimularIluminacion() {

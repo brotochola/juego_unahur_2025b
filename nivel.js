@@ -91,6 +91,14 @@ class Nivel {
           item.scaleX
         );
         this.juego.autos.push(auto);
+      } else if (item.type.toLowerCase().startsWith("poste")) {
+        const arbol = new Poste(
+          item.x + this.offsetX,
+          item.y + this.offsetY,
+          this.juego,
+          item.scaleX
+        );
+        this.juego.arboles.push(arbol);
       } else if (item.type.toLowerCase().startsWith("arbol")) {
         const tipoDeArbol = parseInt(item.type.replace("arbol", ""));
         const arbol = new Arbol(
@@ -136,7 +144,11 @@ class Nivel {
         item.type.toLowerCase().startsWith("monumento_belgrano") ||
         item.type.toLowerCase().startsWith("piramide") ||
         item.type.toLowerCase().startsWith("banco_nacion") ||
-        item.type.toLowerCase().startsWith("casa_rosada")
+        item.type.toLowerCase().startsWith("casa_rosada") ||
+        item.type.toLowerCase().startsWith("edificio") ||
+        item.type.toLowerCase().startsWith("casa") ||
+        item.type.toLowerCase().startsWith("basura") ||
+        item.type.toLowerCase().startsWith("cabildo")
       ) {
         // const tipoDeMonumento = parseInt(item.type.replace("monumento", ""));
         const monumento = new Monumento(
@@ -153,6 +165,7 @@ class Nivel {
           await PIXI.Assets.load("/assets/pixelart/" + item.type + ".png")
         );
         sprite.anchor.set(0.5, 1);
+        sprite.scale.set(item.scaleX, item.scaleY);
         sprite.x = item.x + this.offsetX;
         sprite.y = item.y + this.offsetY;
         this.juego.containerPrincipal.addChild(sprite);

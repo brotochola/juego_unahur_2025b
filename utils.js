@@ -8,7 +8,7 @@ function calcularDistancia(obj1, obj2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-function limitarVector(vector, magnitudMaxima) {
+function limitarVector(vector, magnitudMaxima = 1) {
   const magnitudActual = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
 
   if (magnitudActual > magnitudMaxima) {
@@ -23,19 +23,31 @@ function limitarVector(vector, magnitudMaxima) {
   return { ...vector };
 }
 
+// Cache para texturas negras para evitar recrearlas
+const texturaNegrCache = new Map();
+
 function crearSpriteNegro(anchoDelMapa, altoDelMapa) {
-  // Crear un canvas negro del tamaño del mapa
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  canvas.width = anchoDelMapa;
-  canvas.height = altoDelMapa;
+  // Verificar si ya tenemos esta textura en cache
+  const cacheKey = `negro_${anchoDelMapa}x${altoDelMapa}`;
+  let textura = texturaNegrCache.get(cacheKey);
 
-  // Llenar todo el canvas de negro
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if (!textura) {
+    // Crear un canvas negro del tamaño del mapa solo si no existe en cache
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = anchoDelMapa;
+    canvas.height = altoDelMapa;
 
-  // Crear sprite PIXI a partir del canvas
-  const textura = PIXI.Texture.from(canvas);
+    // Llenar todo el canvas de negro
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Crear textura PIXI a partir del canvas y guardarla en cache
+    textura = PIXI.Texture.from(canvas);
+    texturaNegrCache.set(cacheKey, textura);
+  }
+
+  // Crear sprite usando la textura (reutilizada o nueva)
   const sprite = new PIXI.Sprite(textura);
 
   // Posicionar el sprite en el origen del mapa
@@ -45,44 +57,56 @@ function crearSpriteNegro(anchoDelMapa, altoDelMapa) {
   return sprite;
 }
 
+// Cache para texturas de gradientes para evitar recrearlas
+const texturaGradienteCache = new Map();
+
 function crearSpriteConGradiente(radio = 300) {
-  // Crear un canvas para el gradiente individual
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  const size = radio * 2;
-  canvas.width = size;
-  canvas.height = size;
+  // Verificar si ya tenemos esta textura en cache
+  const cacheKey = `gradiente_${radio}`;
+  let textura = texturaGradienteCache.get(cacheKey);
 
-  // Crear gradiente radial centrado
-  const gradient = ctx.createRadialGradient(
-    radio,
-    radio,
-    0, // círculo interior (centro)
-    radio,
-    radio,
-    radio // círculo exterior
-  );
+  if (!textura) {
+    // Crear un canvas para el gradiente individual solo si no existe en cache
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const size = radio * 2;
+    canvas.width = size;
+    canvas.height = size;
 
-  // Configurar paradas del gradiente
-  gradient.addColorStop(0, "white"); // Centro blanco (sin oscuridad)
-  gradient.addColorStop(0.2, "rgba(255,255,255,0.5)"); // Transición
-  gradient.addColorStop(0.4, "rgba(255,255,255,0.25)"); // Más transición
-  gradient.addColorStop(0.6, "rgba(255,255,255,0.125)"); // Más transición
-  gradient.addColorStop(0.8, "rgba(255,255,255,0.0625)"); // Más transición
-  gradient.addColorStop(1, "rgba(255,255,255,0)"); // Borde transparente
+    // Crear gradiente radial centrado
+    const gradient = ctx.createRadialGradient(
+      radio,
+      radio,
+      0, // círculo interior (centro)
+      radio,
+      radio,
+      radio // círculo exterior
+    );
 
-  // Llenar todo el canvas de negro primero
-  ctx.fillStyle = "transparent";
-  ctx.fillRect(0, 0, size, size);
+    // Configurar paradas del gradiente
+    gradient.addColorStop(0, "white"); // Centro blanco (sin oscuridad)
+    gradient.addColorStop(0.2, "rgba(255,255,255,0.5)"); // Transición
+    gradient.addColorStop(0.4, "rgba(255,255,255,0.25)"); // Más transición
+    gradient.addColorStop(0.6, "rgba(255,255,255,0.125)"); // Más transición
+    gradient.addColorStop(0.8, "rgba(255,255,255,0.0625)"); // Más transición
+    gradient.addColorStop(1, "rgba(255,255,255,0)"); // Borde transparente
 
-  // Dibujar el círculo con gradiente
-  ctx.fillStyle = gradient;
-  ctx.beginPath();
-  ctx.arc(radio, radio, radio, 0, Math.PI * 2);
-  ctx.fill();
+    // Llenar todo el canvas de negro primero
+    ctx.fillStyle = "transparent";
+    ctx.fillRect(0, 0, size, size);
 
-  // Crear sprite PIXI a partir del canvas
-  const textura = PIXI.Texture.from(canvas);
+    // Dibujar el círculo con gradiente
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(radio, radio, radio, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Crear textura PIXI a partir del canvas y guardarla en cache
+    textura = PIXI.Texture.from(canvas);
+    texturaGradienteCache.set(cacheKey, textura);
+  }
+
+  // Crear sprite usando la textura (reutilizada o nueva)
   const sprite = new PIXI.Sprite(textura);
 
   // Centrar el anchor para que el gradiente se centre en la posición del farol

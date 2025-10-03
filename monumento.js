@@ -7,6 +7,11 @@ class Monumento extends EntidadEstatica {
     this.container.label = "monumento_" + this.tipo + "_" + this.id;
     this.isometric = true;
     this.crearSprite();
+    this.juego.obstaculos.push(this);
+  }
+
+  calcularRadio() {
+    this.radio = this.sprite.width * 0.33; //creo q este ratio va bien
   }
 
   async crearSprite() {
@@ -14,7 +19,7 @@ class Monumento extends EntidadEstatica {
       await PIXI.Assets.load("/assets/pixelart/" + this.tipo + ".png")
     );
 
-    this.radio = this.sprite.width * 0.71; //creo q este ratio va bien
+    this.calcularRadio();
     this.sprite.anchor.set(0.5, 1);
     this.container.addChild(this.sprite);
     this.sprite.scale.x = this.scaleX;

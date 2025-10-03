@@ -37,11 +37,11 @@ class Amigo extends Persona {
       //si estoy a una distancia q no es al ladito y tampoco es tan lejos.
       return;
 
-      // Reducción más pronunciada cuando están muy cerca
-      const factor = (dist / this.radioParaBajarLaVelocidad) ** 3;
+      // // Reducción más pronunciada cuando están muy cerca
+      // const factor = (dist / this.radioParaBajarLaVelocidad) ** 3;
 
-      vectorNuevo.x *= factor;
-      vectorNuevo.y *= factor;
+      // vectorNuevo.x *= factor;
+      // vectorNuevo.y *= factor;
     } else if (dist < this.vision && dist > this.radioParaBajarLaVelocidad) {
       //esta lejos, va de una
     }
@@ -69,6 +69,9 @@ class Amigo extends Persona {
     this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
     this.amigos = this.buscarPersonasDeMiBando();
     this.enemigoMasCerca = this.buscarEnemigoMasCerca();
+    this.buscarObstaculosBienCerquitaMio();
+    this.noChocarConObstaculos();
+    this.repelerSuavementeObstaculos();
 
     this.pegarSiEstaEnMiRango();
 

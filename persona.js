@@ -9,7 +9,7 @@ class Persona extends GameObject {
     this.vision = Math.random() * 400 + 200;
 
     this.fuerzaDeAtaque = 0.01 + Math.random() * 0.01;
-    this.radio = 13 + Math.random() * 4;
+    this.radio = 10 + Math.random() * 3;
     this.rangoDeAtaque = this.radio * 3;
 
     this.factorPerseguir = 0.15;
@@ -33,6 +33,83 @@ class Persona extends GameObject {
     return this.juego.personas.filter(
       (persona) => persona.bando !== this.bando
     );
+  }
+
+  buscarObstaculosBienCerquitaMio() {
+    this.obstaculosCercaMio = [];
+    this.obstaculosConLosQueMeEstoyChocando = [];
+    for (let obstaculo of this.juego.obstaculos) {
+      const dist = calcularDistancia(
+        this.posicion,
+        obstaculo.getPosicionCentral()
+      );
+
+      const distDeColision = this.radio + obstaculo.radio;
+      const distConChangui = distDeColision + this.radio * 10;
+      if (dist < distConChangui && dist > distDeColision) {
+        this.obstaculosCercaMio.push(obstaculo);
+      } else if (dist < distDeColision) {
+        this.obstaculosConLosQueMeEstoyChocando.push(obstaculo);
+      }
+    }
+  }
+
+  repelerSuavementeObstaculos() {
+    if (this.obstaculosCercaMio.length == 0) return;
+
+    const posicionFutura = {
+      x: this.posicion.x + this.velocidad.x * 3,
+      y: this.posicion.y + this.velocidad.y * 3,
+    };
+
+    let fuerzaRepulsionTotal = { x: 0, y: 0 };
+
+    for (let obstaculo of this.obstaculosCercaMio) {
+      const posicionObstaculo = obstaculo.getPosicionCentral();
+
+      // Vector que apunta del obstáculo hacia mi posición futura
+      const vectorRepulsion = limitarVector({
+        x: posicionFutura.x - posicionObstaculo.x,
+        y: posicionFutura.y - posicionObstaculo.y,
+      });
+      const distancia = Math.sqrt(
+        vectorRepulsion.x * vectorRepulsion.x +
+          vectorRepulsion.y * vectorRepulsion.y
+      );
+
+      // Calcular fuerza inversamente proporcional a la distancia
+      // Cuanto más cerca, más fuerza (usando 1/distancia)
+      const fuerzaBase = 3; // Factor base de repulsión
+      const distanciaMinima = 10; // Distancia mínima para evitar fuerzas extremas
+      const fuerzaRepulsion = fuerzaBase / Math.max(distancia, distanciaMinima);
+
+      // Aplicar la fuerza de repulsión
+      fuerzaRepulsionTotal.x += vectorRepulsion.x * fuerzaRepulsion;
+      fuerzaRepulsionTotal.y += vectorRepulsion.y * fuerzaRepulsion;
+    }
+
+    // Aplicar la fuerza total a la aceleración
+    this.aceleracion.x += fuerzaRepulsionTotal.x;
+    this.aceleracion.y += fuerzaRepulsionTotal.y;
+  }
+
+  noChocarConObstaculos() {
+    if (this.obstaculosConLosQueMeEstoyChocando.length == 0) return;
+    const posicionFutura = {
+      x: this.posicion.x + this.velocidad.x,
+      y: this.posicion.y + this.velocidad.y,
+    };
+
+    for (let obstaculo of this.obstaculosConLosQueMeEstoyChocando) {
+      const posicionObstaculo = obstaculo.getPosicionCentral();
+      const vectorRepulsion = limitarVector({
+        x: posicionFutura.x - posicionObstaculo.x,
+        y: posicionFutura.y - posicionObstaculo.y,
+      });
+
+      this.aceleracion.x += vectorRepulsion.x * 3;
+      this.aceleracion.y += vectorRepulsion.y * 3;
+    }
   }
 
   tick() {
@@ -94,6 +171,7 @@ class Persona extends GameObject {
     ).character;
 
     this.sprite.anchor.set(0.5, 1);
+    this.sprite.scale.set(0.85, 0.85);
 
     this.container.addChild(this.sprite);
   }
@@ -159,55 +237,19 @@ class Persona extends GameObject {
   }
 
   separacion() {
-    /**
-     * ALGORITMO DE SEPARACIÓN (BOIDS - Craig Reynolds)
-     *
-     * Objetivo: Evitar colisiones manteniendo distancia mínima entre agentes
-     *
-     * Proceso:
-     * 1. Detectar TODAS las personas (amigos y enemigos) muy cercanas
-     * 2. Zona crítica: radio * 1.5 (zona de colisión inminente)
-     * 3. Calcular centro de masa de los agentes cercanos
-     * 4. Generar fuerza de repulsión: fuerza = posición_actual - CM_cercanos
-     *
-     * Características:
-     * - Prioridad máxima (se ejecuta primero en tick())
-     * - Afecta a todos los agentes sin distinción de bando
-     * - Previene superposición y aglomeración excesiva
-     *
-     * Resultado: Espaciado natural y realista entre personajes
-     */
-    let cont = 0;
-    let vectorPromedioDePosiciones = { x: 0, y: 0 };
-
-    // Detectar TODOS los agentes cercanos (sin distinción de bando)
     for (const persona of this.juego.personas) {
       if (persona !== this) {
         const distancia = calcularDistancia(this.posicion, persona.posicion);
-        // Zona crítica de separación
-        if (distancia < this.radio * 1.5) {
-          cont++;
-          vectorPromedioDePosiciones.x += persona.posicion.x;
-          vectorPromedioDePosiciones.y += persona.posicion.y;
-        }
+        if (distancia > this.radio + persona.radio) continue;
+        let vectorNuevo = {
+          x: this.posicion.x - persona.posicion.x,
+          y: this.posicion.y - persona.posicion.y,
+        };
+
+        this.aceleracion.x += vectorNuevo.x;
+        this.aceleracion.y += vectorNuevo.y;
       }
     }
-    if (cont == 0) return; // No hay agentes demasiado cerca
-
-    // Centro de masa de los agentes cercanos
-    vectorPromedioDePosiciones.x /= cont;
-    vectorPromedioDePosiciones.y /= cont;
-
-    // Vector de repulsión (alejarse del centro de masa)
-    let vectorNuevo = {
-      x: this.posicion.x - vectorPromedioDePosiciones.x,
-      y: this.posicion.y - vectorPromedioDePosiciones.y,
-    };
-
-    // Normalizar y aplicar factor de separación
-    vectorNuevo = limitarVector(vectorNuevo, 1);
-    this.aceleracion.x += this.factorSeparacion * vectorNuevo.x;
-    this.aceleracion.y += this.factorSeparacion * vectorNuevo.y;
   }
   verificarSiEstoyMuerto() {
     if (this.vida <= 0) {
