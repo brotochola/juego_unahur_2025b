@@ -5,7 +5,7 @@ class Amigo extends Persona {
     this.bando = 1;
 
     // Parámetros para el Arrival Behaviour
-    this.radioLlegadaAlLider = 50; // Radio donde empieza a desacelerar
+    this.radioLlegadaAlLider = 80; // Radio donde empieza a desacelerar
     this.radioParaBajarLaVelocidad = this.vision * 0.5;
     this.factorSeguirAlLider = 0.63;
     this.factorCohesion = 0.1; //a los amigos les bajo la cohesion pq igual estan siguiendo al lider
@@ -52,28 +52,30 @@ class Amigo extends Persona {
 
   tick() {
     if (this.muerto) return;
+    this.verificarSiEstoyMuerto();
+
+    // mirar alrededor
+    this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
+    this.amigos = this.buscarPersonasDeMiBando();
+    this.enemigoMasCerca = this.buscarEnemigoMasCerca();
+    this.buscarObstaculosBienCerquitaMio();
+
+    //hacer cosas
     this.seguirAlLider();
-
     this.cohesion();
-
-    this.alineacion();
+    // this.alineacion();
     this.separacion();
 
     // this.escapar();
     this.perseguir();
 
-    this.aplicarFisica();
-
-    this.verificarSiEstoyMuerto();
-
-    this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
-    this.amigos = this.buscarPersonasDeMiBando();
-    this.enemigoMasCerca = this.buscarEnemigoMasCerca();
-    this.buscarObstaculosBienCerquitaMio();
     this.noChocarConObstaculos();
     this.repelerSuavementeObstaculos();
 
     this.pegarSiEstaEnMiRango();
+
+    //moverse
+    this.aplicarFisica();
 
     this.calcularAnguloYVelocidadLineal();
 

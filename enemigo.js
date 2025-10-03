@@ -7,26 +7,25 @@ class Enemigo extends Persona {
 
   tick() {
     if (this.muerto) return;
-
-    this.cohesion();
-
-    this.alineacion();
-    this.separacion();
-
-    // this.escapar();
-    this.perseguir();
-
-    this.aplicarFisica();
-
     this.verificarSiEstoyMuerto();
 
     this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
     this.amigos = this.buscarPersonasDeMiBando();
     this.enemigoMasCerca = this.buscarEnemigoMasCerca();
     this.buscarObstaculosBienCerquitaMio();
+
+    //
+    this.cohesion();
+    this.alineacion();
+    this.separacion();
+    // this.escapar();
+    this.perseguir();
+
     this.noChocarConObstaculos();
     this.repelerSuavementeObstaculos();
     this.pegarSiEstaEnMiRango();
+
+    this.aplicarFisica();
 
     this.calcularAnguloYVelocidadLineal();
 

@@ -217,21 +217,15 @@ class Juego {
       );
 
       if (nuevoZoom !== this.zoom) {
-        // Obtener la posición del mouse antes del zoom
-        const mouseX = event.x;
-        const mouseY = event.y;
-
-        // Calcular el punto en coordenadas del mundo antes del zoom
-        const worldPosX = (mouseX - this.containerPrincipal.x) / this.zoom;
-        const worldPosY = (mouseY - this.containerPrincipal.y) / this.zoom;
-
         // Aplicar el nuevo zoom
         this.zoom = nuevoZoom;
         this.containerPrincipal.scale.set(this.zoom);
 
-        // Ajustar la posición del contenedor para mantener el mouse en el mismo punto del mundo
-        this.containerPrincipal.x = mouseX - worldPosX * this.zoom;
-        this.containerPrincipal.y = mouseY - worldPosY * this.zoom;
+        // Recentrar la cámara en el targetCamara
+        this.containerPrincipal.x =
+          -this.targetCamara.posicion.x * this.zoom + this.width / 2;
+        this.containerPrincipal.y =
+          -this.targetCamara.posicion.y * this.zoom + this.height / 2;
       }
     });
   }
@@ -325,7 +319,7 @@ class Juego {
       obstaculo.dibujarCirculo();
     }
 
-    this.hacerQLaCamaraSigaAlProtagonista();
+    this.hacerQLaCamaraSigaAAlguien();
   }
 
   toggleIluminacion() {
@@ -345,7 +339,7 @@ class Juego {
     }
   }
 
-  hacerQLaCamaraSigaAlProtagonista() {
+  hacerQLaCamaraSigaAAlguien() {
     if (!this.targetCamara) return;
     // Ajustar la posición considerando el zoom actual
     let targetX = -this.targetCamara.posicion.x * this.zoom + this.width / 2;

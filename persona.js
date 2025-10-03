@@ -6,16 +6,16 @@ class Persona extends GameObject {
     this.bando = 0; //bando default
 
     this.coraje = Math.random();
-    this.vision = Math.random() * 400 + 200;
+    this.vision = Math.random() * 400 + 400;
 
     this.fuerzaDeAtaque = 0.01 + Math.random() * 0.01;
-    this.radio = 10 + Math.random() * 3;
+    this.radio = 7 + Math.random() * 3;
     this.rangoDeAtaque = this.radio * 3;
 
     this.factorPerseguir = 0.15;
 
     this.factorSeparacion = 0.5;
-    this.factorCohesion = 0.3;
+    this.factorCohesion = 0.2;
     this.factorAlineacion = 0.4;
 
     this.aceleracionMaxima = 0.2;
@@ -58,8 +58,8 @@ class Persona extends GameObject {
     if (this.obstaculosCercaMio.length == 0) return;
 
     const posicionFutura = {
-      x: this.posicion.x + this.velocidad.x * 3,
-      y: this.posicion.y + this.velocidad.y * 3,
+      x: this.posicion.x + this.velocidad.x * 10,
+      y: this.posicion.y + this.velocidad.y * 10,
     };
 
     let fuerzaRepulsionTotal = { x: 0, y: 0 };
@@ -102,13 +102,13 @@ class Persona extends GameObject {
 
     for (let obstaculo of this.obstaculosConLosQueMeEstoyChocando) {
       const posicionObstaculo = obstaculo.getPosicionCentral();
-      const vectorRepulsion = limitarVector({
+      const vectorRepulsion = {
         x: posicionFutura.x - posicionObstaculo.x,
         y: posicionFutura.y - posicionObstaculo.y,
-      });
+      };
 
-      this.aceleracion.x += vectorRepulsion.x * 3;
-      this.aceleracion.y += vectorRepulsion.y * 3;
+      this.aceleracion.x += vectorRepulsion.x;
+      this.aceleracion.y += vectorRepulsion.y;
     }
   }
 
@@ -208,18 +208,18 @@ class Persona extends GameObject {
     //verctor vacio donde vamos a ir sumando posiciones
     let vectorPromedioDePosiciones = { x: 0, y: 0 };
     //iteramos por todos los amigos
-    const amigosSinElLider = this.amigos.filter(
-      (persona) => persona !== this.juego.protagonista
-    );
-    for (const persona of amigosSinElLider) {
-      if (persona !== this) {
-        //si la persona ota no soy yo
-        const distancia = calcularDistancia(this.posicion, persona.posicion);
-        if (distancia < this.vision && distancia > this.radio * 2) {
-          cont++;
-          vectorPromedioDePosiciones.x += persona.posicion.x;
-          vectorPromedioDePosiciones.y += persona.posicion.y;
-        }
+
+    for (const persona of this.amigos) {
+      if (persona === this || persona === this.juego.protagonista) continue;
+      //si la persona ota no soy yo y no es el protagonista
+      const distancia = calcularDistancia(this.posicion, persona.posicion);
+      const sumaDeRadios = this.radio + persona.radio;
+      const distanciaMinima = sumaDeRadios * 3;
+      if (distancia < this.vision && distancia > distanciaMinima) {
+        //si la persona esta muy cerca no nos acercamos a ella
+        cont++;
+        vectorPromedioDePosiciones.x += persona.posicion.x;
+        vectorPromedioDePosiciones.y += persona.posicion.y;
       }
     }
     if (cont == 0) return;
@@ -227,11 +227,23 @@ class Persona extends GameObject {
     vectorPromedioDePosiciones.x /= cont;
     vectorPromedioDePosiciones.y /= cont;
 
-    let vectorNuevo = {
+    let vectorNuevo = limitarVector({
       x: vectorPromedioDePosiciones.x - this.posicion.x,
       y: vectorPromedioDePosiciones.y - this.posicion.y,
-    };
-    vectorNuevo = limitarVector(vectorNuevo, 1);
+    });
+
+    const distanciaAlPromedioDePosiciones = calcularDistancia(
+      this.posicion,
+      vectorPromedioDePosiciones
+    );
+
+    const distanciaMinima = this.radio * 14;
+    if (distanciaAlPromedioDePosiciones < distanciaMinima) return;
+
+    const factorDistancia = distanciaAlPromedioDePosiciones / distanciaMinima;
+    vectorNuevo.x *= factorDistancia;
+    vectorNuevo.y *= factorDistancia;
+
     this.aceleracion.x += this.factorCohesion * vectorNuevo.x;
     this.aceleracion.y += this.factorCohesion * vectorNuevo.y;
   }

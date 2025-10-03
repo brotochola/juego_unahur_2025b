@@ -17,6 +17,9 @@ class Protagonista extends Persona {
     this.bando = 1; // Bando del jugador
     this.crearSpritesheetAnimado(this.bando);
     this.container.label = "prota";
+    this.factorIrAlTarget = 0.9;
+    this.distanciaParaEmpezarABajarLaVelocidad = this.radio * 20;
+    this.distanciaAlTarget = Infinity;
   }
 
   morir() {
@@ -28,32 +31,31 @@ class Protagonista extends Persona {
   }
 
   tick() {
-    /**
-     * CICLO DE ACTUALIZACIÓN DEL PROTAGONISTA
-     *
-     * Diferencias con Persona base:
-     * - No usa separación automática (el jugador controla el movimiento)
-     * - No ejecuta acciones de combate automáticas
-     * - El movimiento se basa en input del mouse
-     *
-     * Orden de ejecución:
-     * 1. Procesar input del jugador (mouse)
-     * 2. Aplicar física del movimiento
-     * 3. Actualizar contexto de combate
-     * 4. Calcular datos de animación
-     */
-    this.irAlTarget(); // Control por mouse
-    this.aplicarFisica(); // Física del movimiento
+    /*
+
+El protagonista no usa separación automática, ni alineacion ni cohesion. Pero sigue al mouse.
+Si esta cerca del target, no repele obstaculos.
+Si esta muy lejos del target, repelo obstaculos de forma piola, para ir llegando, pero si queres meterte en algun recoveco
+y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
+
+*/
 
     this.verificarSiEstoyMuerto();
 
-    // Actualizar contexto táctico
+    this.irAlTarget(); // Control por mouse
+
     this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
     this.amigos = this.buscarPersonasDeMiBando();
     this.enemigoMasCerca = this.buscarEnemigoMasCerca();
     this.buscarObstaculosBienCerquitaMio();
     this.noChocarConObstaculos();
-    this.repelerSuavementeObstaculos();
+
+    //si no estoy cerca del target, repelo obstaculos de forma piola
+    if (this.distanciaAlTarget > this.distanciaParaEmpezarABajarLaVelocidad) {
+      this.repelerSuavementeObstaculos();
+    }
+
+    this.aplicarFisica(); // Física del movimiento
 
     // Datos para animación
     this.calcularAnguloYVelocidadLineal();
@@ -89,22 +91,27 @@ class Protagonista extends Persona {
     // Calcular vector hacia el objetivo
     const difX = this.juego.mouse.up.x - this.posicion.x;
     const difY = this.juego.mouse.up.y - this.posicion.y;
-    const dist = calcularDistancia(this.posicion, this.juego.mouse.up);
+    this.distanciaAlTarget = calcularDistancia(
+      this.posicion,
+      this.juego.mouse.up
+    );
 
     // Normalizar dirección
     const vectorNuevo = limitarVector({ x: difX, y: difY }, 1);
 
     // Sistema de desaceleración progresiva
-    const distanciaParaEmpezarABajarLaVelocidad = this.rangoDeAtaque * 3;
-    if (dist < distanciaParaEmpezarABajarLaVelocidad) {
+
+    if (this.distanciaAlTarget < this.distanciaParaEmpezarABajarLaVelocidad) {
       // Curva cúbica de desaceleración para aproximación suave
-      const factor = (dist / distanciaParaEmpezarABajarLaVelocidad) ** 3;
+      const factor =
+        (this.distanciaAlTarget / this.distanciaParaEmpezarABajarLaVelocidad) **
+        3;
       vectorNuevo.x *= factor;
       vectorNuevo.y *= factor;
     }
 
     // Aplicar fuerza de movimiento
-    this.aceleracion.x += vectorNuevo.x;
-    this.aceleracion.y += vectorNuevo.y;
+    this.aceleracion.x += vectorNuevo.x * this.factorIrAlTarget;
+    this.aceleracion.y += vectorNuevo.y * this.factorIrAlTarget;
   }
 }
