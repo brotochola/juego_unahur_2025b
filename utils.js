@@ -83,13 +83,12 @@ function crearSpriteConGradiente(radio = 300) {
       radio // círculo exterior
     );
 
+    const cantStops = 10;
+    for (let i = 1; i <= cantStops; i++) {
+      const value = 2 ** (1 - i);
+      gradient.addColorStop(i / cantStops, "rgba(255,255,255," + value + ")"); // Centro blanco (sin oscuridad)
+    }
     // Configurar paradas del gradiente
-    gradient.addColorStop(0, "white"); // Centro blanco (sin oscuridad)
-    gradient.addColorStop(0.2, "rgba(255,255,255,0.5)"); // Transición
-    gradient.addColorStop(0.4, "rgba(255,255,255,0.25)"); // Más transición
-    gradient.addColorStop(0.6, "rgba(255,255,255,0.125)"); // Más transición
-    gradient.addColorStop(0.8, "rgba(255,255,255,0.0625)"); // Más transición
-    gradient.addColorStop(1, "rgba(255,255,255,0)"); // Borde transparente
 
     // Llenar todo el canvas de negro primero
     ctx.fillStyle = "transparent";

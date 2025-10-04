@@ -168,7 +168,7 @@ class Nivel {
         sprite.scale.set(item.scaleX, item.scaleY);
         sprite.x = item.x + this.offsetX;
         sprite.y = item.y + this.offsetY;
-        this.juego.containerPrincipal.addChild(sprite);
+        this.juego.containerBG.addChild(sprite);
         sprite.label = item.type;
         sprite.zIndex = -999999999 + item.y;
       }

@@ -21,6 +21,7 @@ class Persona extends GameObject {
     this.aceleracionMaxima = 0.2;
     this.velocidadMaxima = 3;
     this.amigos = [];
+    this.crearSombra();
   }
 
   buscarPersonasDeMiBando() {

@@ -1,3 +1,11 @@
+const Z_INDEX = {
+  containerBG: 0,
+  graficoSombrasProyectadas: 1,
+
+  containerIluminacion: 2,
+  containerPrincipal: 3,
+};
+
 class Juego {
   pixiApp;
   personas = [];
@@ -12,9 +20,12 @@ class Juego {
   protagonista;
   width;
   height;
+  debug = false;
+  distanciaALaQueLosObjetosTienenTodaLaLuz = 157;
+  factorMagicoArriba = 2;
+  factorMagicoAbajo = 2.18;
 
   constructor() {
-    this.iluminacion = false;
     this.updateDimensions();
     this.anchoDelMapa = 5000;
     this.altoDelMapa = 5000;
@@ -91,17 +102,32 @@ class Juego {
     this.fondo.tileScale.set(0.5);
     this.fondo.width = this.anchoDelMapa;
     this.fondo.height = this.altoDelMapa;
-    this.containerPrincipal.addChild(this.fondo);
+    this.containerBG.addChild(this.fondo);
   }
-  async crearNivel() {
-    this.containerPrincipal = new PIXI.Container();
 
+  crearContainerBG() {
+    this.containerBG = new PIXI.Container();
+    this.containerBG.label = "containerBG";
+    this.containerBG.zIndex = Z_INDEX.containerBG;
+
+    this.pixiApp.stage.addChild(this.containerBG);
+  }
+  crearGraficoDebug() {
     this.graficoDebug = new PIXI.Graphics();
     this.graficoDebug.zIndex = 51231231231;
     this.graficoDebug.label = "graficoDebug";
     this.containerPrincipal.addChild(this.graficoDebug);
+  }
 
+  async crearNivel() {
+    this.containerPrincipal = new PIXI.Container();
+    this.containerPrincipal.label = "containerPrincipal";
+    this.containerPrincipal.zIndex = Z_INDEX.containerPrincipal;
     this.pixiApp.stage.addChild(this.containerPrincipal);
+
+    this.crearContainerBG();
+    this.crearGraficoDebug();
+
     await this.cargarTexturas();
     this.crearFondo();
 
@@ -122,7 +148,8 @@ class Juego {
 
     this.crearAmigos(400);
 
-    this.crearSistemaDeIluminacion(); // Sistema nuevo de sprites individuales
+    // Crear el sistema de iluminación
+    this.sistemaDeIluminacion = new SistemaDeIluminacion(this);
   }
   crearCasitasRandom() {
     for (let i = 0; i < 100; i++) {
@@ -218,14 +245,13 @@ class Juego {
 
       if (nuevoZoom !== this.zoom) {
         // Aplicar el nuevo zoom
-        this.zoom = nuevoZoom;
-        this.containerPrincipal.scale.set(this.zoom);
+        this.cambiarZoom(nuevoZoom);
 
         // Recentrar la cámara en el targetCamara
-        this.containerPrincipal.x =
-          -this.targetCamara.posicion.x * this.zoom + this.width / 2;
-        this.containerPrincipal.y =
-          -this.targetCamara.posicion.y * this.zoom + this.height / 2;
+        this.moverContainerPrincipalA(
+          -this.targetCamara.posicion.x * this.zoom + this.width / 2,
+          -this.targetCamara.posicion.y * this.zoom + this.height / 2
+        );
       }
     });
   }
@@ -239,75 +265,15 @@ class Juego {
     };
   }
 
-  crearSistemaDeIluminacion() {
-    console.log("crearSistemaDeIluminacion");
-    this.graficoSombrasProyectadas = new PIXI.Graphics();
-    this.graficoSombrasProyectadas.zIndex = 3;
-    this.graficoSombrasProyectadas.label = "graficoSombrasProyectadas";
-    this.graficoSombrasProyectadas.blendMode = "multiply";
-    this.containerPrincipal.addChild(this.graficoSombrasProyectadas);
-
-    this.blurParaElGraficoDeSombrasProyectadas = new PIXI.BlurFilter({
-      strength: 8,
-      quality: 2,
-      kernelSize: 5,
-    });
-    this.graficoSombrasProyectadas.filters = [
-      this.blurParaElGraficoDeSombrasProyectadas,
-    ];
-
-    // Solo crear el sistema de iluminación una vez
-    setTimeout(() => {
-      // Solo crear si no existe ya
-      if (!this.containerDeIluminacion) {
-        this.containerDeIluminacion = new PIXI.Container();
-        this.containerDeIluminacion.label = "containerDeIluminacion";
-        this.containerDeIluminacion.sortableChildren = true; // Para que funcione el zIndex
-
-        this.containerPrincipal.addChild(this.containerDeIluminacion);
-
-        // Primero crear el sprite negro de fondo
-        const spriteNegro = crearSpriteNegro(
-          this.anchoDelMapa,
-          this.altoDelMapa
-        );
-        spriteNegro.label = "spriteNegro";
-        // spriteNegro.x = -this.anchoDelMapa;
-        // spriteNegro.y = -this.altoDelMapa;
-        spriteNegro.zIndex = 1; // Debajo del gradiente
-        this.containerDeIluminacion.addChild(spriteNegro);
-
-        // Crear sprites individuales para cada farol usando sus propios métodos
-        for (let farol of this.faroles) {
-          const spriteGradiente = crearSpriteConGradiente(700);
-          spriteGradiente.x = farol.posicion.x;
-          spriteGradiente.y = farol.posicion.y;
-          spriteGradiente.zIndex = 2; // Encima del sprite negro
-
-          this.containerDeIluminacion.addChild(spriteGradiente);
-        }
-
-        this.containerDeIluminacion.zIndex = 2;
-        this.containerDeIluminacion.alpha = 0.8;
-        this.containerDeIluminacion.cacheAsBitmap = true;
-        this.containerDeIluminacion.blendMode = "multiply";
-      }
-
-      // Siempre actualizar la visibilidad basada en el estado actual
-      this.containerDeIluminacion.visible = this.iluminacion;
-    }, 1000);
-  }
-
   gameLoop(time) {
-    //borrar lo q hay en los graficos debug y sombras proyectadas
-    if (this.graficoSombrasProyectadas) this.graficoSombrasProyectadas.clear();
+    //borrar lo q hay en los graficos debug
     if (this.graficoDebug) this.graficoDebug.clear();
 
-    if (this.iluminacion) {
-      for (let farol of this.faroles) {
-        farol.actualizarLineas();
-      }
+    // Actualizar el sistema de iluminación
+    if (this.sistemaDeIluminacion) {
+      this.sistemaDeIluminacion.tick();
     }
+
     //iteramos por todos los personas
     for (let unpersona of this.personas) {
       //ejecutamos el metodo tick de cada persona
@@ -315,27 +281,34 @@ class Juego {
       unpersona.render();
     }
 
-    for (let obstaculo of this.obstaculos) {
-      obstaculo.dibujarCirculo();
+    // for (let monumento of this.monumentos) {
+    //   monumento.render();
+    // }
+    // for (let arbol of this.arboles) {
+    //   arbol.render();
+    // }
+
+    if (this.debug) {
+      for (let obstaculo of this.obstaculos) {
+        obstaculo.dibujarCirculo();
+      }
+      for (let unpersona of this.personas) {
+        unpersona.dibujarCirculo();
+      }
+      for (let monumento of this.monumentos) {
+        monumento.dibujarCirculo();
+      }
+      for (let arbol of this.arboles) {
+        arbol.dibujarCirculo();
+      }
     }
 
     this.hacerQLaCamaraSigaAAlguien();
   }
 
   toggleIluminacion() {
-    this.iluminacion = !this.iluminacion;
-
-    // Alternar visibilidad del sistema de sprites individuales
-    if (this.containerDeIluminacion)
-      this.containerDeIluminacion.visible = this.iluminacion;
-
-    for (let obj of [
-      ...this.autos,
-      ...this.personas,
-      ...this.arboles,
-      ...this.monumentos,
-    ]) {
-      obj.cambiarTintParaSimularIluminacion();
+    if (this.sistemaDeIluminacion) {
+      this.sistemaDeIluminacion.toggle();
     }
   }
 
@@ -348,8 +321,23 @@ class Juego {
     const x = (targetX - this.containerPrincipal.x) * 0.1;
     const y = (targetY - this.containerPrincipal.y) * 0.1;
 
-    this.containerPrincipal.x += x;
-    this.containerPrincipal.y += y;
+    this.moverContainerPrincipalA(
+      this.containerPrincipal.x + x,
+      this.containerPrincipal.y + y
+    );
+  }
+
+  moverContainerPrincipalA(x, y) {
+    this.containerPrincipal.x = x;
+    this.containerPrincipal.y = y;
+    this.containerBG.x = x;
+    this.containerBG.y = y;
+  }
+
+  cambiarZoom(zoom) {
+    this.zoom = zoom;
+    this.containerPrincipal.scale.set(this.zoom);
+    this.containerBG.scale.set(this.zoom);
   }
 
   finDelJuego() {

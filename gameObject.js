@@ -145,7 +145,9 @@ class GameObject {
   }
 
   calcularZindex() {
-    const base = 5000;
+    const base = 50000;
+    if (!this.sprite) return this.posicion.y + base;
+
     return this.isometric
       ? this.posicion.y - this.sprite.width * 0.29 + base
       : this.posicion.y + base;
@@ -274,13 +276,20 @@ class GameObject {
   }
 
   render() {
-    this.dibujarCirculo();
     if (!this.container || this.muerto) return;
 
     this.container.x = this.posicion.x;
     this.container.y = this.posicion.y;
-    this.container.zIndex = this.calcularZindex();
-    this.cambiarTintParaSimularIluminacion();
+    try {
+      this.container.zIndex = this.calcularZindex();
+    } catch (e) {
+      console.warn(e);
+    }
+    try {
+      this.cambiarTintParaSimularIluminacion();
+    } catch (e) {
+      console.warn(e);
+    }
   }
 
   dibujarCirculo() {
@@ -297,8 +306,45 @@ class GameObject {
     this.juego.graficoDebug.stroke({ color: 0x000000, width: 1 });
   }
 
+  getPosicionEnPantalla() {
+    let posicionCentral = this.getPosicionCentral();
+
+    return {
+      x: posicionCentral.x * this.juego.zoom + this.juego.containerPrincipal.x,
+      y: posicionCentral.y * this.juego.zoom + this.juego.containerPrincipal.y,
+    };
+  }
+
+  async crearSombra() {
+    await PIXI.Assets.load({
+      alias: "sombra",
+      src: "/assets/pixelart/sombra.png",
+    });
+    this.sombra = new PIXI.Sprite(PIXI.Assets.get("sombra"));
+
+    this.sombra.zIndex = -1;
+    this.sombra.anchor.set(0.5, 0.5);
+    this.sombra.width = this.radio * 3;
+    this.sombra.height = this.radio * 1.33;
+    this.sombra.alpha = 0.8;
+    this.container.addChild(this.sombra);
+  }
+
+  estoyVisibleEnPantalla(changui = 1) {
+    //el changui es un multiplicador para el tamaño de pantalla
+    //1 es el tamaño normal de la pantalla
+    //2 es el doble, entonces es como si: si fuera el doble de grande, se veria en pantalla?
+    let posicionEnPantalla = this.getPosicionEnPantalla();
+    return (
+      posicionEnPantalla.x > 0 - this.juego.width * (changui - 1) &&
+      posicionEnPantalla.x < this.juego.width * changui &&
+      posicionEnPantalla.y > 0 - this.juego.height * (changui - 1) &&
+      posicionEnPantalla.y < this.juego.height * changui
+    );
+  }
+
   cambiarTintParaSimularIluminacion() {
-    if (!this.juego.iluminacion) {
+    if (!this.juego.sistemaDeIluminacion?.isActivo()) {
       this.container.tint = 0xffffff;
       return;
     }
@@ -312,10 +358,14 @@ class GameObject {
 
   calcularLuz() {
     let luz = 0;
-    const distanciaALaQueTieneTodaLaLuz = 100;
+    const factorMagico = 10;
+
     for (let farol of this.juego.faroles) {
       const dist = calcularDistancia(farol.posicion, this.posicion);
-      luz += distanciaALaQueTieneTodaLaLuz ** 2 / dist ** 2;
+      luz +=
+        this.juego.distanciaALaQueLosObjetosTienenTodaLaLuz **
+          this.juego.factorMagicoArriba /
+        dist ** this.juego.factorMagicoAbajo;
     }
 
     if (luz > 1) luz = 1;
