@@ -284,7 +284,7 @@ class Persona extends GameObject {
 
     // if (this.sprite) this.sprite.destroy();
     // if (this.container) this.container.destroy();
-
+    this.container.zIndex = this.calcularZindex();
     this.borrarmeComoTargetDeTodos();
   }
 
@@ -366,6 +366,8 @@ class Persona extends GameObject {
 
     if (this.muerto) {
       this.sprite.changeAnimation("hurt");
+      // this.sprite.anchor.set(0.5, 0);
+      // this.sprite.y = -this.sprite.height;
       this.sprite.loop = false;
       return;
     }

@@ -148,9 +148,16 @@ class GameObject {
     const base = 50000;
     if (!this.sprite) return this.posicion.y + base;
 
-    return this.isometric
-      ? this.posicion.y - this.sprite.width * 0.29 + base
-      : this.posicion.y + base;
+    if (this.isometric) {
+      return this.posicion.y - this.sprite.width * 0.29 + base;
+    } else {
+      if (this.muerto) {
+        //como el dibujo de los chabones cuando mueren es q se caen palante...
+        return this.posicion.y - this.sprite.height * 0.66 + base;
+      } else {
+        return this.posicion.y + base;
+      }
+    }
   }
 
   getPosicionCentral() {
