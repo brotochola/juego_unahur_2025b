@@ -211,17 +211,11 @@ class SistemaDeIluminacion {
         const puntoControlY =
           centroY + Math.sin(anguloAlCentro) * extensionCurva * zoom;
 
-        this.juego.sistemaDeIluminacion.graficoSombrasProyectadas.moveTo(
-          puntoTangente1x,
-          puntoTangente1y
-        );
-        this.juego.sistemaDeIluminacion.graficoSombrasProyectadas.lineTo(
-          puntoFinal1x,
-          puntoFinal1y
-        );
+        this.graficoSombrasProyectadas.moveTo(puntoTangente1x, puntoTangente1y);
+        this.graficoSombrasProyectadas.lineTo(puntoFinal1x, puntoFinal1y);
 
         // Dibujar curva en lugar de línea recta para el lado alejado
-        this.juego.sistemaDeIluminacion.graficoSombrasProyectadas.quadraticCurveTo(
+        this.graficoSombrasProyectadas.quadraticCurveTo(
           puntoControlX,
           puntoControlY, // Punto de control de la curva
           puntoFinal2x,
@@ -249,16 +243,16 @@ class SistemaDeIluminacion {
           puntoTangente1y // Punto inicial
         );
 
-        let cantDecantSombra = (farol.radioLuz ** 1.5 / distancia ** 2) * 0.33;
-        if (cantDecantSombra > 0.33) cantDecantSombra = 0.33;
-        if (cantDecantSombra < 0) cantDecantSombra = 0;
+        let cantDeSombra = (farol.radioLuz ** 1.5 / distancia ** 2) * 0.33;
+        if (cantDeSombra > 0.33) cantDeSombra = 0.33;
+        if (cantDeSombra < 0) cantDeSombra = 0;
 
         this.graficoSombrasProyectadas.fill({
           color: 0x000000,
-          alpha: cantDecantSombra,
+          alpha: cantDeSombra,
         });
 
-        // if (this.juego.stroke) this.juego.sistemaDeIluminacion.graficoSombrasProyectadas.stroke();
+        // if (this.juego.stroke) this.graficoSombrasProyectadas.stroke();
       }
     }
   }
