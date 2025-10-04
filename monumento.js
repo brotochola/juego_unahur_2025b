@@ -10,10 +10,6 @@ class Monumento extends EntidadEstatica {
     this.juego.obstaculos.push(this);
   }
 
-  calcularRadio() {
-    this.radio = this.sprite.width * 0.33; //creo q este ratio va bien
-  }
-
   async crearSprite() {
     this.sprite = new PIXI.Sprite(
       await PIXI.Assets.load("/assets/pixelart/" + this.tipo + ".png")

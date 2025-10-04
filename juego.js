@@ -1,7 +1,6 @@
 const Z_INDEX = {
   containerBG: 0,
   graficoSombrasProyectadas: 1,
-
   containerIluminacion: 2,
   containerPrincipal: 3,
 };
@@ -20,7 +19,7 @@ class Juego {
   protagonista;
   width;
   height;
-  debug = false;
+  debug = true;
   distanciaALaQueLosObjetosTienenTodaLaLuz = 157;
   factorMagicoArriba = 2;
   factorMagicoAbajo = 2.18;
@@ -51,6 +50,10 @@ class Juego {
       this.updateDimensions();
       if (this.pixiApp) {
         this.pixiApp.renderer.resize(this.width, this.height);
+      }
+      // Redimensionar la RenderTexture del sistema de iluminación
+      if (this.sistemaDeIluminacion) {
+        this.sistemaDeIluminacion.redimensionarRenderTexture();
       }
     });
   }
@@ -149,7 +152,7 @@ class Juego {
     this.crearAmigos(400);
 
     // Crear el sistema de iluminación
-    this.sistemaDeIluminacion = new SistemaDeIluminacion(this);
+    // this.sistemaDeIluminacion = new SistemaDeIluminacion(this);
   }
   crearCasitasRandom() {
     for (let i = 0; i < 100; i++) {

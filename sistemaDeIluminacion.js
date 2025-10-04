@@ -4,7 +4,10 @@ class SistemaDeIluminacion {
     this.activo = false;
     this.inicializado = false;
     this.graficoSombrasProyectadas = null;
-    this.containerDeIluminacion = null;
+    this.renderTexture = null;
+    this.spriteDeIluminacion = null;
+    this.containerParaRenderizar = null;
+    this.spriteNegro = null;
     this.blurParaElGraficoDeSombrasProyectadas = null;
 
     this.inicializar();
@@ -12,10 +15,9 @@ class SistemaDeIluminacion {
   crearGraficoSombrasProyectadas() {
     // Crear el gráfico de sombras proyectadas
     this.graficoSombrasProyectadas = new PIXI.Graphics();
-    this.graficoSombrasProyectadas.zIndex = Z_INDEX.graficoSombrasProyectadas;
+    this.graficoSombrasProyectadas.zIndex = 3; // Encima del fondo negro y los gradientes
     this.graficoSombrasProyectadas.label = "graficoSombrasProyectadas";
-    this.graficoSombrasProyectadas.blendMode = "multiply";
-    this.juego.pixiApp.stage.addChild(this.graficoSombrasProyectadas);
+    // No necesita blendMode porque está dentro del containerParaRenderizar
 
     // Crear el filtro de blur para las sombras
     this.blurParaElGraficoDeSombrasProyectadas = new PIXI.BlurFilter({
@@ -26,52 +28,82 @@ class SistemaDeIluminacion {
     this.graficoSombrasProyectadas.filters = [
       this.blurParaElGraficoDeSombrasProyectadas,
     ];
+
+    // Agregar al containerParaRenderizar en lugar del stage
+    this.containerParaRenderizar.addChild(this.graficoSombrasProyectadas);
   }
 
   inicializar() {
     // Crear el sistema de iluminación después de un pequeño delay
     // para asegurarse de que los faroles estén cargados
     setTimeout(() => {
-      this.crearContainerDeIluminacion();
-      this.crearGraficoSombrasProyectadas();
+      this.crearSistemaDeIluminacionConRenderTexture();
+      this.crearGraficoSombrasProyectadas(); // Debe ir después porque se agrega al containerParaRenderizar
       this.inicializado = true;
       this.toggle();
     }, 1000);
   }
 
-  crearContainerDeIluminacion() {
-    this.containerDeIluminacion = new PIXI.Container();
-    this.containerDeIluminacion.label = "containerDeIluminacion";
-    this.containerDeIluminacion.zIndex = Z_INDEX.containerIluminacion;
-    this.containerDeIluminacion.sortableChildren = true; // Para que funcione el zIndex
+  crearSistemaDeIluminacionConRenderTexture() {
+    // Crear RenderTexture del tamaño de la pantalla
+    this.renderTexture = PIXI.RenderTexture.create({
+      width: this.juego.width,
+      height: this.juego.height,
+    });
 
-    this.juego.pixiApp.stage.addChild(this.containerDeIluminacion);
+    // Crear sprite que mostrará la RenderTexture
+    this.spriteDeIluminacion = new PIXI.Sprite(this.renderTexture);
+    this.spriteDeIluminacion.label = "spriteDeIluminacion";
+    this.spriteDeIluminacion.zIndex = Z_INDEX.containerIluminacion;
+    this.spriteDeIluminacion.blendMode = "multiply";
+    this.spriteDeIluminacion.alpha = 0.99;
+    this.juego.pixiApp.stage.addChild(this.spriteDeIluminacion);
 
-    // Primero crear el sprite negro de fondo
-    const spriteNegro = crearSpriteNegro(this.juego.width, this.juego.height);
-    spriteNegro.label = "spriteNegro";
-    spriteNegro.zIndex = 1; // Debajo del gradiente
-    this.containerDeIluminacion.addChild(spriteNegro);
+    // Crear container temporal para renderizar (no se agrega al stage)
+    this.containerParaRenderizar = new PIXI.Container();
+    this.containerParaRenderizar.sortableChildren = true;
 
-    // Crear sprites individuales para cada farol usando sus propios métodos
+    // Crear el sprite negro de fondo
+    this.spriteNegro = crearSpriteNegro(this.juego.width, this.juego.height);
+    this.spriteNegro.label = "spriteNegro";
+    this.spriteNegro.zIndex = 1;
+    this.containerParaRenderizar.addChild(this.spriteNegro);
+
+    // Crear sprites de gradiente para cada farol
     for (let farol of this.juego.faroles) {
       farol.spriteGradiente = crearSpriteConGradiente(farol.radioLuz);
-      const posicionEnPantalla = farol.getPosicionEnPantalla();
-      farol.spriteGradiente.x = posicionEnPantalla.x;
-      farol.spriteGradiente.y = posicionEnPantalla.y;
-      farol.spriteGradiente.scale.set(this.juego.zoom);
-      farol.spriteGradiente.zIndex = 2; // Encima del sprite negro
-
-      this.containerDeIluminacion.addChild(farol.spriteGradiente);
+      farol.spriteGradiente.zIndex = 2;
+      this.containerParaRenderizar.addChild(farol.spriteGradiente);
     }
 
-    this.containerDeIluminacion.zIndex = 2;
-    this.containerDeIluminacion.alpha = 0.99;
-    this.containerDeIluminacion.cacheAsBitmap = true;
-    this.containerDeIluminacion.blendMode = "multiply";
-
     // Establecer la visibilidad inicial
-    this.containerDeIluminacion.visible = this.activo;
+    this.spriteDeIluminacion.visible = this.activo;
+  }
+
+  redimensionarRenderTexture() {
+    if (!this.renderTexture || !this.spriteDeIluminacion) return;
+
+    // Destruir la RenderTexture anterior
+    this.renderTexture.destroy(true);
+
+    // Crear nueva RenderTexture con el nuevo tamaño
+    this.renderTexture = PIXI.RenderTexture.create({
+      width: this.juego.width,
+      height: this.juego.height,
+    });
+
+    // Actualizar la textura del sprite
+    this.spriteDeIluminacion.texture = this.renderTexture;
+
+    // Recrear el sprite negro con el nuevo tamaño
+    if (this.spriteNegro) {
+      this.containerParaRenderizar.removeChild(this.spriteNegro);
+      this.spriteNegro.destroy();
+    }
+    this.spriteNegro = crearSpriteNegro(this.juego.width, this.juego.height);
+    this.spriteNegro.label = "spriteNegro";
+    this.spriteNegro.zIndex = 1;
+    this.containerParaRenderizar.addChild(this.spriteNegro);
   }
 
   tick() {
@@ -80,9 +112,9 @@ class SistemaDeIluminacion {
       this.graficoSombrasProyectadas.clear();
     }
 
-    // Si la iluminación está activa, actualizar las líneas de los faroles
+    // Si la iluminación está activa, actualizar y renderizar
     if (this.activo) {
-      this.containerDeIluminacion.cacheAsBitmap = false;
+      // Actualizar posiciones de los sprites de gradiente
       for (let farol of this.juego.faroles) {
         if (!farol.estoyVisibleEnPantalla(1.33)) {
           farol.spriteGradiente.visible = false;
@@ -97,16 +129,22 @@ class SistemaDeIluminacion {
 
         this.actualizarSombrasProyectadas(farol);
       }
-      this.containerDeIluminacion.cacheAsBitmap = true;
+
+      // Renderizar el container en la RenderTexture
+      this.juego.pixiApp.renderer.render({
+        container: this.containerParaRenderizar,
+        target: this.renderTexture,
+        clear: true,
+      });
     }
   }
 
   toggle() {
     this.activo = !this.activo;
 
-    // Alternar visibilidad del sistema de sprites individuales
-    if (this.containerDeIluminacion) {
-      this.containerDeIluminacion.visible = this.activo;
+    // Alternar visibilidad del sprite de iluminación
+    if (this.spriteDeIluminacion) {
+      this.spriteDeIluminacion.visible = this.activo;
     }
 
     // Cambiar el tint de todos los objetos para simular iluminación

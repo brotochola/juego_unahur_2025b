@@ -9,6 +9,7 @@ class Bondi extends EntidadEstatica {
     this.container.label = "bondi" + this.id;
     this.isometric = true;
     this.crearSprite();
+    this.juego.obstaculos.push(this);
   }
 
   async crearSprite() {
@@ -24,6 +25,7 @@ class Bondi extends EntidadEstatica {
     this.sprite.anchor.set(0.5, 1);
 
     this.container.addChild(this.sprite);
+    this.calcularRadio();
     this.sprite.scale.x = this.scaleX;
     this.render();
   }
