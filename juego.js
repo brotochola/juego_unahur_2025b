@@ -19,10 +19,11 @@ class Juego {
   protagonista;
   width;
   height;
-  debug = true;
+  debug = false;
   distanciaALaQueLosObjetosTienenTodaLaLuz = 157;
   factorMagicoArriba = 2;
   factorMagicoAbajo = 2.18;
+  teclado = {};
 
   constructor() {
     this.updateDimensions();
@@ -92,7 +93,11 @@ class Juego {
   }
 
   agregarListenersDeTeclado() {
+    window.onkeydown = (event) => {
+      this.teclado[event.key.toLowerCase()] = true;
+    };
     window.onkeyup = (event) => {
+      this.teclado[event.key.toLowerCase()] = false;
       if (event.key.toLowerCase() == "u") {
         this.hacerQueLaCamaraSigaAalguienRandom();
       }
@@ -149,7 +154,7 @@ class Juego {
 
     // this.crearArbolesRAndom
 
-    this.crearAmigos(400);
+    // this.crearAmigos(400);
 
     // Crear el sistema de iluminación
     // this.sistemaDeIluminacion = new SistemaDeIluminacion(this);
@@ -174,6 +179,13 @@ class Juego {
   async cargarTexturas() {
     await PIXI.Assets.load(["assets/bg.jpg"]);
   }
+
+  crearUnEnemigo(bando, x, y) {
+    const persona = new Enemigo(x, y, this, bando);
+    this.personas.push(persona);
+    this.enemigos.push(persona);
+  }
+
   crearEnemigos(cant, bando) {
     for (let i = 0; i < cant; i++) {
       const x = Math.random() * this.anchoDelMapa;
@@ -204,6 +216,11 @@ class Juego {
       this.objetosInanimados.push(arbol);
     }
   }
+  crearUnAmigo(x, y) {
+    const persona = new Amigo(x, y, this);
+    this.personas.push(persona);
+    this.amigos.push(persona);
+  }
   crearAmigos(cant) {
     for (let i = 0; i < cant; i++) {
       const x = Math.random() * this.anchoDelMapa;
@@ -221,9 +238,56 @@ class Juego {
     this.protagonista = protagonista;
   }
 
+  segunQueTeclaEstaApretadaHacerCosas() {
+    if (this.teclado[1]) {
+      this.crearUnAmigo(
+        event.x - this.containerPrincipal.x,
+        event.y - this.containerPrincipal.y
+      );
+    }
+    if (this.teclado[2]) {
+      this.crearUnEnemigo(
+        2,
+        event.x - this.containerPrincipal.x,
+        event.y - this.containerPrincipal.y
+      );
+    } else if (this.teclado[3]) {
+      this.crearUnEnemigo(
+        3,
+        event.x - this.containerPrincipal.x,
+        event.y - this.containerPrincipal.y
+      );
+    } else if (this.teclado[4]) {
+      this.crearUnEnemigo(
+        4,
+        event.x - this.containerPrincipal.x,
+        event.y - this.containerPrincipal.y
+      );
+    } else if (this.teclado[5]) {
+      this.crearUnEnemigo(
+        5,
+        event.x - this.containerPrincipal.x,
+        event.y - this.containerPrincipal.y
+      );
+    } else if (this.teclado[6]) {
+      this.crearUnEnemigo(
+        6,
+        event.x - this.containerPrincipal.x,
+        event.y - this.containerPrincipal.y
+      );
+    } else if (this.teclado[7]) {
+      this.crearUnEnemigo(
+        7,
+        event.x - this.containerPrincipal.x,
+        event.y - this.containerPrincipal.y
+      );
+    }
+  }
+
   agregarInteractividadDelMouse() {
     // Escuchar el evento mousemove
     this.pixiApp.canvas.onmousemove = (event) => {
+      this.segunQueTeclaEstaApretadaHacerCosas();
       this.mouse.posicion = this.convertirCoordenadaDelMouse(event.x, event.y);
     };
 

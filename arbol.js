@@ -2,7 +2,7 @@ class Arbol extends EntidadEstatica {
   constructor(x, y, juego, tipo, scaleX) {
     super(x, y, juego);
     this.vida = 1;
-    this.radio = 15;
+    this.radio = 12;
     this.scaleX = scaleX || 1;
     this.tipo = tipo || Math.floor(Math.random() * 2) + 1;
     this.container.label = "arbol" + this.id;
