@@ -352,9 +352,12 @@ class Juego {
     // for (let monumento of this.monumentos) {
     //   monumento.render();
     // }
-    // for (let arbol of this.arboles) {
-    //   arbol.render();
-    // }
+    for (let arbol of this.arboles) {
+      arbol.tick();
+    }
+    for (let farol of this.faroles) {
+      farol.tick();
+    }
 
     if (this.debug) {
       for (let obstaculo of this.obstaculos) {

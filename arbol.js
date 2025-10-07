@@ -8,6 +8,15 @@ class Arbol extends EntidadEstatica {
     this.container.label = "arbol" + this.id;
     this.crearSprite();
     this.juego.obstaculos.push(this);
+
+    // Para la animación de skew
+    this.offsetSkew = Math.random() * Math.PI * 2; // Offset aleatorio para que no todos se muevan igual
+    this.velocidadSkew = 0.1 + Math.random() * 0.05; // Velocidad muy lenta
+    this.cantidadDeSkew = 0.005 + Math.random() * 0.01;
+
+    this.offsetSkew2 = Math.random() * Math.PI * 2; // Offset aleatorio para que no todos se muevan igual
+    this.velocidadSkew2 = 0.1 + Math.random() * 0.05; // Velocidad muy lenta
+    this.cantidadDeSkew2 = 0.005 + Math.random() * 0.01;
   }
 
   async crearSprite() {
@@ -20,5 +29,21 @@ class Arbol extends EntidadEstatica {
     this.render();
   }
 
-  tick() {}
+  tick() {
+    if (this.sprite) {
+      // Incrementar el tiempo lentamente
+
+      // Aplicar skew suave usando seno (-0.05 a 0.05 radianes, muy sutil)
+      this.sprite.skew.x =
+        Math.sin(
+          this.juego.ahora * 0.01 * this.velocidadSkew + this.offsetSkew
+        ) *
+          this.cantidadDeSkew +
+        Math.sin(
+          this.juego.ahora * 0.03 * this.velocidadSkew2 + this.offsetSkew2
+        ) *
+          this.cantidadDeSkew2 *
+          0.3;
+    }
+  }
 }
