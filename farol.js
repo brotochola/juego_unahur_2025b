@@ -9,6 +9,7 @@ class Farol extends EntidadEstatica {
     this.container.label = "arbol" + this.id;
     this.crearSprite();
     this.juego.obstaculos.push(this);
+    this.cantidadDeLuz = 1;
   }
   calcularRadioLuz() {
     this.radioLuz = this.container.height ** 1.3;
@@ -17,7 +18,7 @@ class Farol extends EntidadEstatica {
     this.spriteDeLuz = crearSpriteConGradiente(this.radioLuz * 0.3);
     this.spriteDeLuz.zIndex = 2;
     this.spriteDeLuz.label = "spriteDeLuz";
-    this.spriteDeLuz.alpha = 0.6;
+    this.spriteDeLuz.alpha = this.alphaNormal;
     this.container.addChild(this.spriteDeLuz);
     this.spriteDeLuz.scale.y = 1;
     this.spriteDeLuz.tint = 0xffff99;
@@ -40,16 +41,12 @@ class Farol extends EntidadEstatica {
   tick() {
     //TODO: re hacer esto
     if (!this.spriteDeLuz) return;
-    const rnd = Math.random();
-    if (rnd > 0.995) {
-      this.spriteDeLuz.alpha = 0;
-      if (this.spriteGradiente) this.spriteGradiente.alpha = 0;
-    } else if (rnd > 0.993) {
-      this.spriteDeLuz.alpha = 0.3;
-      if (this.spriteGradiente) this.spriteGradiente.alpha = 0.3;
-    } else {
-      this.spriteDeLuz.alpha = 0.6;
-      if (this.spriteGradiente) this.spriteGradiente.alpha = 0.6;
-    }
+    const rnd = Math.random() * 0.01 - 0.005;
+    this.cantidadDeLuz += rnd;
+    if (this.cantidadDeLuz > 1) this.cantidadDeLuz = 1;
+    if (this.cantidadDeLuz < 0) this.cantidadDeLuz = 0;
+
+    this.spriteDeLuz.alpha = this.cantidadDeLuz * this.alphaNormal;
+    if (this.spriteGradiente) this.spriteGradiente.alpha = this.cantidadDeLuz;
   }
 }

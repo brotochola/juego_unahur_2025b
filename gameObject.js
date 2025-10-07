@@ -360,18 +360,20 @@ class GameObject {
     const valorGris = Math.floor(luz * 255);
     // Crear color hexadecimal: 0xRRGGBB donde RR=GG=BB para gris
     const colorGris = (valorGris << 16) | (valorGris << 8) | valorGris;
-    this.container.tint = colorGris;
+    if (this instanceof Farol && this.sprite) this.sprite.tint = colorGris;
+    else this.container.tint = colorGris;
   }
 
   calcularLuz() {
     let luz = 0;
-    const factorMagico = 10;
 
     for (let farol of this.juego.faroles) {
+      if (farol == this) continue;
       const dist = calcularDistancia(farol.posicion, this.posicion);
       luz +=
-        this.juego.distanciaALaQueLosObjetosTienenTodaLaLuz **
-          this.juego.factorMagicoArriba /
+        (farol.cantidadDeLuz *
+          this.juego.distanciaALaQueLosObjetosTienenTodaLaLuz **
+            this.juego.factorMagicoArriba) /
         dist ** this.juego.factorMagicoAbajo;
     }
 

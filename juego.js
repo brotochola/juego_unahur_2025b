@@ -359,6 +359,10 @@ class Juego {
       farol.tick();
     }
 
+    for (let obstaculo of this.obstaculos) {
+      obstaculo.render();
+    }
+
     if (this.debug) {
       for (let obstaculo of this.obstaculos) {
         obstaculo.dibujarCirculo();
