@@ -165,7 +165,7 @@ class Persona extends GameObject {
   async crearSpritesheetAnimado(bando) {
     this.sprite = (
       await AnimatedCharacter.CreateCharacterFromMegaSpritesheet(
-        `/assets/pixelart/personajes/${bando}.png`,
+        `assets/pixelart/personajes/${bando}.png`,
         64,
         64
       )

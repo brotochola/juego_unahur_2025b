@@ -12,7 +12,7 @@ class Monumento extends EntidadEstatica {
 
   async crearSprite() {
     this.sprite = new PIXI.Sprite(
-      await PIXI.Assets.load("/assets/pixelart/" + this.tipo + ".png")
+      await PIXI.Assets.load("assets/pixelart/" + this.tipo + ".png")
     );
 
     this.calcularRadio();

@@ -325,7 +325,7 @@ class GameObject {
   async crearSombra() {
     await PIXI.Assets.load({
       alias: "sombra",
-      src: "/assets/pixelart/sombra.png",
+      src: "assets/pixelart/sombra.png",
     });
     this.sombra = new PIXI.Sprite(PIXI.Assets.get("sombra"));
 

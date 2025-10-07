@@ -162,7 +162,7 @@ class Nivel {
       } else if (item.background) {
         //cualquier item que tenga puesto backgroudn:true es un fondo y es solo un sprite, no una instancia de ninguna clase nuestra
         const sprite = new PIXI.Sprite(
-          await PIXI.Assets.load("/assets/pixelart/" + item.type + ".png")
+          await PIXI.Assets.load("assets/pixelart/" + item.type + ".png")
         );
         sprite.anchor.set(0.5, 1);
         sprite.scale.set(item.scaleX, item.scaleY);

@@ -15,7 +15,7 @@ class Bondi extends EntidadEstatica {
   async crearSprite() {
     // Load the full spritesheet
     const texture = await PIXI.Assets.load(
-      "/assets/pixelart/bondi" + this.tipo + ".png"
+      "assets/pixelart/bondi" + this.tipo + ".png"
     );
 
     // Create sprite with the specific car texture

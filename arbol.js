@@ -12,7 +12,7 @@ class Arbol extends EntidadEstatica {
 
   async crearSprite() {
     this.sprite = new PIXI.Sprite(
-      await PIXI.Assets.load("/assets/pixelart/arbol" + this.tipo + ".png")
+      await PIXI.Assets.load("assets/pixelart/arbol" + this.tipo + ".png")
     );
     this.sprite.anchor.set(0.5, 1);
     this.container.addChild(this.sprite);

@@ -15,7 +15,7 @@ class Auto extends EntidadEstatica {
   async crearSprite() {
     // Load the full spritesheet
     const texture = await PIXI.Assets.load(
-      "/assets/pixelart/auto" + this.tipo + ".png"
+      "assets/pixelart/auto" + this.tipo + ".png"
     );
 
     // Create sprite with the specific car texture
