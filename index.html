@@ -19,6 +19,18 @@
             width: 100vw;
             height: 100vh;
         }
+
+        #toggleIluminacion {
+            position: absolute;
+            top: 10px;
+            left: 1%;
+        }
+
+        #toggleDebug {
+            position: absolute;
+            top: 10px;
+            left: 20%;
+        }
     </style>
 
     <script src="utils.js"></script>
@@ -57,6 +69,8 @@
 
 
     </script>
+    <button id="toggleIluminacion" onclick="juego.toggleIluminacion()">toggle iluminacion</button>
+    <button id="toggleDebug" onclick="juego.toggleDebug()">toggle debug</button>
 
 </body>
 

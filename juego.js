@@ -24,6 +24,7 @@ class Juego {
   factorMagicoArriba = 2;
   factorMagicoAbajo = 2.18;
   teclado = {};
+  ahora = performance.now();
 
   constructor() {
     this.updateDimensions();
@@ -157,7 +158,7 @@ class Juego {
     // this.crearAmigos(400);
 
     // Crear el sistema de iluminación
-    // this.sistemaDeIluminacion = new SistemaDeIluminacion(this);
+    this.sistemaDeIluminacion = new SistemaDeIluminacion(this);
   }
   crearCasitasRandom() {
     for (let i = 0; i < 100; i++) {
@@ -371,12 +372,22 @@ class Juego {
     }
 
     this.hacerQLaCamaraSigaAAlguien();
+    this.calcularFPS();
+  }
+  calcularFPS() {
+    this.deltaTime = performance.now() - this.ahora;
+    this.ahora = performance.now();
+    this.fps = 1000 / this.deltaTime;
+    this.ratioDeltaTime = this.deltaTime / 16.66;
   }
 
   toggleIluminacion() {
     if (this.sistemaDeIluminacion) {
       this.sistemaDeIluminacion.toggle();
     }
+  }
+  toggleDebug() {
+    this.debug = !this.debug;
   }
 
   hacerQLaCamaraSigaAAlguien() {

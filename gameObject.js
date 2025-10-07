@@ -65,7 +65,7 @@ class GameObject {
      * - FPS bajos (15): deltaTime ≈ 4 → limitado a 3
      * - Esto previene saltos extremos en la simulación física
      */
-    const deltaTime = Math.min(this.juego.pixiApp.ticker.deltaTime, 3);
+    const deltaTime = Math.min(this.juego.ratioDeltaTime, 3);
 
     // PASO 1: Aplicar fuerzas acumuladas
     this.limitarAceleracion();
@@ -137,7 +137,7 @@ class GameObject {
      */
     const friccionPorFrame = 0.93;
     const friccionPorSegundo = Math.pow(friccionPorFrame, 60);
-    const deltaTime = Math.min(this.juego.pixiApp.ticker.deltaTime, 3);
+    const deltaTime = Math.min(this.juego.ratioDeltaTime, 3);
     const friccionAplicada = Math.pow(friccionPorSegundo, deltaTime / 60);
 
     this.velocidad.x *= friccionAplicada;
