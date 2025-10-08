@@ -241,47 +241,20 @@ class Juego {
 
   segunQueTeclaEstaApretadaHacerCosas() {
     if (this.teclado[1]) {
-      this.crearUnAmigo(
-        event.x - this.containerPrincipal.x,
-        event.y - this.containerPrincipal.y
-      );
+      this.crearUnAmigo(this.mouse.posicion.x, this.mouse.posicion.y);
     }
     if (this.teclado[2]) {
-      this.crearUnEnemigo(
-        2,
-        event.x - this.containerPrincipal.x,
-        event.y - this.containerPrincipal.y
-      );
+      this.crearUnEnemigo(2, this.mouse.posicion.x, this.mouse.posicion.y);
     } else if (this.teclado[3]) {
-      this.crearUnEnemigo(
-        3,
-        event.x - this.containerPrincipal.x,
-        event.y - this.containerPrincipal.y
-      );
+      this.crearUnEnemigo(3, this.mouse.posicion.x, this.mouse.posicion.y);
     } else if (this.teclado[4]) {
-      this.crearUnEnemigo(
-        4,
-        event.x - this.containerPrincipal.x,
-        event.y - this.containerPrincipal.y
-      );
+      this.crearUnEnemigo(4, this.mouse.posicion.x, this.mouse.posicion.y);
     } else if (this.teclado[5]) {
-      this.crearUnEnemigo(
-        5,
-        event.x - this.containerPrincipal.x,
-        event.y - this.containerPrincipal.y
-      );
+      this.crearUnEnemigo(5, this.mouse.posicion.x, this.mouse.posicion.y);
     } else if (this.teclado[6]) {
-      this.crearUnEnemigo(
-        6,
-        event.x - this.containerPrincipal.x,
-        event.y - this.containerPrincipal.y
-      );
+      this.crearUnEnemigo(6, this.mouse.posicion.x, this.mouse.posicion.y);
     } else if (this.teclado[7]) {
-      this.crearUnEnemigo(
-        7,
-        event.x - this.containerPrincipal.x,
-        event.y - this.containerPrincipal.y
-      );
+      this.crearUnEnemigo(7, this.mouse.posicion.x, this.mouse.posicion.y);
     }
   }
 

@@ -251,17 +251,16 @@ class Persona extends GameObject {
 
   separacion() {
     for (const persona of this.juego.personas) {
-      if (persona !== this) {
-        const distancia = calcularDistancia(this.posicion, persona.posicion);
-        if (distancia > this.radio + persona.radio) continue;
-        let vectorNuevo = {
-          x: this.posicion.x - persona.posicion.x,
-          y: this.posicion.y - persona.posicion.y,
-        };
+      if (persona == this) continue;
+      const distancia = calcularDistancia(this.posicion, persona.posicion);
+      if (distancia > this.radio + persona.radio) continue;
+      let vectorNuevo = {
+        x: this.posicion.x - persona.posicion.x,
+        y: this.posicion.y - persona.posicion.y,
+      };
 
-        this.aceleracion.x += vectorNuevo.x;
-        this.aceleracion.y += vectorNuevo.y;
-      }
+      this.aceleracion.x += vectorNuevo.x;
+      this.aceleracion.y += vectorNuevo.y;
     }
   }
   verificarSiEstoyMuerto() {
