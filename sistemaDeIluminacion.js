@@ -118,10 +118,13 @@ class SistemaDeIluminacion {
       this.numeroDeDia++;
     }
 
-    this.cantidadDeLuzDelDia =
-      (-Math.cos((this.minutoDelDia / this.minutosPorDia) * Math.PI * 2) * 0.5 +
-        0.5) *
-      1.2;
+    const cantidadDeLuzDelDiaProvisoria =
+      -Math.cos((this.minutoDelDia / this.minutosPorDia) * Math.PI * 2) + 0.5;
+
+    this.cantidadDeLuzDelDia = cantidadDeLuzDelDiaProvisoria;
+
+    if (this.cantidadDeLuzDelDia > 1) this.cantidadDeLuzDelDia = 1;
+    if (this.cantidadDeLuzDelDia < 0) this.cantidadDeLuzDelDia = 0;
 
     this.horaDelDia = this.minutoDelDia / 60;
   }
@@ -139,7 +142,7 @@ class SistemaDeIluminacion {
   prenderOApagarTodosLosFarolesSegunLaHoraDelDia() {
     if (this.horaDelDia > 7 && this.horaDelDia < 7.2) {
       this.apagarTodosLosFaroles();
-    } else if (this.horaDelDia > 19 && this.horaDelDia < 19.2) {
+    } else if (this.horaDelDia > 18 && this.horaDelDia < 18.2) {
       this.prenderTodosLosFaroles();
     }
   }
