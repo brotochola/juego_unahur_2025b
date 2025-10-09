@@ -18,16 +18,16 @@ class Policia extends Persona {
     this.verificarSiEstoyMuerto();
 
     this.percibirEntorno();
-    this.caminarSinRumbo();
+    // this.caminarSinRumbo();
     // this.cohesion();
     // this.alineacion();
     this.separacion();
 
     // this.perseguir();
-    if (this.enemigoMasCerca) {
-      this.perseguidor = this.enemigoMasCerca;
-      this.escapar();
-    }
+    // if (this.enemigoMasCerca) {
+    //   this.perseguidor = this.enemigoMasCerca;
+    //   this.escapar();
+    // }
 
     this.noChocarConObstaculos();
     this.repelerSuavementeObstaculos();

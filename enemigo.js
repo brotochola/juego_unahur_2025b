@@ -39,22 +39,30 @@ class Enemigo extends Persona {
     if (this.vida > 0.15) return;
     if (this.enemigosCerca.length < this.amigosCerca.length) return;
     if (Math.random() > 0.3) return;
+    if (!this.enemigoMasCerca) return;
 
-    this.convertirEnAmigo();
+    this.pasarseDeBando(this.enemigoMasCerca.bando);
   }
 
-  convertirEnAmigo() {
+  pasarseDeBando(cualBando) {
+    console.log("convertirEnAmigo", this.bando, "==>", cualBando);
     const pos = this.posicion;
-    const vida = this.vida;
-    const coraje = this.coraje;
-    const vision = this.vision;
-    const id = this.id;
 
     this.borrar();
-    const amigo = this.juego.crearUnAmigo(pos.x, pos.y);
-    amigo.id = id;
-    amigo.vida = vida;
-    amigo.coraje = coraje;
-    amigo.vision = vision;
+    let amigo;
+    if (cualBando == 1) {
+      amigo = this.juego.crearUnAmigo(pos.x, pos.y);
+    } else {
+      amigo = this.juego.crearUnEnemigo(cualBando, pos.x, pos.y);
+    }
+
+    amigo.id = this.id;
+    amigo.vida = this.vida;
+    amigo.coraje = this.coraje;
+    amigo.vision = this.vision;
+    amigo.recienConvertido = true;
+    setTimeout(() => {
+      delete amigo.recienConvertido;
+    }, 1000);
   }
 }

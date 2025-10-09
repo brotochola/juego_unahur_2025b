@@ -215,6 +215,7 @@ class Juego {
     const persona = new Enemigo(x, y, this, bando);
     this.personas.push(persona);
     this.enemigos.push(persona);
+    return persona;
   }
 
   crearEnemigos(cant, bando) {

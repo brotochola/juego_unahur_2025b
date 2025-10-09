@@ -83,8 +83,10 @@ class GameObject {
     this.limitarVelocidad(); // Velocidad terminal
 
     // PASO 3: Integrar posición: x = x₀ + v×Δt
-    this.posicion.x += this.velocidad.x * deltaTime;
-    this.posicion.y += this.velocidad.y * deltaTime;
+    if (!this.recienConvertido) {
+      this.posicion.x += this.velocidad.x * deltaTime;
+      this.posicion.y += this.velocidad.y * deltaTime;
+    }
 
     // PASO 4: Calcular ángulo de movimiento usando arctangente
     // atan2(y,x) nos da el ángulo en radianes del vector velocidad

@@ -453,6 +453,12 @@ class Persona extends GameObject {
       return;
     }
 
+    if (this.recienConvertido) {
+      this.sprite.changeAnimation("spellcast");
+      this.sprite.loop = false;
+      return;
+    }
+
     if (this.velocidadLineal > this.velocidadMaxima * 0.7) {
       this.sprite.changeAnimation("run");
       this.sprite.animationSpeed =
