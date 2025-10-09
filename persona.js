@@ -13,10 +13,13 @@ class Persona extends GameObject {
     this.rangoDeAtaque = this.radio * 3;
 
     this.factorPerseguir = 0.15;
+    this.factorEscapar = 0.1;
 
     this.factorSeparacion = 0.5;
     this.factorCohesion = 0.2;
     this.factorAlineacion = 0.4;
+
+    this.factorRepelerSuavementeObstaculos = 1;
 
     this.aceleracionMaxima = 0.2;
     this.velocidadMaxima = 3;
@@ -90,8 +93,17 @@ class Persona extends GameObject {
     }
 
     // Aplicar la fuerza total a la aceleración
-    this.aceleracion.x += fuerzaRepulsionTotal.x;
-    this.aceleracion.y += fuerzaRepulsionTotal.y;
+    this.aceleracion.x +=
+      fuerzaRepulsionTotal.x * this.factorRepelerSuavementeObstaculos;
+    this.aceleracion.y +=
+      fuerzaRepulsionTotal.y * this.factorRepelerSuavementeObstaculos;
+  }
+  percibirEntorno() {
+    // mirar alrededor
+    this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
+    this.amigos = this.buscarPersonasDeMiBando();
+    this.enemigoMasCerca = this.buscarEnemigoMasCerca();
+    this.buscarObstaculosBienCerquitaMio();
   }
 
   noChocarConObstaculos() {
@@ -303,6 +315,43 @@ class Persona extends GameObject {
 
   recibirDanio(danio) {
     this.vida -= danio;
+  }
+
+  caminarSinRumbo() {
+    if (!this.container || !this.sprite) return;
+
+    if (!this.targetRandom) {
+      this.targetRandom = {
+        posicion: {
+          x: this.juego.anchoDelMapa * Math.random(),
+          y: this.juego.altoDelMapa * Math.random(),
+        },
+      };
+    }
+
+    if (
+      calcularDistancia(this.posicion, this.targetRandom.posicion) <
+      this.distanciaParaLlegarALTarget
+    ) {
+      this.targetRandom = null;
+    }
+
+    if (!this.targetRandom) return;
+    if (
+      isNaN(this.targetRandom.posicion.x) ||
+      isNaN(this.targetRandom.posicion.y)
+    )
+      debugger;
+
+    // Vector de dirección hacia el objetivo
+    const difX = this.targetRandom.posicion.x - this.posicion.x;
+    const difY = this.targetRandom.posicion.y - this.posicion.y;
+
+    const vectorNuevo = limitarVector({ x: difX, y: difY }, 1);
+
+    // Aplicar fuerza de persecución escalada por el factor específico del objeto
+    this.aceleracion.x += vectorNuevo.x * this.factorPerseguir;
+    this.aceleracion.y += vectorNuevo.y * this.factorPerseguir;
   }
 
   buscarEnemigoMasCerca() {

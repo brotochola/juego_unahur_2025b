@@ -9,16 +9,12 @@ class Enemigo extends Persona {
     if (this.muerto) return;
     this.verificarSiEstoyMuerto();
 
-    this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
-    this.amigos = this.buscarPersonasDeMiBando();
-    this.enemigoMasCerca = this.buscarEnemigoMasCerca();
-    this.buscarObstaculosBienCerquitaMio();
-
+    this.percibirEntorno();
     //
     this.cohesion();
     this.alineacion();
     this.separacion();
-    // this.escapar();
+
     this.perseguir();
 
     this.noChocarConObstaculos();

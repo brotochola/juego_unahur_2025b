@@ -146,6 +146,7 @@ class GameObject {
 
   calcularZindex() {
     const base = 50000;
+
     if (!this.sprite) return this.posicion.y + base;
 
     if (this.isometric) {
@@ -159,6 +160,12 @@ class GameObject {
       }
     }
   }
+
+  // calcularzIndexEnMundoNoIsometrico() {
+  //   const base = 50000;
+  //   const pos = this.calcularPosicionEnMundoNoIsometrico();
+  //   return pos.y + pos.x + base;
+  // }
 
   getPosicionCentral() {
     if (!this.container) return this.posicion;
@@ -273,8 +280,8 @@ class GameObject {
     const vectorNuevo = limitarVector({ x: difX, y: difY }, 1);
 
     // Aplicar fuerza en dirección opuesta (huir)
-    this.aceleracion.x += -vectorNuevo.x;
-    this.aceleracion.y += -vectorNuevo.y;
+    this.aceleracion.x += -vectorNuevo.x * this.factorEscapar;
+    this.aceleracion.y += -vectorNuevo.y * this.factorEscapar;
   }
 
   asignarVelocidad(x, y) {
@@ -379,5 +386,9 @@ class GameObject {
 
     if (luz > 1) luz = 1;
     return luz;
+  }
+
+  calcularPosicionEnMundoNoIsometrico() {
+    return isometricToCartesian(this.getPosicionCentral());
   }
 }

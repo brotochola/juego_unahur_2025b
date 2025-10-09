@@ -43,11 +43,7 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
     this.verificarSiEstoyMuerto();
 
     this.irAlTarget(); // Control por mouse
-
-    this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
-    this.amigos = this.buscarPersonasDeMiBando();
-    this.enemigoMasCerca = this.buscarEnemigoMasCerca();
-    this.buscarObstaculosBienCerquitaMio();
+    this.percibirEntorno();
     this.noChocarConObstaculos();
 
     //si no estoy cerca del target, repelo obstaculos de forma piola

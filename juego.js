@@ -10,6 +10,8 @@ class Juego {
   personas = [];
   amigos = [];
   enemigos = [];
+  civiles = [];
+  policias = [];
   faroles = [];
   monumentos = [];
   obstaculos = [];
@@ -222,13 +224,24 @@ class Juego {
     this.personas.push(persona);
     this.amigos.push(persona);
   }
+
+  crearUnCivil(x, y) {
+    const persona = new Civil(x, y, this);
+    this.civiles.push(persona);
+    this.personas.push(persona);
+  }
+
+  crearUnPolicia(x, y) {
+    const persona = new Policia(x, y, this);
+    this.policias.push(persona);
+    this.personas.push(persona);
+  }
+
   crearAmigos(cant) {
     for (let i = 0; i < cant; i++) {
       const x = Math.random() * this.anchoDelMapa;
       const y = Math.random() * this.altoDelMapa;
-      const persona = new Amigo(x, y, this);
-      this.personas.push(persona);
-      this.amigos.push(persona);
+      this.crearUnAmigo(x, y);
     }
   }
   crearProtagonista() {
@@ -255,6 +268,10 @@ class Juego {
       this.crearUnEnemigo(6, this.mouse.posicion.x, this.mouse.posicion.y);
     } else if (this.teclado[7]) {
       this.crearUnEnemigo(7, this.mouse.posicion.x, this.mouse.posicion.y);
+    } else if (this.teclado["c"]) {
+      this.crearUnCivil(this.mouse.posicion.x, this.mouse.posicion.y);
+    } else if (this.teclado["p"]) {
+      this.crearUnPolicia(this.mouse.posicion.x, this.mouse.posicion.y);
     }
   }
 

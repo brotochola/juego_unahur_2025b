@@ -54,19 +54,14 @@ class Amigo extends Persona {
     if (this.muerto) return;
     this.verificarSiEstoyMuerto();
 
-    // mirar alrededor
-    this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
-    this.amigos = this.buscarPersonasDeMiBando();
-    this.enemigoMasCerca = this.buscarEnemigoMasCerca();
-    this.buscarObstaculosBienCerquitaMio();
+    this.percibirEntorno();
 
     //hacer cosas
     this.seguirAlLider();
     this.cohesion();
-    // this.alineacion();
+
     this.separacion();
 
-    // this.escapar();
     this.perseguir();
 
     this.noChocarConObstaculos();

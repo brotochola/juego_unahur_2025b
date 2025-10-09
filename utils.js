@@ -114,3 +114,10 @@ function crearSpriteConGradiente(radio = 300) {
 
   return sprite;
 }
+
+function isometricToCartesian(pos) {
+  return {
+    x: pos.x / 2 + pos.y,
+    y: pos.y - pos.x / 2,
+  };
+}
