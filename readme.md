@@ -4,7 +4,7 @@ Pendiente:
 
 - UI:
 
-  - Agregar cruz q marca el objetivo de donde esta yendo el protagonista
+  - agregar barra de vida a todos + boton para sacarla
   - Icono de "robar" cuando pasamos por encima de un civil
   - Icono de "$" cuando pasamos por encima del poli
   - Agregar indicadores en la pantalla:

@@ -11,6 +11,11 @@ class SistemaDeIluminacion {
     this.blurParaElGraficoDeSombrasProyectadas = null;
 
     this.inicializar();
+
+    this.numeroDeDia = 0;
+    this.minutoDelDia = 0;
+    this.minutosPorDia = 1440;
+    this.cantidadDeLuzDelDia = 0.5;
   }
   crearGraficoSombrasProyectadas() {
     // Crear el gráfico de sombras proyectadas
@@ -106,7 +111,43 @@ class SistemaDeIluminacion {
     this.containerParaRenderizar.addChild(this.spriteNegro);
   }
 
+  avanzarDia() {
+    this.minutoDelDia += this.juego.deltaTime * 0.01;
+    if (this.minutoDelDia >= this.minutosPorDia) {
+      this.minutoDelDia = 0;
+      this.numeroDeDia++;
+    }
+
+    this.cantidadDeLuzDelDia =
+      (-Math.cos((this.minutoDelDia / this.minutosPorDia) * Math.PI * 2) * 0.5 +
+        0.5) *
+      1.2;
+
+    this.horaDelDia = this.minutoDelDia / 60;
+  }
+
+  prenderTodosLosFaroles() {
+    for (let farol of this.juego.faroles) {
+      farol.prender();
+    }
+  }
+  apagarTodosLosFaroles() {
+    for (let farol of this.juego.faroles) {
+      farol.apagar();
+    }
+  }
+  prenderOApagarTodosLosFarolesSegunLaHoraDelDia() {
+    if (this.horaDelDia > 7 && this.horaDelDia < 7.2) {
+      this.apagarTodosLosFaroles();
+    } else if (this.horaDelDia > 19 && this.horaDelDia < 19.2) {
+      this.prenderTodosLosFaroles();
+    }
+  }
+
   tick() {
+    this.avanzarDia();
+
+    this.prenderOApagarTodosLosFarolesSegunLaHoraDelDia();
     // Limpiar el gráfico de sombras proyectadas
     if (this.graficoSombrasProyectadas) {
       this.graficoSombrasProyectadas.clear();
@@ -129,6 +170,8 @@ class SistemaDeIluminacion {
 
         this.actualizarSombrasProyectadas(farol);
       }
+
+      this.spriteDeIluminacion.alpha = 1 - this.cantidadDeLuzDelDia;
 
       // Renderizar el container en la RenderTexture
       this.juego.pixiApp.renderer.render({

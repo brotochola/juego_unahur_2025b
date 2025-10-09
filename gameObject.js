@@ -365,6 +365,7 @@ class GameObject {
       return;
     }
     const luz = this.calcularLuz();
+
     // Convertir luz (0-1) a valor de gris (0-255)
     const valorGris = Math.floor(luz * 255);
     // Crear color hexadecimal: 0xRRGGBB donde RR=GG=BB para gris
@@ -376,8 +377,10 @@ class GameObject {
   calcularLuz() {
     let luz = 0;
 
+    luz += this.juego.sistemaDeIluminacion.cantidadDeLuzDelDia;
+
     for (let farol of this.juego.faroles) {
-      if (farol == this) continue;
+      if (farol == this || farol.estado == 0) continue;
       const dist = calcularDistancia(farol.posicion, this.posicion);
       luz +=
         (farol.cantidadDeLuz *

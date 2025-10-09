@@ -121,3 +121,11 @@ function isometricToCartesian(pos) {
     y: pos.y - pos.x / 2,
   };
 }
+
+function convertirCantidadDeMinutosDelDiaAStringDeHora(minutos) {
+  const horas = Math.floor(minutos / 60);
+  const minutosRestantes = Math.floor(minutos % 60);
+  return `${horas.toString().padStart(2, "0")}:${minutosRestantes
+    .toString()
+    .padStart(2, "0")}`;
+}
