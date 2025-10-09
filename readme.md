@@ -4,7 +4,7 @@ Pendiente:
 
 - UI:
 
-  - agregar barra de vida a todos + boton para sacarla
+  - agregar hora en la UI
   - Icono de "robar" cuando pasamos por encima de un civil
   - Icono de "$" cuando pasamos por encima del poli
   - Agregar indicadores en la pantalla:
@@ -12,8 +12,6 @@ Pendiente:
     - cantidad de cada bando
 
 - MUNDO:
-
-  - ciclos de dia y noche?
 
 - MAPA:
 
@@ -26,7 +24,6 @@ Pendiente:
 
 - PERSONAS:
 
-  - agregarles propiedad "coraje": random entre 0 y 1
   - Sangre!
   - agregarles metodo "hablar(😁)" q muestre un globito de dialogo con el emoji
     - En los cambios de estado se ponen triste, asustado, etc

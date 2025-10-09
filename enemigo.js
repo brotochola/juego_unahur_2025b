@@ -3,6 +3,9 @@ class Enemigo extends Persona {
     super(x, y, juego);
     this.bando = bando || Math.floor(Math.random() * 3) + 2;
     this.crearSpritesheetAnimado(this.bando);
+    this.esperarAQueTengaSpriteCargado(() => {
+      this.crearBarritaVida();
+    });
   }
 
   tick() {
@@ -45,7 +48,6 @@ class Enemigo extends Persona {
   }
 
   pasarseDeBando(cualBando) {
-    console.log("convertirEnAmigo", this.bando, "==>", cualBando);
     const pos = this.posicion;
 
     this.borrar();

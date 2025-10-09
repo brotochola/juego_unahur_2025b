@@ -1,7 +1,6 @@
 class Poste extends EntidadEstatica {
   constructor(x, y, juego, scaleX) {
     super(x, y, juego);
-    this.vida = 1;
     this.radio = 10;
     this.scaleX = scaleX || 1;
     this.container.label = "poste" + this.id;

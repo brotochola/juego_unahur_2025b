@@ -12,7 +12,7 @@ class Protagonista extends Persona {
     super(x, y, juego);
 
     // Configuración especial del protagonista
-    this.vida = 9287364928348; // Vida prácticamente infinita
+    this.vida = 1;
     this.vision = Infinity; // Visión ilimitada
     this.bando = 1; // Bando del jugador
     this.crearSpritesheetAnimado(this.bando);
@@ -20,6 +20,9 @@ class Protagonista extends Persona {
     this.factorIrAlTarget = 0.9;
     this.distanciaParaEmpezarABajarLaVelocidad = this.radio * 20;
     this.distanciaAlTarget = Infinity;
+    this.esperarAQueTengaSpriteCargado(() => {
+      this.crearBarritaVida();
+    });
   }
 
   morir() {

@@ -20,6 +20,11 @@ class GameObject {
   target; // Objeto que este GameObject está persiguiendo
   perseguidor; // Objeto que está persiguiendo a este GameObject
   isometric = false;
+  tieneSpriteCargado = false;
+  anchoBarraVida = 20;
+  altoBarraVida = 4;
+  vida = 1;
+  vidaMaxima = 1;
 
   constructor(x, y, juego) {
     // Rango de visión aleatorio entre 400-700 píxeles
@@ -50,6 +55,88 @@ class GameObject {
     // Jerarquía de renderizado: Juego -> ContainerPrincipal -> Container -> Sprite
     // El containerPrincipal maneja la cámara y el scrolling del mundo
     this.juego.containerPrincipal.addChild(this.container);
+  }
+
+  esperarAQueTengaSpriteCargado(callback) {
+    if (this.sprite) {
+      this.tieneSpriteCargado = true;
+      if (callback instanceof Function) callback();
+    } else {
+      setTimeout(() => {
+        this.esperarAQueTengaSpriteCargado(callback);
+      }, 100);
+    }
+  }
+
+  crearBarritaVida() {
+    this.containerBarraVida = new PIXI.Container();
+
+    this.container.addChild(this.containerBarraVida);
+
+    this.barritaVida = new PIXI.Graphics();
+    this.barritaVida.rect(
+      0,
+      -this.sprite.height,
+      this.anchoBarraVida,
+      this.altoBarraVida
+    );
+    this.barritaVida.fill(0xffffff);
+
+    this.contornoBarraVida = new PIXI.Graphics();
+    this.contornoBarraVida.rect(
+      0,
+      -this.sprite.height,
+      this.anchoBarraVida,
+      this.altoBarraVida
+    );
+    this.contornoBarraVida.stroke({ color: 0xffffff, width: 1, alpha: 0.66 });
+
+    this.containerBarraVida.addChild(this.barritaVida);
+    this.containerBarraVida.addChild(this.contornoBarraVida);
+
+    this.containerBarraVida.x = -this.anchoBarraVida * 0.5;
+  }
+
+  quitarBarritaVida() {
+    if (this.containerBarraVida) {
+      this.containerBarraVida.visible = false;
+
+      if (this.barritaVida) {
+        this.barritaVida.visible = false;
+        this.barritaVida.clear();
+        this.barritaVida.destroy();
+        this.barritaVida = null;
+      }
+
+      if (this.contornoBarraVida) {
+        this.contornoBarraVida.visible = false;
+        this.contornoBarraVida.clear();
+        this.contornoBarraVida.destroy();
+        this.contornoBarraVida = null;
+      }
+
+      if (this.container && this.containerBarraVida.parent) {
+        this.container.removeChild(this.containerBarraVida);
+      }
+
+      this.containerBarraVida.destroy();
+      this.containerBarraVida = null;
+    }
+  }
+
+  actualizarBarritaVida() {
+    if (!this.tieneSpriteCargado) return;
+    if (!this.barritaVida || !this.containerBarraVida) return;
+    if (this.muerto) return;
+
+    this.barritaVida.width =
+      (this.vida / this.vidaMaxima) * this.anchoBarraVida;
+
+    this.barritaVida.tint = mapColors(
+      0x7fca34,
+      0xff0000,
+      this.vida / this.vidaMaxima
+    );
   }
 
   tick() {
@@ -205,13 +292,15 @@ class GameObject {
     }
   }
   borrarmeComoTargetDeTodos() {
+    console.log("borrarmeComoTargetDeTodos", this);
     this.juego.personas.forEach((persona) => {
-      persona.asignarTarget(null);
+      if (persona.target == this) persona.asignarTarget(null);
+      if (persona.perseguidor == this) persona.perseguidor = null;
+      if (persona.enemigoMasCerca == this) persona.enemigoMasCerca = null;
     });
   }
 
   asignarTarget(quien) {
-    if (quien instanceof Persona && quien.muerto) return;
     this.target = quien;
   }
 
@@ -236,6 +325,11 @@ class GameObject {
      * 4. Aplicación de fuerza direccional
      */
     if (!this.target) return;
+    // if (this.target.muerto) {
+    //   console.log("target muerto", this.target);
+    //   this.asignarTarget(null);
+    //   return;
+    // }
     const dist = calcularDistancia(this.posicion, this.target.posicion);
     if (dist > this.vision) return;
 
@@ -306,6 +400,8 @@ class GameObject {
     } catch (e) {
       console.warn(e);
     }
+
+    this.actualizarBarritaVida();
   }
 
   dibujarCirculo() {

@@ -20,16 +20,12 @@
             height: 100vh;
         }
 
-        #toggleIluminacion {
+        #controles {
+            display: flex;
             position: absolute;
             top: 10px;
-            left: 1%;
-        }
-
-        #toggleDebug {
-            position: absolute;
-            top: 10px;
-            left: 20%;
+            left: 10px;
+            gap: 10px
         }
     </style>
     <script src="gsap.js"></script>
@@ -71,8 +67,11 @@
 
 
     </script>
-    <button id="toggleIluminacion" onclick="juego.toggleIluminacion()">toggle iluminacion</button>
-    <button id="toggleDebug" onclick="juego.toggleDebug()">toggle debug</button>
+    <div id="controles">
+        <button id="toggleIluminacion" onclick="juego.toggleIluminacion()">toggle iluminacion</button>
+        <button id="toggleBarrasDeVida" onclick="juego.toggleBarrasDeVida()">toggle barras de vida</button>
+        <button id="toggleDebug" onclick="juego.toggleDebug()">toggle debug</button>
+    </div>
 
 </body>
 

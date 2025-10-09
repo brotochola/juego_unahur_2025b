@@ -1,14 +1,17 @@
 class Persona extends GameObject {
   constructor(x, y, juego) {
     super(x, y, juego);
+    this.noPuedoPegarPeroEstoyEnCombate = false;
     this.muerto = false;
-    this.vida = 1;
     this.bando = 0; //bando default
+
+    this.rateOfFire = 500; //medido en milisegundos
+    this.ultimoGolpe = 0;
 
     this.coraje = Math.random();
     this.vision = Math.random() * 400 + 400;
 
-    this.fuerzaDeAtaque = 0.01 + Math.random() * 0.01;
+    this.fuerzaDeAtaque = 0.05 + Math.random() * 0.05;
     this.radio = 7 + Math.random() * 3;
     this.rangoDeAtaque = this.radio * 3;
 
@@ -29,13 +32,14 @@ class Persona extends GameObject {
 
   buscarPersonasDeMiBando() {
     return this.juego.personas.filter(
-      (persona) => persona.bando === this.bando
+      (persona) => persona.bando === this.bando && !persona.muerto
     );
   }
 
   buscarEnemigos() {
     return this.juego.personas.filter(
       (persona) =>
+        !persona.muerto &&
         persona.bando !== this.bando &&
         persona.bando != "policia" &&
         persona.bando != "civil"
@@ -45,7 +49,8 @@ class Persona extends GameObject {
   getPersonasCerca() {
     return this.juego.personas.filter(
       (persona) =>
-        calcularDistancia(this.posicion, persona.posicion) < this.vision
+        calcularDistancia(this.posicion, persona.posicion) < this.vision &&
+        !persona.muerto
     );
   }
 
@@ -311,13 +316,22 @@ class Persona extends GameObject {
   verificarSiEstoyMuerto() {
     if (this.vida <= 0) {
       this.morir();
+      return;
     }
+
+    this.vida += 0.0001;
+    if (this.vida > this.vidaMaxima) this.vida = this.vidaMaxima;
   }
 
   morir() {
     if (this.muerto) return;
 
+    // Marcar como muerto PRIMERO para evitar que se actualice la barra durante el proceso
     this.muerto = true;
+    this.quitarBarritaVida();
+
+    this.borrarmeComoTargetDeTodos();
+
     this.juego.personas = this.juego.personas.filter(
       (persona) => persona !== this
     );
@@ -326,10 +340,7 @@ class Persona extends GameObject {
     );
     this.juego.amigos = this.juego.amigos.filter((persona) => persona !== this);
 
-    // if (this.sprite) this.sprite.destroy();
-    // if (this.container) this.container.destroy();
     this.container.zIndex = this.calcularZindex();
-    this.borrarmeComoTargetDeTodos();
   }
 
   pegarSiEstaEnMiRango() {
@@ -338,12 +349,27 @@ class Persona extends GameObject {
       calcularDistancia(this.posicion, this.enemigoMasCerca.posicion) <
         this.rangoDeAtaque
     ) {
-      this.pegar(this.enemigoMasCerca);
+      if (this.puedoPegar()) {
+        this.pegar(this.enemigoMasCerca);
+        this.noPuedoPegarPeroEstoyEnCombate = false;
+      } else {
+        this.noPuedoPegarPeroEstoyEnCombate = true;
+      }
+    } else {
+      this.noPuedoPegarPeroEstoyEnCombate = false;
     }
+  }
+  puedoPegar() {
+    return performance.now() > this.rateOfFire + this.ultimoGolpe;
   }
 
   pegar(enemigo) {
     enemigo.recibirDanio(this.fuerzaDeAtaque);
+    this.ultimoGolpe = performance.now();
+    this.pegando = true;
+    setTimeout(() => {
+      this.pegando = false;
+    }, 300);
   }
 
   recibirDanio(danio) {
@@ -459,6 +485,18 @@ class Persona extends GameObject {
       return;
     }
 
+    if (this.pegando) {
+      this.sprite.changeAnimation("slash");
+      this.velocidad.x *= 0.1;
+      this.velocidad.y *= 0.1;
+      return;
+    } else if (this.noPuedoPegarPeroEstoyEnCombate) {
+      this.sprite.changeAnimation("combat");
+      this.velocidad.x *= 0.3;
+      this.velocidad.y *= 0.3;
+      return;
+    }
+
     if (this.velocidadLineal > this.velocidadMaxima * 0.7) {
       this.sprite.changeAnimation("run");
       this.sprite.animationSpeed =
@@ -510,9 +548,11 @@ class Persona extends GameObject {
   }
 
   borrar() {
+    this.borrarmeComoTargetDeTodos();
     this.container.parent = null;
     this.container = null;
     this.sprite = null;
+
     this.juego.personas = this.juego.personas.filter(
       (persona) => persona !== this
     );

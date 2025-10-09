@@ -22,6 +22,7 @@ class Juego {
   width;
   height;
   debug = false;
+  barrasDeVidaVisibles = true;
   distanciaALaQueLosObjetosTienenTodaLaLuz = 157;
   factorMagicoArriba = 2;
   factorMagicoAbajo = 2.18;
@@ -323,26 +324,30 @@ class Juego {
     };
 
     // Event listener para la rueda del mouse (zoom)
-    this.pixiApp.canvas.addEventListener("wheel", (event) => {
-      event.preventDefault(); // Prevenir el scroll de la página
+    this.pixiApp.canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault(); // Prevenir el scroll de la página
 
-      const zoomDelta = event.deltaY > 0 ? -this.zoomStep : this.zoomStep;
-      const nuevoZoom = Math.max(
-        this.minZoom,
-        Math.min(this.maxZoom, this.zoom + zoomDelta)
-      );
-
-      if (nuevoZoom !== this.zoom) {
-        // Aplicar el nuevo zoom
-        this.cambiarZoom(nuevoZoom);
-
-        // Recentrar la cámara en el targetCamara
-        this.moverContainerPrincipalA(
-          -this.targetCamara.posicion.x * this.zoom + this.width / 2,
-          -this.targetCamara.posicion.y * this.zoom + this.height / 2
+        const zoomDelta = event.deltaY > 0 ? -this.zoomStep : this.zoomStep;
+        const nuevoZoom = Math.max(
+          this.minZoom,
+          Math.min(this.maxZoom, this.zoom + zoomDelta)
         );
-      }
-    });
+
+        if (nuevoZoom !== this.zoom) {
+          // Aplicar el nuevo zoom
+          this.cambiarZoom(nuevoZoom);
+
+          // Recentrar la cámara en el targetCamara
+          this.moverContainerPrincipalA(
+            -this.targetCamara.posicion.x * this.zoom + this.width / 2,
+            -this.targetCamara.posicion.y * this.zoom + this.height / 2
+          );
+        }
+      },
+      { passive: false }
+    );
   }
   ponerCruzTargetDondeElMouseHizoClick(posicion) {
     this.cruzTarget.x = posicion.x;
@@ -375,9 +380,6 @@ class Juego {
       unpersona.render();
     }
 
-    // for (let monumento of this.monumentos) {
-    //   monumento.render();
-    // }
     for (let arbol of this.arboles) {
       arbol.tick();
     }
@@ -396,12 +398,6 @@ class Juego {
       for (let unpersona of this.personas) {
         unpersona.dibujarCirculo();
       }
-      for (let monumento of this.monumentos) {
-        monumento.dibujarCirculo();
-      }
-      for (let arbol of this.arboles) {
-        arbol.dibujarCirculo();
-      }
     }
 
     this.hacerQLaCamaraSigaAAlguien();
@@ -418,6 +414,13 @@ class Juego {
     if (this.sistemaDeIluminacion) {
       this.sistemaDeIluminacion.toggle();
     }
+  }
+
+  toggleBarrasDeVida() {
+    this.barrasDeVidaVisibles = !this.barrasDeVidaVisibles;
+    this.personas.forEach((persona) => {
+      persona.containerBarraVida.visible = this.barrasDeVidaVisibles;
+    });
   }
   toggleDebug() {
     this.debug = !this.debug;

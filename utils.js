@@ -129,3 +129,16 @@ function convertirCantidadDeMinutosDelDiaAStringDeHora(minutos) {
     .toString()
     .padStart(2, "0")}`;
 }
+
+function mapColors(color1, color2, mix) {
+  const r1 = (color1 >> 16) & 255;
+  const g1 = (color1 >> 8) & 255;
+  const b1 = color1 & 255;
+  const r2 = (color2 >> 16) & 255;
+  const g2 = (color2 >> 8) & 255;
+  const b2 = color2 & 255;
+  const r = Math.round(r1 * mix + r2 * (1 - mix));
+  const g = Math.round(g1 * mix + g2 * (1 - mix));
+  const b = Math.round(b1 * mix + b2 * (1 - mix));
+  return (r << 16) | (g << 8) | b;
+}

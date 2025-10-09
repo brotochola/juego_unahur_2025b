@@ -2,7 +2,6 @@ class Auto extends EntidadEstatica {
   constructor(x, y, juego, tipo, scaleX) {
     super(x, y, juego);
 
-    this.vida = 1;
     this.radio = 10;
     this.scaleX = scaleX || 1;
     this.tipo = tipo || Math.floor(Math.random() * 4) + 1;
