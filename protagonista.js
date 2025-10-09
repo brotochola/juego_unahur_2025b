@@ -98,6 +98,7 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
     // Sistema de desaceleración progresiva
 
     if (this.distanciaAlTarget < this.distanciaParaEmpezarABajarLaVelocidad) {
+      this.juego.hacerQueCruzTargetSeVaya();
       // Curva cúbica de desaceleración para aproximación suave
       const factor =
         (this.distanciaAlTarget / this.distanciaParaEmpezarABajarLaVelocidad) **

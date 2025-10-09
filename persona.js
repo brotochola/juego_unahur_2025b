@@ -33,9 +33,31 @@ class Persona extends GameObject {
     );
   }
 
-  buscarPersonasQueNoSonDeMiBando() {
+  buscarEnemigos() {
     return this.juego.personas.filter(
-      (persona) => persona.bando !== this.bando
+      (persona) =>
+        persona.bando !== this.bando &&
+        persona.bando != "policia" &&
+        persona.bando != "civil"
+    );
+  }
+
+  getPersonasCerca() {
+    return this.juego.personas.filter(
+      (persona) =>
+        calcularDistancia(this.posicion, persona.posicion) < this.vision
+    );
+  }
+
+  getAmigosCerca() {
+    return this.personasCerca.filter((persona) =>
+      this.amigos.includes(persona)
+    );
+  }
+
+  getEnemigosCerca() {
+    return this.personasCerca.filter((persona) =>
+      this.enemigos.includes(persona)
     );
   }
 
@@ -100,9 +122,20 @@ class Persona extends GameObject {
   }
   percibirEntorno() {
     // mirar alrededor
-    this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
+    //todos los enemigos
+    this.enemigos = this.buscarEnemigos();
+    //todos los amigos
     this.amigos = this.buscarPersonasDeMiBando();
+
+    //todas las personas en mi rango de vision
+    this.personasCerca = this.getPersonasCerca();
+    //de esas personas cuales son amigas
+    this.amigosCerca = this.getAmigosCerca();
+    //de esas personas cuales son enemigos
+    this.enemigosCerca = this.getEnemigosCerca();
+    //de los enemigos cerca, el mas cercano
     this.enemigoMasCerca = this.buscarEnemigoMasCerca();
+
     this.buscarObstaculosBienCerquitaMio();
   }
 
@@ -192,7 +225,7 @@ class Persona extends GameObject {
   alineacion() {
     let cont = 0;
     let vectorPromedioDeVelocidades = { x: 0, y: 0 };
-    for (const persona of this.amigos) {
+    for (const persona of this.amigosCerca) {
       if (persona !== this) {
         const distancia = calcularDistancia(this.posicion, persona.posicion);
         if (distancia < this.vision) {
@@ -222,7 +255,7 @@ class Persona extends GameObject {
     let vectorPromedioDePosiciones = { x: 0, y: 0 };
     //iteramos por todos los amigos
 
-    for (const persona of this.amigos) {
+    for (const persona of this.amigosCerca) {
       if (persona === this || persona === this.juego.protagonista) continue;
       //si la persona ota no soy yo y no es el protagonista
       const distancia = calcularDistancia(this.posicion, persona.posicion);
@@ -373,8 +406,8 @@ class Persona extends GameObject {
     let enemigoMasCerca = null;
     let distanciaMasCerca = Infinity;
 
-    for (let i = 0; i < this.enemigos.length; i++) {
-      const enemigo = this.enemigos[i];
+    for (let i = 0; i < this.enemigosCerca.length; i++) {
+      const enemigo = this.enemigosCerca[i];
       const distancia = calcularDistancia(this.posicion, enemigo.posicion);
 
       // Actualizar si es más cercano Y está dentro del rango de visión
@@ -468,5 +501,21 @@ class Persona extends GameObject {
     super.render();
 
     this.cambiarDeAnimacionSegunLaVelocidadYAngulo();
+  }
+
+  borrar() {
+    this.container.parent = null;
+    this.container = null;
+    this.sprite = null;
+    this.juego.personas = this.juego.personas.filter(
+      (persona) => persona !== this
+    );
+    this.juego.enemigos = this.juego.enemigos.filter(
+      (persona) => persona !== this
+    );
+    this.juego.amigos = this.juego.amigos.filter((persona) => persona !== this);
+    this.juego.policias = this.juego.policias.filter(
+      (persona) => persona !== this
+    );
   }
 }

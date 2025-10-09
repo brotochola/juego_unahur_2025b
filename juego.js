@@ -159,8 +159,36 @@ class Juego {
 
     // this.crearAmigos(400);
 
+    this.crearCruzTarget();
+
     // Crear el sistema de iluminación
     this.sistemaDeIluminacion = new SistemaDeIluminacion(this);
+  }
+
+  async crearCruzTarget() {
+    this.cruzTarget = new PIXI.Sprite(
+      await PIXI.Assets.load("assets/pixelart/target.png")
+    );
+    this.cruzTarget.visible = false;
+
+    this.cruzTarget.zIndex = 999999999999;
+    this.cruzTarget.anchor.set(0.5, 0.5);
+    this.containerPrincipal.addChild(this.cruzTarget);
+  }
+
+  hacerQueCruzTargetSeVaya() {
+    gsap.to(this.cruzTarget, {
+      alpha: 0,
+      duration: 1,
+      onComplete: () => {
+        this.cruzTarget.visible = false;
+      },
+    });
+  }
+  hacerQueCruzTargetAparezca() {
+    gsap.killTweensOf(this.cruzTarget);
+    this.cruzTarget.visible = true;
+    this.cruzTarget.alpha = 1;
   }
   crearCasitasRandom() {
     for (let i = 0; i < 100; i++) {
@@ -180,7 +208,7 @@ class Juego {
   }
 
   async cargarTexturas() {
-    await PIXI.Assets.load(["assets/bg.jpg"]);
+    await PIXI.Assets.load(["assets/bg.jpg", "assets/pixelart/target.png"]);
   }
 
   crearUnEnemigo(bando, x, y) {
@@ -223,6 +251,7 @@ class Juego {
     const persona = new Amigo(x, y, this);
     this.personas.push(persona);
     this.amigos.push(persona);
+    return persona;
   }
 
   crearUnCivil(x, y) {
@@ -289,6 +318,7 @@ class Juego {
     this.pixiApp.canvas.onmouseup = (event) => {
       this.mouse.up = this.convertirCoordenadaDelMouse(event.x, event.y);
       this.mouse.apretado = false;
+      this.ponerCruzTargetDondeElMouseHizoClick(this.mouse.up);
     };
 
     // Event listener para la rueda del mouse (zoom)
@@ -312,6 +342,11 @@ class Juego {
         );
       }
     });
+  }
+  ponerCruzTargetDondeElMouseHizoClick(posicion) {
+    this.cruzTarget.x = posicion.x;
+    this.cruzTarget.y = posicion.y;
+    this.hacerQueCruzTargetAparezca();
   }
 
   convertirCoordenadaDelMouse(mouseX, mouseY) {
