@@ -28,6 +28,7 @@ class Juego {
   factorMagicoAbajo = 2.18;
   teclado = {};
   ahora = performance.now();
+  BASE_Z_INDEX = 50000;
 
   constructor() {
     this.updateDimensions();
@@ -99,6 +100,15 @@ class Juego {
   agregarListenersDeTeclado() {
     window.onkeydown = (event) => {
       this.teclado[event.key.toLowerCase()] = true;
+      if (event.key == "1") {
+        this.crearUnAmigo(this.mouse.posicion.x, this.mouse.posicion.y);
+      } else if (parseInt(event.key)) {
+        this.crearUnEnemigo(
+          parseInt(event.key),
+          this.mouse.posicion.x,
+          this.mouse.posicion.y
+        );
+      }
     };
     window.onkeyup = (event) => {
       this.teclado[event.key.toLowerCase()] = false;
@@ -164,6 +174,7 @@ class Juego {
 
     // Crear el sistema de iluminación
     this.sistemaDeIluminacion = new SistemaDeIluminacion(this);
+    this.particleSystem = new ParticleSystem(this);
   }
 
   async crearCruzTarget() {
@@ -276,8 +287,8 @@ class Juego {
     }
   }
   crearProtagonista() {
-    const x = this.anchoDelMapa / 2;
-    const y = this.altoDelMapa / 2;
+    const x = 3500;
+    const y = 1500;
     const protagonista = new Protagonista(x, y, this);
     this.personas.push(protagonista);
     this.protagonista = protagonista;
@@ -307,6 +318,9 @@ class Juego {
   }
 
   agregarInteractividadDelMouse() {
+    this.pixiApp.canvas.oncontextmenu = (event) => {
+      event.preventDefault();
+    };
     // Escuchar el evento mousemove
     this.pixiApp.canvas.onmousemove = (event) => {
       this.segunQueTeclaEstaApretadaHacerCosas();
@@ -318,6 +332,7 @@ class Juego {
       this.mouse.apretado = true;
     };
     this.pixiApp.canvas.onmouseup = (event) => {
+      if (event.button != 0) return;
       this.mouse.up = this.convertirCoordenadaDelMouse(event.x, event.y);
       this.mouse.apretado = false;
       this.ponerCruzTargetDondeElMouseHizoClick(this.mouse.up);
@@ -368,40 +383,57 @@ class Juego {
     //borrar lo q hay en los graficos debug
     if (this.graficoDebug) this.graficoDebug.clear();
 
+    for (let unpersona of this.personas) unpersona.tick();
+    for (let unpersona of this.personas) unpersona.render();
+
+    for (let arbol of this.arboles) arbol.tick();
+    for (let farol of this.faroles) farol.tick();
+
+    for (let obstaculo of this.obstaculos) obstaculo.render();
+
     // Actualizar el sistema de iluminación
-    if (this.sistemaDeIluminacion) {
-      this.sistemaDeIluminacion.tick();
-    }
+    if (this.sistemaDeIluminacion) this.sistemaDeIluminacion.tick();
 
-    //iteramos por todos los personas
-    for (let unpersona of this.personas) {
-      //ejecutamos el metodo tick de cada persona
-      unpersona.tick();
-      unpersona.render();
-    }
+    if (this.particleSystem) this.particleSystem.update();
 
-    for (let arbol of this.arboles) {
-      arbol.tick();
-    }
-    for (let farol of this.faroles) {
-      farol.tick();
-    }
-
-    for (let obstaculo of this.obstaculos) {
-      obstaculo.render();
-    }
-
-    if (this.debug) {
-      for (let obstaculo of this.obstaculos) {
-        obstaculo.dibujarCirculo();
-      }
-      for (let unpersona of this.personas) {
-        unpersona.dibujarCirculo();
-      }
-    }
+    this.chequearQueNoHayaMuertosConBarraDeVida();
 
     this.hacerQLaCamaraSigaAAlguien();
     this.calcularFPS();
+
+    if (!this.debug) return;
+    for (let obstaculo of this.obstaculos) obstaculo.dibujarCirculo();
+    for (let unpersona of this.personas) unpersona.dibujarCirculo();
+  }
+
+  chequearQueNoHayaMuertosConBarraDeVida() {
+    this.containerPrincipal.children
+      .filter((k) => k.label.startsWith("persona muerta"))
+      .forEach((k) => {
+        const containerBarraVida = k.children.find((k) =>
+          k.label.startsWith("containerBarraVida")
+        );
+
+        const spriteAnimado = k.children.find((k) =>
+          k.label.startsWith("animatedSprite")
+        );
+
+        //fade out muertos
+        if (spriteAnimado) {
+          spriteAnimado.alpha *= 0.999;
+          if (spriteAnimado.alpha < 0.01) {
+            k.removeChild(spriteAnimado);
+            console.log("borrando sprite animado de un muerto");
+            spriteAnimado.destroy();
+          }
+        }
+
+        if (containerBarraVida) {
+          k.removeChild(containerBarraVida);
+          console.log("borrando container barra vida de un muerto");
+          containerBarraVida.destroy();
+        }
+      });
   }
   calcularFPS() {
     this.deltaTime = performance.now() - this.ahora;
@@ -419,7 +451,10 @@ class Juego {
   toggleBarrasDeVida() {
     this.barrasDeVidaVisibles = !this.barrasDeVidaVisibles;
     this.personas.forEach((persona) => {
-      persona.containerBarraVida.visible = this.barrasDeVidaVisibles;
+      // Verificar que la persona no esté muerta y tenga barra de vida
+      if (!persona.muerto && persona.containerBarraVida) {
+        persona.containerBarraVida.visible = this.barrasDeVidaVisibles;
+      }
     });
   }
   toggleDebug() {

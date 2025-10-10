@@ -115,6 +115,40 @@ function crearSpriteConGradiente(radio = 300) {
   return sprite;
 }
 
+// Cache para texturas de círculos para evitar recrearlas
+const texturaCirculoCache = new Map();
+
+function crearCirculo(radio, color) {
+  // Verificar si ya tenemos esta textura en cache
+  const cacheKey = `circulo_${radio}_${color}`;
+  let textura = texturaCirculoCache.get(cacheKey);
+
+  if (!textura) {
+    // Crear un canvas para el círculo solo si no existe en cache
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const size = radio * 2;
+    canvas.width = size;
+    canvas.height = size;
+
+    // Llenar el canvas de transparente
+    ctx.fillStyle = "transparent";
+    ctx.fillRect(0, 0, size, size);
+
+    // Dibujar el círculo con el color especificado
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(radio, radio, radio, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Crear textura PIXI a partir del canvas y guardarla en cache
+    textura = PIXI.Texture.from(canvas);
+    texturaCirculoCache.set(cacheKey, textura);
+  }
+
+  return textura;
+}
+
 function isometricToCartesian(pos) {
   return {
     x: pos.x / 2 + pos.y,
@@ -130,7 +164,7 @@ function convertirCantidadDeMinutosDelDiaAStringDeHora(minutos) {
     .padStart(2, "0")}`;
 }
 
-function mapColors(color1, color2, mix) {
+function mapColors(color2, color1, mix) {
   const r1 = (color1 >> 16) & 255;
   const g1 = (color1 >> 8) & 255;
   const b1 = color1 & 255;
@@ -141,4 +175,284 @@ function mapColors(color1, color2, mix) {
   const g = Math.round(g1 * mix + g2 * (1 - mix));
   const b = Math.round(b1 * mix + b2 * (1 - mix));
   return (r << 16) | (g << 8) | b;
+}
+
+function colorToHexString(color) {
+  // Convierte un número hexadecimal (ej: 0xff0000) a string hexadecimal (ej: "#ff0000")
+  return "#" + color.toString(16).padStart(6, "0");
+}
+
+function generateName() {
+  const englishFirstNames = [
+    "James",
+    "John",
+    "Robert",
+    "Michael",
+    "William",
+    "David",
+    "Richard",
+    "Joseph",
+    "Thomas",
+    "Christopher",
+    "Mary",
+    "Patricia",
+    "Jennifer",
+    "Linda",
+    "Elizabeth",
+    "Barbara",
+    "Susan",
+    "Jessica",
+    "Sarah",
+    "Karen",
+    "Emma",
+    "Olivia",
+    "Ava",
+    "Isabella",
+    "Sophia",
+    "Mia",
+    "Charlotte",
+    "Amelia",
+    "Harper",
+    "Evelyn",
+    "Alexander",
+    "Benjamin",
+    "Lucas",
+    "Henry",
+    "Mason",
+    "Ethan",
+    "Noah",
+    "Logan",
+    "Sebastian",
+    "Jack",
+  ];
+
+  const spanishFirstNames = [
+    "José",
+    "Antonio",
+    "Manuel",
+    "Francisco",
+    "David",
+    "Juan",
+    "Javier",
+    "Daniel",
+    "Carlos",
+    "Miguel",
+    "María",
+    "Carmen",
+    "Josefa",
+    "Isabel",
+    "Ana",
+    "Dolores",
+    "Pilar",
+    "Teresa",
+    "Rosa",
+    "Francisca",
+    "Alejandro",
+    "Diego",
+    "Pablo",
+    "Álvaro",
+    "Adrián",
+    "Gonzalo",
+    "Fernando",
+    "Eduardo",
+    "Sergio",
+    "Raúl",
+    "Sofía",
+    "Martina",
+    "Lucía",
+    "Valeria",
+    "Paula",
+    "Emma",
+    "Daniela",
+    "Carla",
+    "Sara",
+    "Jimena",
+  ];
+
+  const englishSurnames = [
+    "Smith",
+    "Johnson",
+    "Williams",
+    "Brown",
+    "Jones",
+    "Garcia",
+    "Miller",
+    "Davis",
+    "Rodriguez",
+    "Martinez",
+    "Wilson",
+    "Anderson",
+    "Taylor",
+    "Thomas",
+    "Hernandez",
+    "Moore",
+    "Martin",
+    "Jackson",
+    "Thompson",
+    "White",
+    "Lopez",
+    "Lee",
+    "Gonzalez",
+    "Harris",
+    "Clark",
+    "Lewis",
+    "Robinson",
+    "Walker",
+    "Perez",
+    "Hall",
+    "Young",
+    "Allen",
+    "Sanchez",
+    "Wright",
+    "King",
+    "Scott",
+    "Green",
+    "Baker",
+    "Adams",
+    "Nelson",
+  ];
+
+  const spanishSurnames = [
+    "García",
+    "González",
+    "Rodríguez",
+    "Fernández",
+    "López",
+    "Martínez",
+    "Sánchez",
+    "Pérez",
+    "Gómez",
+    "Martín",
+    "Jiménez",
+    "Ruiz",
+    "Hernández",
+    "Díaz",
+    "Moreno",
+    "Muñoz",
+    "Álvarez",
+    "Romero",
+    "Alonso",
+    "Gutiérrez",
+    "Navarro",
+    "Torres",
+    "Domínguez",
+    "Vázquez",
+    "Ramos",
+    "Gil",
+    "Ramírez",
+    "Serrano",
+    "Blanco",
+    "Suárez",
+    "Molina",
+    "Morales",
+    "Ortega",
+    "Delgado",
+    "Castro",
+    "Ortiz",
+    "Rubio",
+    "Marín",
+    "Sanz",
+    "Iglesias",
+  ];
+
+  const italianSurnames = [
+    "Rossi",
+    "Ferrari",
+    "Russo",
+    "Bianchi",
+    "Romano",
+    "Gallo",
+    "Costa",
+    "Fontana",
+    "Conti",
+    "Esposito",
+    "Ricci",
+    "Bruno",
+    "Rizzo",
+    "Moretti",
+    "Marino",
+    "Greco",
+    "Ferrara",
+    "Caruso",
+    "Galli",
+    "Ferrara",
+    "Leone",
+    "Longo",
+    "Mancini",
+    "Mazza",
+    "Rinaldi",
+    "Testa",
+    "Grasso",
+    "Pellegrini",
+    "Ferraro",
+    "Galli",
+    "Bellini",
+    "Basile",
+    "Rizzo",
+    "Vitale",
+    "Parisi",
+    "Ferrara",
+    "Serra",
+    "Valentini",
+    "D'Angelo",
+    "Marchetti",
+  ];
+
+  const portugueseSurnames = [
+    "Silva",
+    "Santos",
+    "Oliveira",
+    "Sousa",
+    "Rodrigues",
+    "Ferreira",
+    "Alves",
+    "Pereira",
+    "Costa",
+    "Martins",
+    "Carvalho",
+    "Fernandes",
+    "Lopes",
+    "Gomes",
+    "Mendes",
+    "Nunes",
+    "Ribeiro",
+    "Antunes",
+    "Correia",
+    "Dias",
+    "Teixeira",
+    "Monteiro",
+    "Moreira",
+    "Cardoso",
+    "Soares",
+    "Melo",
+    "Pinto",
+    "Fonseca",
+    "Machado",
+    "Araújo",
+    "Barbosa",
+    "Tavares",
+    "Coelho",
+    "Cruz",
+    "Cunha",
+    "Freitas",
+    "Lima",
+    "Mota",
+    "Neves",
+    "Rocha",
+  ];
+
+  // Randomly select from all available names and surnames
+  const allFirstNames = [...englishFirstNames, ...spanishFirstNames];
+  const allSurnames = [
+    ...englishSurnames,
+    ...spanishSurnames,
+    ...italianSurnames,
+    ...portugueseSurnames,
+  ];
+
+  const firstName =
+    allFirstNames[Math.floor(Math.random() * allFirstNames.length)];
+  const surname = allSurnames[Math.floor(Math.random() * allSurnames.length)];
+
+  return `${firstName} ${surname}`;
 }

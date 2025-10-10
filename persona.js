@@ -1,9 +1,12 @@
 class Persona extends GameObject {
   constructor(x, y, juego) {
     super(x, y, juego);
+    this.container.label = "persona - " + this.id;
     this.noPuedoPegarPeroEstoyEnCombate = false;
     this.muerto = false;
     this.bando = 0; //bando default
+
+    this.nombre = generateName();
 
     this.rateOfFire = 500; //medido en milisegundos
     this.ultimoGolpe = 0;
@@ -28,6 +31,28 @@ class Persona extends GameObject {
     this.velocidadMaxima = 3;
     this.amigos = [];
     this.crearSombra();
+  }
+  pasarseDeBando(cualBando) {
+    const pos = this.posicion;
+
+    this.borrar();
+    let amigo;
+    if (cualBando == 1) {
+      amigo = this.juego.crearUnAmigo(pos.x, pos.y);
+    } else {
+      amigo = this.juego.crearUnEnemigo(cualBando, pos.x, pos.y);
+    }
+
+    amigo.id = this.id;
+    amigo.vida = this.vida;
+    amigo.coraje = this.coraje;
+    amigo.vision = this.vision;
+    amigo.recienConvertido = true;
+    setTimeout(() => {
+      try {
+        delete amigo.recienConvertido;
+      } catch (e) {}
+    }, 1000);
   }
 
   buscarPersonasDeMiBando() {
@@ -223,6 +248,7 @@ class Persona extends GameObject {
 
     this.sprite.anchor.set(0.5, 1);
     this.sprite.scale.set(0.85, 0.85);
+    this.sprite.label = "animatedSprite" + this.id;
 
     this.container.addChild(this.sprite);
   }
@@ -323,15 +349,33 @@ class Persona extends GameObject {
     if (this.vida > this.vidaMaxima) this.vida = this.vidaMaxima;
   }
 
+  quitarSombra() {
+    if (this.sombra) {
+      this.container.removeChild(this.sombra);
+      this.sombra.destroy();
+      this.sombra = null;
+    }
+  }
+
   morir() {
     if (this.muerto) return;
-
+    this.container.label = "persona muerta - " + this.id;
+    this.quitarSombra();
+    this.quitarBarritaVida();
+    this.sprite.changeAnimation("hurt");
+    this.sprite.loop = false;
     // Marcar como muerto PRIMERO para evitar que se actualice la barra durante el proceso
     this.muerto = true;
-    this.quitarBarritaVida();
+    this.recienConvertido = false;
+    // this.render();
+    // Limpiar la barra de vida DESPUÉS de marcar como muerto
 
     this.borrarmeComoTargetDeTodos();
+    this.quitarmeDeLosArrays();
+  }
 
+  quitarmeDeLosArrays() {
+    // console.log("quitarmeDeLosArrays", this.id);
     this.juego.personas = this.juego.personas.filter(
       (persona) => persona !== this
     );
@@ -340,7 +384,13 @@ class Persona extends GameObject {
     );
     this.juego.amigos = this.juego.amigos.filter((persona) => persona !== this);
 
-    this.container.zIndex = this.calcularZindex();
+    this.juego.policias = this.juego.policias.filter(
+      (persona) => persona !== this
+    );
+
+    this.juego.civiles = this.juego.civiles.filter(
+      (persona) => persona !== this
+    );
   }
 
   pegarSiEstaEnMiRango() {
@@ -364,7 +414,7 @@ class Persona extends GameObject {
   }
 
   pegar(enemigo) {
-    enemigo.recibirDanio(this.fuerzaDeAtaque);
+    enemigo.recibirDanio(this.fuerzaDeAtaque, this);
     this.ultimoGolpe = performance.now();
     this.pegando = true;
     setTimeout(() => {
@@ -372,8 +422,9 @@ class Persona extends GameObject {
     }, 300);
   }
 
-  recibirDanio(danio) {
+  recibirDanio(danio, deQuien) {
     this.vida -= danio;
+    this.juego.particleSystem.hacerQueLeSalgaSangreAAlguien(this, deQuien);
   }
 
   caminarSinRumbo() {
@@ -446,27 +497,6 @@ class Persona extends GameObject {
   }
 
   cambiarDeAnimacionSegunLaVelocidadYAngulo() {
-    /**
-     * SISTEMA DE ANIMACIÓN BASADO EN FÍSICA
-     *
-     * Mapea el estado físico del agente a animaciones visuales:
-     *
-     * 1. SELECCIÓN DE ANIMACIÓN POR VELOCIDAD:
-     *    - Muerte: animación "hurt" sin loop
-     *    - Correr: velocidad > 70% del máximo
-     *    - Caminar: velocidad > 0.1 píxeles/frame
-     *    - Idle: velocidad ≤ 0.1 píxeles/frame
-     *
-     * 2. VELOCIDAD DE ANIMACIÓN ADAPTATIVA:
-     *    - Correr: speed = 0.25 × (v_actual / v_max)
-     *    - Caminar: speed = 0.05 + 0.3 × (v_actual / v_max)
-     *    - Esto sincroniza la animación con la velocidad real
-     *
-     * 3. DIRECCIÓN CARDINAL (4 direcciones):
-     *    - Divide el círculo en 4 sectores de 90°
-     *    - Mapea ángulos de movimiento a direcciones de sprite
-     *    - Nota: Las direcciones están invertidas por el sistema de coordenadas
-     */
     if (this.velocidadLineal == undefined || this.angulo == undefined) {
       return;
     }
@@ -548,20 +578,12 @@ class Persona extends GameObject {
   }
 
   borrar() {
+    this.juego.containerPrincipal.removeChild(this.container);
+    this.quitarBarritaVida();
     this.borrarmeComoTargetDeTodos();
+    this.quitarmeDeLosArrays();
     this.container.parent = null;
     this.container = null;
     this.sprite = null;
-
-    this.juego.personas = this.juego.personas.filter(
-      (persona) => persona !== this
-    );
-    this.juego.enemigos = this.juego.enemigos.filter(
-      (persona) => persona !== this
-    );
-    this.juego.amigos = this.juego.amigos.filter((persona) => persona !== this);
-    this.juego.policias = this.juego.policias.filter(
-      (persona) => persona !== this
-    );
   }
 }

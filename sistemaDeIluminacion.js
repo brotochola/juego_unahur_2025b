@@ -83,7 +83,26 @@ class SistemaDeIluminacion {
 
     // Establecer la visibilidad inicial
     this.spriteDeIluminacion.visible = this.activo;
+
+    // this.crearSpriteAmarilloParaElAtardecer();
   }
+  // crearSpriteAmarilloParaElAtardecer() {
+  //   this.spriteAmarilloParaElAtardecer = new PIXI.Graphics();
+  //   this.spriteAmarilloParaElAtardecer.label = "spriteAmarilloParaElAtardecer";
+  //   this.spriteAmarilloParaElAtardecer.rect(
+  //     0,
+  //     0,
+  //     this.juego.width,
+  //     this.juego.height
+  //   );
+  //   this.spriteAmarilloParaElAtardecer.fill({
+  //     color: 0xff6600,
+  //     alpha: 0.5,
+  //   });
+  //   this.spriteAmarilloParaElAtardecer.zIndex = 9999999999999999999;
+  //   this.spriteAmarilloParaElAtardecer.blendMode = "multiply";
+  //   this.juego.pixiApp.stage.addChild(this.spriteAmarilloParaElAtardecer);
+  // }
 
   redimensionarRenderTexture() {
     if (!this.renderTexture || !this.spriteDeIluminacion) return;

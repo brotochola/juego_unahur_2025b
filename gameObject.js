@@ -45,10 +45,11 @@ class GameObject {
 
     // Referencias del sistema
     this.juego = juego; // Referencia al motor del juego
-    this.id = Math.floor(Math.random() * 99999999); // ID único aleatorio
+    this.id = Math.floor(Math.random() * 9999999999999); // ID único aleatorio
 
     // Configuración del sistema de renderizado PIXI.js
     this.container = new PIXI.Container(); // Container para agrupar elementos visuales
+    this.container.label = "gameObject - " + this.id;
     this.container.x = x; // Posición inicial X en pantalla
     this.container.y = y; // Posición inicial Y en pantalla
 
@@ -70,10 +71,11 @@ class GameObject {
 
   crearBarritaVida() {
     this.containerBarraVida = new PIXI.Container();
-
+    this.containerBarraVida.label = "containerBarraVida";
     this.container.addChild(this.containerBarraVida);
 
     this.barritaVida = new PIXI.Graphics();
+    this.barritaVida.label = "barritaVida";
     this.barritaVida.rect(
       0,
       -this.sprite.height,
@@ -98,28 +100,45 @@ class GameObject {
   }
 
   quitarBarritaVida() {
-    if (this.containerBarraVida) {
-      this.containerBarraVida.visible = false;
+    // Verificar que el contenedor principal exista antes de proceder
+    if (!this.containerBarraVida) return;
+    this.containerBarraVida.visible = false;
+    this.container.removeChild(this.containerBarraVida);
 
-      if (this.barritaVida) {
+    if (this.barritaVida) {
+      try {
+        this.containerBarraVida.removeChild(this.barritaVida);
         this.barritaVida.visible = false;
         this.barritaVida.clear();
         this.barritaVida.destroy();
-        this.barritaVida = null;
+      } catch (e) {
+        console.warn("Error al destruir barritaVida:", e);
       }
+      this.barritaVida = null;
+    }
 
-      if (this.contornoBarraVida) {
+    if (this.contornoBarraVida) {
+      try {
+        this.containerBarraVida.removeChild(this.contornoBarraVida);
         this.contornoBarraVida.visible = false;
         this.contornoBarraVida.clear();
         this.contornoBarraVida.destroy();
-        this.contornoBarraVida = null;
+      } catch (e) {
+        console.warn("Error al destruir contornoBarraVida:", e);
       }
+      this.contornoBarraVida = null;
+    }
 
-      if (this.container && this.containerBarraVida.parent) {
-        this.container.removeChild(this.containerBarraVida);
+    if (this.containerBarraVida) {
+      try {
+        if (this.container) {
+          this.container.removeChild(this.containerBarraVida);
+        }
+        this.containerBarraVida.visible = false;
+        this.containerBarraVida.destroy();
+      } catch (e) {
+        console.warn("Error al destruir containerBarraVida:", e);
       }
-
-      this.containerBarraVida.destroy();
       this.containerBarraVida = null;
     }
   }
@@ -132,11 +151,11 @@ class GameObject {
     this.barritaVida.width =
       (this.vida / this.vidaMaxima) * this.anchoBarraVida;
 
-    this.barritaVida.tint = mapColors(
-      0x7fca34,
-      0xff0000,
-      this.vida / this.vidaMaxima
-    );
+    let ratio = this.vida / this.vidaMaxima;
+    if (ratio > 1) ratio = 1;
+    if (ratio < 0) ratio = 0;
+
+    this.barritaVida.tint = mapColors(0xff0000, 0x7fca34, ratio);
   }
 
   tick() {
@@ -234,7 +253,7 @@ class GameObject {
   }
 
   calcularZindex() {
-    const base = 50000;
+    const base = this.juego.BASE_Z_INDEX;
 
     if (!this.sprite) return this.posicion.y + base;
 
@@ -292,7 +311,6 @@ class GameObject {
     }
   }
   borrarmeComoTargetDeTodos() {
-    console.log("borrarmeComoTargetDeTodos", this);
     this.juego.personas.forEach((persona) => {
       if (persona.target == this) persona.asignarTarget(null);
       if (persona.perseguidor == this) persona.perseguidor = null;
@@ -386,7 +404,7 @@ class GameObject {
   }
 
   render() {
-    if (!this.container || this.muerto) return;
+    if (!this.container) return;
 
     this.container.x = this.posicion.x;
     this.container.y = this.posicion.y;
