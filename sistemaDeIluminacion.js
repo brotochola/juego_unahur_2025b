@@ -76,7 +76,7 @@ class SistemaDeIluminacion {
 
     // Crear sprites de gradiente para cada farol
     for (let farol of this.juego.faroles) {
-      farol.spriteGradiente = crearSpriteConGradiente(farol.radioLuz);
+      farol.spriteGradiente = crearSpriteConGradiente(farol.radioLuz, 0xffffcc);
       farol.spriteGradiente.zIndex = 2;
       this.containerParaRenderizar.addChild(farol.spriteGradiente);
     }
@@ -84,25 +84,28 @@ class SistemaDeIluminacion {
     // Establecer la visibilidad inicial
     this.spriteDeIluminacion.visible = this.activo;
 
-    // this.crearSpriteAmarilloParaElAtardecer();
+    this.crearSpriteAmarilloParaElAtardecer();
   }
-  // crearSpriteAmarilloParaElAtardecer() {
-  //   this.spriteAmarilloParaElAtardecer = new PIXI.Graphics();
-  //   this.spriteAmarilloParaElAtardecer.label = "spriteAmarilloParaElAtardecer";
-  //   this.spriteAmarilloParaElAtardecer.rect(
-  //     0,
-  //     0,
-  //     this.juego.width,
-  //     this.juego.height
-  //   );
-  //   this.spriteAmarilloParaElAtardecer.fill({
-  //     color: 0xff6600,
-  //     alpha: 0.5,
-  //   });
-  //   this.spriteAmarilloParaElAtardecer.zIndex = 9999999999999999999;
-  //   this.spriteAmarilloParaElAtardecer.blendMode = "multiply";
-  //   this.juego.pixiApp.stage.addChild(this.spriteAmarilloParaElAtardecer);
-  // }
+  crearSpriteAmarilloParaElAtardecer() {
+    this.spriteAmarilloParaElAtardecer = new PIXI.Graphics();
+    this.spriteAmarilloParaElAtardecer.label = "spriteAmarilloParaElAtardecer";
+    this.spriteAmarilloParaElAtardecer.rect(
+      0,
+      0,
+      this.juego.width,
+      this.juego.height
+    );
+    this.spriteAmarilloParaElAtardecer.fill({
+      color: 0xffcc00,
+      alpha: 0.5,
+    });
+
+    this.spriteAmarilloParaElAtardecer.alpha = 0;
+    this.spriteAmarilloParaElAtardecer.zIndex =
+      Z_INDEX.spriteAmarilloParaElAtardecer;
+    this.spriteAmarilloParaElAtardecer.blendMode = "multiply";
+    this.juego.pixiApp.stage.addChild(this.spriteAmarilloParaElAtardecer);
+  }
 
   redimensionarRenderTexture() {
     if (!this.renderTexture || !this.spriteDeIluminacion) return;
@@ -128,6 +131,9 @@ class SistemaDeIluminacion {
     this.spriteNegro.label = "spriteNegro";
     this.spriteNegro.zIndex = 1;
     this.containerParaRenderizar.addChild(this.spriteNegro);
+
+    this.spriteAmarilloParaElAtardecer.width = this.juego.width;
+    this.spriteAmarilloParaElAtardecer.height = this.juego.height;
   }
 
   avanzarDia() {
@@ -168,39 +174,62 @@ class SistemaDeIluminacion {
 
   tick() {
     this.avanzarDia();
-
+    this.actualizarSpriteAmarilloParaElAtardecer();
     this.prenderOApagarTodosLosFarolesSegunLaHoraDelDia();
-    // Limpiar el gráfico de sombras proyectadas
+
     if (this.graficoSombrasProyectadas) {
       this.graficoSombrasProyectadas.clear();
     }
 
-    // Si la iluminación está activa, actualizar y renderizar
     if (this.activo) {
-      // Actualizar posiciones de los sprites de gradiente
-      for (let farol of this.juego.faroles) {
-        if (!farol.estoyVisibleEnPantalla(1.33)) {
-          farol.spriteGradiente.visible = false;
-          continue;
-        }
+      this.actualizarGradientsDeLosFaroles();
+      this.actualizarSpriteDeIluminacion();
+    }
+  }
 
-        farol.spriteGradiente.visible = true;
-        const posicionEnPantalla = farol.getPosicionEnPantalla();
-        farol.spriteGradiente.x = posicionEnPantalla.x;
-        farol.spriteGradiente.y = posicionEnPantalla.y;
-        farol.spriteGradiente.scale.set(this.juego.zoom);
+  actualizarSpriteAmarilloParaElAtardecer() {
+    if (!this.spriteAmarilloParaElAtardecer) return;
+    const desde = 16;
+    const hasta = 21;
+    if (this.horaDelDia < desde || this.horaDelDia > hasta) {
+      this.spriteAmarilloParaElAtardecer.alpha = 0;
+      return;
+    }
 
-        this.actualizarSombrasProyectadas(farol);
+    const ratio = (this.horaDelDia - desde) / (hasta - desde);
+
+    let valorAlpha = Math.sin(ratio * Math.PI);
+    if (valorAlpha < 0) valorAlpha = 0;
+    if (valorAlpha > 1) valorAlpha = 1;
+
+    this.spriteAmarilloParaElAtardecer.alpha = valorAlpha;
+  }
+
+  actualizarSpriteDeIluminacion() {
+    this.spriteDeIluminacion.alpha = 1 - this.cantidadDeLuzDelDia;
+
+    // Renderizar el container en la RenderTexture
+    this.juego.pixiApp.renderer.render({
+      container: this.containerParaRenderizar,
+      target: this.renderTexture,
+      clear: true,
+    });
+  }
+
+  actualizarGradientsDeLosFaroles() {
+    for (let farol of this.juego.faroles) {
+      if (!farol.estoyVisibleEnPantalla(1.33)) {
+        farol.spriteGradiente.visible = false;
+        continue;
       }
 
-      this.spriteDeIluminacion.alpha = 1 - this.cantidadDeLuzDelDia;
+      farol.spriteGradiente.visible = true;
+      const posicionEnPantalla = farol.getPosicionEnPantalla();
+      farol.spriteGradiente.x = posicionEnPantalla.x;
+      farol.spriteGradiente.y = posicionEnPantalla.y;
+      farol.spriteGradiente.scale.set(this.juego.zoom);
 
-      // Renderizar el container en la RenderTexture
-      this.juego.pixiApp.renderer.render({
-        container: this.containerParaRenderizar,
-        target: this.renderTexture,
-        clear: true,
-      });
+      this.actualizarSombrasProyectadas(farol);
     }
   }
 

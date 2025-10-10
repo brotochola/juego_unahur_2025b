@@ -60,9 +60,9 @@ function crearSpriteNegro(anchoDelMapa, altoDelMapa) {
 // Cache para texturas de gradientes para evitar recrearlas
 const texturaGradienteCache = new Map();
 
-function crearSpriteConGradiente(radio = 300) {
+function crearSpriteConGradiente(radio = 300, color = 0xffffff) {
   // Verificar si ya tenemos esta textura en cache
-  const cacheKey = `gradiente_${radio}`;
+  const cacheKey = `gradiente_${radio}_${color}`;
   let textura = texturaGradienteCache.get(cacheKey);
 
   if (!textura) {
@@ -83,10 +83,17 @@ function crearSpriteConGradiente(radio = 300) {
       radio // círculo exterior
     );
 
+    const r = (color >> 16) & 255;
+    const g = (color >> 8) & 255;
+    const b = color & 255;
+
     const cantStops = 10;
     for (let i = 1; i <= cantStops; i++) {
       const value = 2 ** (1 - i);
-      gradient.addColorStop(i / cantStops, "rgba(255,255,255," + value + ")"); // Centro blanco (sin oscuridad)
+      gradient.addColorStop(
+        i / cantStops,
+        "rgba(" + r + "," + g + "," + b + "," + value + ")"
+      ); // Centro blanco (sin oscuridad)
     }
     // Configurar paradas del gradiente
 

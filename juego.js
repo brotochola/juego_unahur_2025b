@@ -3,6 +3,8 @@ const Z_INDEX = {
   graficoSombrasProyectadas: 1,
   containerIluminacion: 2,
   containerPrincipal: 3,
+  spriteAmarilloParaElAtardecer: 4,
+  containerUI: 5,
 };
 
 class Juego {
@@ -61,6 +63,7 @@ class Juego {
       if (this.sistemaDeIluminacion) {
         this.sistemaDeIluminacion.redimensionarRenderTexture();
       }
+      if (this.ui) this.ui.resize();
     });
   }
 
@@ -95,6 +98,7 @@ class Juego {
     this.agregarInteractividadDelMouse();
     this.pixiApp.stage.sortableChildren = true;
     this.crearNivel();
+    this.ui = new UI(this);
   }
 
   agregarListenersDeTeclado() {
@@ -220,7 +224,11 @@ class Juego {
   }
 
   async cargarTexturas() {
-    await PIXI.Assets.load(["assets/bg.jpg", "assets/pixelart/target.png"]);
+    await PIXI.Assets.load([
+      "assets/bg.jpg",
+      "assets/pixelart/target.png",
+      "assets/pixelart/globo_de_dialogo.png",
+    ]);
   }
 
   crearUnEnemigo(bando, x, y) {
@@ -395,7 +403,7 @@ class Juego {
     if (this.sistemaDeIluminacion) this.sistemaDeIluminacion.tick();
 
     if (this.particleSystem) this.particleSystem.update();
-
+    if (this.ui) this.ui.tick();
     this.chequearQueNoHayaMuertosConBarraDeVida();
 
     this.hacerQLaCamaraSigaAAlguien();
@@ -408,7 +416,7 @@ class Juego {
 
   chequearQueNoHayaMuertosConBarraDeVida() {
     this.containerPrincipal.children
-      .filter((k) => k.label.startsWith("persona muerta"))
+      .filter((child) => child.label.startsWith("persona muerta"))
       .forEach((k) => {
         const containerBarraVida = k.children.find((k) =>
           k.label.startsWith("containerBarraVida")
@@ -420,17 +428,18 @@ class Juego {
 
         //fade out muertos
         if (spriteAnimado) {
-          spriteAnimado.alpha *= 0.999;
+          spriteAnimado.alpha *= 0.996;
+          spriteAnimado.alpha -= 0.0001;
+
           if (spriteAnimado.alpha < 0.01) {
             k.removeChild(spriteAnimado);
-            console.log("borrando sprite animado de un muerto");
             spriteAnimado.destroy();
+            this.containerPrincipal.removeChild(k);
           }
         }
 
         if (containerBarraVida) {
           k.removeChild(containerBarraVida);
-          console.log("borrando container barra vida de un muerto");
           containerBarraVida.destroy();
         }
       });

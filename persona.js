@@ -31,7 +31,47 @@ class Persona extends GameObject {
     this.velocidadMaxima = 3;
     this.amigos = [];
     this.crearSombra();
+    this.esperarAQueTengaSpriteCargado(() => {
+      this.crearGloboDeDialogo();
+    });
   }
+
+  hablar(emoji) {
+    if (this.hablarTimeout) clearTimeout(this.hablarTimeout);
+    this.containerDialogo.visible = true;
+    this.textoDeDialogo.text = emoji;
+    this.hablarTimeout = setTimeout(() => {
+      this.containerDialogo.visible = false;
+    }, 1000);
+  }
+
+  async crearGloboDeDialogo() {
+    this.containerDialogo = new PIXI.Container();
+    this.containerDialogo.visible = false;
+    this.containerDialogo.y = -this.sprite.height * 0.75;
+    this.containerDialogo.zIndex = 9;
+    this.containerDialogo.label = "containerDialogo";
+    this.container.addChild(this.containerDialogo);
+    this.globoDeDialogo = new PIXI.Sprite(
+      await PIXI.Assets.load("assets/pixelart/globo_de_dialogo.png")
+    );
+    this.globoDeDialogo.anchor.set(0.6, 1);
+    this.globoDeDialogo.scale.set(0.75, 1);
+
+    this.containerDialogo.addChild(this.globoDeDialogo);
+
+    this.textoDeDialogo = new PIXI.Text("😊", {
+      fontSize: 18,
+      fill: 0xffffff,
+      align: "center",
+    });
+    this.textoDeDialogo.anchor.set(0.5, 1);
+    this.textoDeDialogo.y = -15;
+    this.textoDeDialogo.x = -4;
+    this.textoDeDialogo.label = "textoDeDialogo";
+    this.containerDialogo.addChild(this.textoDeDialogo);
+  }
+
   pasarseDeBando(cualBando) {
     const pos = this.posicion;
 
@@ -517,13 +557,13 @@ class Persona extends GameObject {
 
     if (this.pegando) {
       this.sprite.changeAnimation("slash");
-      this.velocidad.x *= 0.1;
-      this.velocidad.y *= 0.1;
+      this.velocidad.x *= 0.5;
+      this.velocidad.y *= 0.5;
       return;
     } else if (this.noPuedoPegarPeroEstoyEnCombate) {
       this.sprite.changeAnimation("combat");
-      this.velocidad.x *= 0.3;
-      this.velocidad.y *= 0.3;
+      this.velocidad.x *= 0.7;
+      this.velocidad.y *= 0.7;
       return;
     }
 

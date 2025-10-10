@@ -3,6 +3,15 @@
 <head>
 
     <style>
+        @font-face {
+            font-family: "PixelifySans";
+            src: url("assets/PixelifySans-Regular.ttf") format("truetype");
+        }
+
+        body * {
+            font-family: "PixelifySans", sans-serif;
+        }
+
         body {
             margin: 0px;
             padding: 0px;
@@ -25,7 +34,12 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            gap: 10px
+            gap: 10px;
+
+        }
+
+        button {
+            font-size: 20px;
         }
     </style>
     <script src="gsap.js"></script>
@@ -36,6 +50,7 @@
     <script src="pixi.js"></script>
     <script src="animated-character.js"></script>
     <script src="particleSystem.js"></script>
+    <script src="ui.js"></script>
     <!-- importamos el sistema de iluminación -->
     <script src="sistemaDeIluminacion.js"></script>
     <!-- importamos la clase juego -->

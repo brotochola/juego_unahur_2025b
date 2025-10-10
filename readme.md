@@ -4,7 +4,6 @@ Pendiente:
 
 - UI:
 
-  - agregar hora en la UI
   - Icono de "robar" cuando pasamos por encima de un civil
   - Icono de "$" cuando pasamos por encima del poli
   - Agregar indicadores en la pantalla:
@@ -24,7 +23,6 @@ Pendiente:
 
 - PERSONAS:
 
-  - Sangre!
   - agregarles metodo "hablar(😁)" q muestre un globito de dialogo con el emoji
     - En los cambios de estado se ponen triste, asustado, etc
 
