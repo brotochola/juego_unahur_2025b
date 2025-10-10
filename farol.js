@@ -11,6 +11,8 @@ class Farol extends EntidadEstatica {
     this.juego.obstaculos.push(this);
     this.cantidadDeLuz = 1;
     this.estado = 1;
+    this.fallado = Math.random() > 0.95;
+    this.funcionando = 1;
   }
 
   prender() {
@@ -22,10 +24,10 @@ class Farol extends EntidadEstatica {
 
   actualizarSegunEstado() {
     if (!this.spriteDeLuz) return;
-    this.spriteDeLuz.alpha = this.alphaNormal * this.estado;
+    this.spriteDeLuz.alpha = this.alphaNormal * this.estado * this.funcionando;
     if (!this.spriteGradiente) return;
 
-    this.spriteGradiente.alpha = this.estado;
+    this.spriteGradiente.alpha = this.estado * this.funcionando;
   }
 
   calcularRadioLuz() {
@@ -56,8 +58,12 @@ class Farol extends EntidadEstatica {
   }
 
   tick() {
-    //TODO: re hacer esto
     if (!this.spriteDeLuz) return;
+    if (this.fallado && this.estado == 1) {
+      this.funcionando = Math.random() < 0.99 ? 1 : 0;
+    } else {
+      this.funcionando = 1;
+    }
 
     this.actualizarSegunEstado();
   }
