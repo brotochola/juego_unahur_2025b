@@ -11,8 +11,7 @@ class UI {
       fontFamily: "PixelifySans",
       fill: 0xffffff,
       fontWeight: "bold",
-      stroke: 0x444444,
-      strokeThickness: 3,
+      stroke: { color: 0x444444, width: 3 },
       align: "right",
     };
     this.crearTextoDeLaHora();
@@ -20,14 +19,17 @@ class UI {
     this.resize();
   }
   crearIndicadorDeAmigos() {
-    this.indicadorDeAmigos = new PIXI.Text("", this.estiloDeTexto);
+    this.indicadorDeAmigos = new PIXI.Text({
+      text: "",
+      style: this.estiloDeTexto,
+    });
     this.indicadorDeAmigos.anchor.set(1, 0);
     this.indicadorDeAmigos.label = "indicadorDeAmigos";
     this.container.addChild(this.indicadorDeAmigos);
   }
 
   crearTextoDeLaHora() {
-    this.textoDeLaHora = new PIXI.Text("", this.estiloDeTexto);
+    this.textoDeLaHora = new PIXI.Text({ text: "", style: this.estiloDeTexto });
     this.textoDeLaHora.label = "horaDelDia";
     this.textoDeLaHora.anchor.set(1, 0);
     this.container.addChild(this.textoDeLaHora);

@@ -81,5 +81,7 @@ class Amigo extends Persona {
     if (this.enemigoMasCerca) {
       this.asignarTarget(this.enemigoMasCerca);
     }
+
+    if (this.animationFSM) this.animationFSM.update();
   }
 }

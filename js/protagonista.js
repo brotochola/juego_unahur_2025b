@@ -58,6 +58,7 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
 
     // Datos para animación
     this.calcularAnguloYVelocidadLineal();
+    if (this.animationFSM) this.animationFSM.update();
   }
 
   irAlTarget() {

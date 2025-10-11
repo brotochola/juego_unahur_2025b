@@ -8,7 +8,7 @@ class Persona extends GameObject {
 
     this.nombre = generateName();
 
-    this.rateOfFire = 500; //medido en milisegundos
+    this.rateOfFire = 600; //medido en milisegundos
     this.ultimoGolpe = 0;
 
     this.coraje = Math.random();
@@ -33,6 +33,20 @@ class Persona extends GameObject {
     this.crearSombra();
     this.esperarAQueTengaSpriteCargado(() => {
       this.crearGloboDeDialogo();
+      this.crearFSMparaAnimacion();
+    });
+  }
+
+  crearFSMparaAnimacion() {
+    this.animationFSM = new FSM(this, {
+      states: {
+        idle: IdleAnimationState,
+        walk: WalkAnimationState,
+        run: RunAnimationState,
+        pegar: PegarAnimationState,
+        convertirse: ConvertirseAnimationState,
+      },
+      initialState: "idle",
     });
   }
 
@@ -60,10 +74,13 @@ class Persona extends GameObject {
 
     this.containerDialogo.addChild(this.globoDeDialogo);
 
-    this.textoDeDialogo = new PIXI.Text("😊", {
-      fontSize: 18,
-      fill: 0xffffff,
-      align: "center",
+    this.textoDeDialogo = new PIXI.Text({
+      text: "😊",
+      style: {
+        fontSize: 18,
+        fill: 0xffffff,
+        align: "center",
+      },
     });
     this.textoDeDialogo.anchor.set(0.5, 1);
     this.textoDeDialogo.y = -15;
@@ -88,6 +105,7 @@ class Persona extends GameObject {
     amigo.coraje = this.coraje;
     amigo.vision = this.vision;
     amigo.recienConvertido = true;
+
     setTimeout(() => {
       try {
         delete amigo.recienConvertido;
@@ -229,34 +247,7 @@ class Persona extends GameObject {
   }
 
   tick() {
-    /**
-     * CICLO PRINCIPAL DE ACTUALIZACIÓN DE LA PERSONA
-     *
-     * Orden de ejecución optimizado para estabilidad:
-     * 1. Verificar estado de vida
-     * 2. Aplicar comportamientos de IA (separación)
-     * 3. Procesar física del movimiento
-     * 4. Actualizar listas de aliados/enemigos
-     * 5. Ejecutar acciones de combate
-     * 6. Calcular datos para animación
-     */
-    if (this.muerto) return;
-
-    // Comportamientos de IA
-    this.separacion(); // Evitar aglomeraciones
-    this.aplicarFisica(); // Procesar movimiento
-
-    this.verificarSiEstoyMuerto();
-
-    // Actualizar contexto social y de combate
-    this.enemigos = this.buscarPersonasQueNoSonDeMiBando();
-    this.amigos = this.buscarPersonasDeMiBando();
-    this.enemigoMasCerca = this.buscarEnemigoMasCerca();
-
-    this.pegarSiEstaEnMiRango();
-
-    // Datos para el sistema de animación
-    this.calcularAnguloYVelocidadLineal();
+    console.warn("cada clase deberia implementar su propio tick");
   }
   calcularAnguloYVelocidadLineal() {
     /**
@@ -399,6 +390,7 @@ class Persona extends GameObject {
 
   morir() {
     if (this.muerto) return;
+    if (this.animationFSM) this.animationFSM.destroy();
     this.container.label = "persona muerta - " + this.id;
     this.quitarSombra();
     this.quitarBarritaVida();
@@ -448,6 +440,13 @@ class Persona extends GameObject {
     } else {
       this.noPuedoPegarPeroEstoyEnCombate = false;
     }
+
+    if (this.noPuedoPegarPeroEstoyEnCombate) {
+      this.velocidad.x *= 0.5;
+      this.velocidad.y *= 0.5;
+      this.aceleracion.x *= 0.5;
+      this.aceleracion.y *= 0.5;
+    }
   }
   puedoPegar() {
     return performance.now() > this.rateOfFire + this.ultimoGolpe;
@@ -456,10 +455,8 @@ class Persona extends GameObject {
   pegar(enemigo) {
     enemigo.recibirDanio(this.fuerzaDeAtaque, this);
     this.ultimoGolpe = performance.now();
-    this.pegando = true;
-    setTimeout(() => {
-      this.pegando = false;
-    }, 300);
+
+    if (this.animationFSM) this.animationFSM.setState("pegar");
   }
 
   recibirDanio(danio, deQuien) {
@@ -537,47 +534,47 @@ class Persona extends GameObject {
   }
 
   cambiarDeAnimacionSegunLaVelocidadYAngulo() {
-    if (this.velocidadLineal == undefined || this.angulo == undefined) {
+    if (this.angulo == undefined) {
       return;
     }
 
-    if (this.muerto) {
-      this.sprite.changeAnimation("hurt");
-      // this.sprite.anchor.set(0.5, 0);
-      // this.sprite.y = -this.sprite.height;
-      this.sprite.loop = false;
-      return;
-    }
+    // if (this.muerto) {
+    //   this.sprite.changeAnimation("hurt");
+    //   // this.sprite.anchor.set(0.5, 0);
+    //   // this.sprite.y = -this.sprite.height;
+    //   this.sprite.loop = false;
+    //   return;
+    // }
 
-    if (this.recienConvertido) {
-      this.sprite.changeAnimation("spellcast");
-      this.sprite.loop = false;
-      return;
-    }
+    // if (this.recienConvertido) {
+    //   this.sprite.changeAnimation("spellcast");
+    //   this.sprite.loop = false;
+    //   return;
+    // }
 
-    if (this.pegando) {
-      this.sprite.changeAnimation("slash");
-      this.velocidad.x *= 0.5;
-      this.velocidad.y *= 0.5;
-      return;
-    } else if (this.noPuedoPegarPeroEstoyEnCombate) {
-      this.sprite.changeAnimation("combat");
-      this.velocidad.x *= 0.7;
-      this.velocidad.y *= 0.7;
-      return;
-    }
+    // if (this.pegando) {
+    //   this.sprite.changeAnimation("slash");
+    //   this.velocidad.x *= 0.5;
+    //   this.velocidad.y *= 0.5;
+    //   return;
+    // } else if (this.noPuedoPegarPeroEstoyEnCombate) {
+    //   this.sprite.changeAnimation("combat");
+    //   this.velocidad.x *= 0.7;
+    //   this.velocidad.y *= 0.7;
+    //   return;
+    // }
 
-    if (this.velocidadLineal > this.velocidadMaxima * 0.7) {
-      this.sprite.changeAnimation("run");
-      this.sprite.animationSpeed =
-        (0.25 * this.velocidadLineal) / this.velocidadMaxima;
-    } else if (this.velocidadLineal > 0.1) {
-      this.sprite.changeAnimation("walk");
-      this.sprite.animationSpeed =
-        0.05 + (0.3 * this.velocidadLineal) / this.velocidadMaxima;
-    } else {
-      this.sprite.changeAnimation("idle");
-    }
+    // if (this.velocidadLineal > this.velocidadMaxima * 0.7) {
+    //   this.sprite.changeAnimation("run");
+    //   this.sprite.animationSpeed =
+    //     (0.25 * this.velocidadLineal) / this.velocidadMaxima;
+    // } else if (this.velocidadLineal > 0.1) {
+    //   this.sprite.changeAnimation("walk");
+    //   this.sprite.animationSpeed =
+    //     0.05 + (0.3 * this.velocidadLineal) / this.velocidadMaxima;
+    // } else {
+    //   this.sprite.changeAnimation("idle");
+    // }
 
     /**
      * MAPEO DE DIRECCIÓN CARDINAL
@@ -625,5 +622,7 @@ class Persona extends GameObject {
     this.container.parent = null;
     this.container = null;
     this.sprite = null;
+    if (this.animationFSM) this.animationFSM.destroy();
+    this.animationFSM = null;
   }
 }

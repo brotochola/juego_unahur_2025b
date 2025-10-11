@@ -231,10 +231,21 @@ class Juego {
     ]);
   }
 
-  crearUnEnemigo(bando, x, y) {
+  crearUnEnemigo(bando, x, y, callback) {
     const persona = new Enemigo(x, y, this, bando);
     this.personas.push(persona);
     this.enemigos.push(persona);
+    if (callback instanceof Function)
+      persona.esperarAQueTengaSpriteCargado(() => callback());
+    return persona;
+  }
+
+  crearUnAmigo(x, y, callback) {
+    const persona = new Amigo(x, y, this);
+    this.personas.push(persona);
+    this.amigos.push(persona);
+    if (callback instanceof Function)
+      persona.esperarAQueTengaSpriteCargado(() => callback());
     return persona;
   }
 
@@ -267,12 +278,6 @@ class Juego {
       this.obstaculos.push(arbol);
       this.objetosInanimados.push(arbol);
     }
-  }
-  crearUnAmigo(x, y) {
-    const persona = new Amigo(x, y, this);
-    this.personas.push(persona);
-    this.amigos.push(persona);
-    return persona;
   }
 
   crearUnCivil(x, y) {

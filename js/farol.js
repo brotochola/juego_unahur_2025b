@@ -60,7 +60,7 @@ class Farol extends EntidadEstatica {
   tick() {
     if (!this.spriteDeLuz) return;
     if (this.fallado && this.estado == 1) {
-      this.funcionando = Math.random() < 0.99 ? 1 : 0;
+      this.funcionando = Math.random() < 0.95 ? 1 : 0;
     } else {
       this.funcionando = 1;
     }
