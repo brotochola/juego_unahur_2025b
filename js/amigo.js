@@ -11,9 +11,19 @@ class Amigo extends Persona {
     this.factorCohesion = 0.1; //a los amigos les bajo la cohesion pq igual estan siguiendo al lider
     this.factorAlineacion = 0.05; //a los amigos les bajo la alineacion pq igual estan siguiendo al lider
     this.crearSpritesheetAnimado(this.bando);
-
+    this.crearFSMparaComportamientos();
     this.esperarAQueTengaSpriteCargado(() => {
       this.crearBarritaVida();
+    });
+  }
+
+  crearFSMparaComportamientos() {
+    this.behaviorFSM = new FSM(this, {
+      states: {
+        idle: AmigoIdleBehaviorState,
+        enCombate: AmigoEnCombateBehaviorState,
+      },
+      initialState: "idle",
     });
   }
 
@@ -58,29 +68,7 @@ class Amigo extends Persona {
     if (this.muerto) return;
     this.verificarSiEstoyMuerto();
 
-    this.percibirEntorno();
-
-    //hacer cosas
-    this.seguirAlLider();
-    this.cohesion();
-
-    this.separacion();
-
-    this.perseguir();
-
-    this.noChocarConObstaculos();
-    this.repelerSuavementeObstaculos();
-
-    this.pegarSiEstaEnMiRango();
-
-    //moverse
-    this.aplicarFisica();
-
-    this.calcularAnguloYVelocidadLineal();
-
-    if (this.enemigoMasCerca) {
-      this.asignarTarget(this.enemigoMasCerca);
-    }
+    if (this.behaviorFSM) this.behaviorFSM.update();
 
     if (this.animationFSM) this.animationFSM.update();
   }

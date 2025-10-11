@@ -5,7 +5,10 @@ class IdleAnimationState extends FSMState {
   onExit() {}
   onUpdate() {
     if (!this.owner.sprite) debugger;
-    if (this.owner.noPuedoPegarPeroEstoyEnCombate) {
+    if (
+      (this.owner.behaviorFSM || {}).currentStateName === "enCombate" ||
+      this.owner.noPuedoPegarPeroEstoyEnCombate
+    ) {
       this.owner.sprite.changeAnimation("combat");
     } else {
       this.owner.sprite.changeAnimation("idle");

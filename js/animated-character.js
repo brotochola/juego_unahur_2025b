@@ -47,7 +47,7 @@ class AnimatedCharacter extends PIXI.AnimatedSprite {
       row: 8,
     }, // Caminar - 9 frames
     slash: {
-      speed: 0.2,
+      speed: 0.4,
       directions: ["up", "left", "down", "right"],
       frames: 6,
       row: 12,

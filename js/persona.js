@@ -30,6 +30,7 @@ class Persona extends GameObject {
     this.aceleracionMaxima = 0.2;
     this.velocidadMaxima = 3;
     this.amigos = [];
+
     this.crearSombra();
     this.esperarAQueTengaSpriteCargado(() => {
       this.crearGloboDeDialogo();
@@ -48,6 +49,16 @@ class Persona extends GameObject {
       },
       initialState: "idle",
     });
+  }
+
+  evaluarSiMeConviertoEnAmigo() {
+    if (this.vida > 0.2 || this.vida < 0.1) return;
+    if (this.enemigosCerca.length < this.amigosCerca.length) return;
+    if (Math.random() > 0.3) return;
+    if (!this.enemigoMasCerca) return;
+    if (this.recienConvertido) return;
+
+    this.pasarseDeBando(this.enemigoMasCerca.bando);
   }
 
   hablar(emoji) {
@@ -370,6 +381,21 @@ class Persona extends GameObject {
       this.aceleracion.y += vectorNuevo.y;
     }
   }
+
+  siEstoyPeleandoMirarHaciaMiOponente() {
+    if (!this.enemigoMasCerca) return;
+    if (!this.behaviorFSM) return;
+    if (this.behaviorFSM.currentStateName !== "enCombate") return;
+    if (this.distanciaAlEnemigoMasCerca > this.rangoDeAtaque) return;
+
+    this.angulo =
+      radianesAGrados(
+        Math.atan2(
+          this.enemigoMasCerca.posicion.y - this.posicion.y,
+          this.enemigoMasCerca.posicion.x - this.posicion.x
+        )
+      ) + 180;
+  }
   verificarSiEstoyMuerto() {
     if (this.vida <= 0) {
       this.morir();
@@ -428,8 +454,7 @@ class Persona extends GameObject {
   pegarSiEstaEnMiRango() {
     if (
       this.enemigoMasCerca &&
-      calcularDistancia(this.posicion, this.enemigoMasCerca.posicion) <
-        this.rangoDeAtaque
+      this.distanciaAlEnemigoMasCerca < this.rangoDeAtaque
     ) {
       if (this.puedoPegar()) {
         this.pegar(this.enemigoMasCerca);
@@ -442,8 +467,8 @@ class Persona extends GameObject {
     }
 
     if (this.noPuedoPegarPeroEstoyEnCombate) {
-      this.velocidad.x *= 0.5;
-      this.velocidad.y *= 0.5;
+      this.velocidad.x *= 0.1;
+      this.velocidad.y *= 0.1;
       this.aceleracion.x *= 0.5;
       this.aceleracion.y *= 0.5;
     }
@@ -530,6 +555,7 @@ class Persona extends GameObject {
         enemigoMasCerca = enemigo;
       }
     }
+    this.distanciaAlEnemigoMasCerca = distanciaMasCerca;
     return enemigoMasCerca;
   }
 

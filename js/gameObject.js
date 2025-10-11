@@ -323,33 +323,11 @@ class GameObject {
   }
 
   perseguir() {
-    /**
-     * ALGORITMO DE PERSECUCIÓN CON DESACELERACIÓN PROGRESIVA
-     *
-     * 1. Verificaciones de validez:
-     *    - Existe objetivo
-     *    - Objetivo dentro del rango de visión
-     *
-     * 2. Cálculo del vector de dirección:
-     *    - Vector = posición_objetivo - posición_actual
-     *    - Normalización: vector_unitario = vector / |vector|
-     *
-     * 3. Desaceleración cerca del objetivo:
-     *    - Factor = (distancia / rango_ataque)³
-     *    - La potencia cúbica crea una curva suave de desaceleración
-     *    - Cuando dist = rango_ataque → factor = 1 (velocidad normal)
-     *    - Cuando dist = 0 → factor = 0 (parada completa)
-     *
-     * 4. Aplicación de fuerza direccional
-     */
     if (!this.target) return;
-    // if (this.target.muerto) {
-    //   console.log("target muerto", this.target);
-    //   this.asignarTarget(null);
-    //   return;
-    // }
+
     const dist = calcularDistancia(this.posicion, this.target.posicion);
-    if (dist > this.vision) return;
+    this.distanciaAlTarget = dist;
+    if (dist > this.vision || dist < this.rangoDeAtaque) return;
 
     // Vector de dirección hacia el objetivo
     const difX = this.target.posicion.x - this.posicion.x;
@@ -358,13 +336,13 @@ class GameObject {
     // Normalizar el vector para obtener solo la dirección (magnitud = 1)
     const vectorNuevo = limitarVector({ x: difX, y: difY }, 1);
 
-    if (dist < this.rangoDeAtaque) {
-      // Curva cúbica de desaceleración: f(x) = (x/r)³
-      // Esto crea una aproximación suave al objetivo
-      const factor = (dist / this.rangoDeAtaque) ** 3;
-      vectorNuevo.x *= factor;
-      vectorNuevo.y *= factor;
-    }
+    // if (dist < this.rangoDeAtaque) {
+    //   // Curva cúbica de desaceleración: f(x) = (x/r)³
+    //   // Esto crea una aproximación suave al objetivo
+    //   const factor = (dist / this.rangoDeAtaque) ** 3;
+    //   vectorNuevo.x *= factor;
+    //   vectorNuevo.y *= factor;
+    // }
 
     // Aplicar fuerza de persecución escalada por el factor específico del objeto
     this.aceleracion.x += vectorNuevo.x * this.factorPerseguir;
