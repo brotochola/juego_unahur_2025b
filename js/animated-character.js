@@ -29,7 +29,7 @@
 class AnimatedCharacter extends PIXI.AnimatedSprite {
   static bigSpriteAnimationConfigs = {
     spellcast: {
-      speed: 0.12,
+      speed: 0.2,
       directions: ["up", "left", "down", "right"],
       frames: 7,
       row: 0,
@@ -600,6 +600,13 @@ class AnimatedCharacter extends PIXI.AnimatedSprite {
       return this.animations[animationName].directions;
     }
     return [];
+  }
+
+  static getDurationInFrames(animationName) {
+    return (
+      AnimatedCharacter.bigSpriteAnimationConfigs[animationName].frames /
+      AnimatedCharacter.bigSpriteAnimationConfigs[animationName].speed
+    );
   }
 }
 

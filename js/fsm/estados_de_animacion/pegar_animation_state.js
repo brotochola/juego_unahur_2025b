@@ -13,11 +13,11 @@ class PegarAnimationState extends FSMState {
 
   onUpdate() {
     super.onUpdate();
+  }
 
+  doChecks() {
     if (this.currentFrame > this.cantFrames) {
       this.fsm.setState("idle");
     }
   }
-
-  doChecks() {}
 }

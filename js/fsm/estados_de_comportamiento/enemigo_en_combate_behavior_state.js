@@ -24,10 +24,12 @@ class EnemigoEnCombateBehaviorState extends FSMState {
 
     if (this.owner.enemigoMasCerca) {
       this.owner.asignarTarget(this.owner.enemigoMasCerca);
-    } else {
-      this.fsm.setState("idle");
     }
   }
 
-  doChecks() {}
+  doChecks() {
+    if (!this.owner.enemigoMasCerca) {
+      this.fsm.setState("idle");
+    }
+  }
 }

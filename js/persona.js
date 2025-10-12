@@ -56,7 +56,7 @@ class Persona extends GameObject {
     if (this.enemigosCerca.length < this.amigosCerca.length) return;
     if (Math.random() > 0.3) return;
     if (!this.enemigoMasCerca) return;
-    if (this.recienConvertido) return;
+    if (this.behaviorFSM.currentStateName === "pasadoDeBando") return;
 
     this.pasarseDeBando(this.enemigoMasCerca.bando);
   }
@@ -115,13 +115,9 @@ class Persona extends GameObject {
     amigo.vida = this.vida;
     amigo.coraje = this.coraje;
     amigo.vision = this.vision;
-    amigo.recienConvertido = true;
+    amigo.nombre = this.nombre;
 
-    setTimeout(() => {
-      try {
-        delete amigo.recienConvertido;
-      } catch (e) {}
-    }, 1000);
+    amigo.behaviorFSM.setState("pasadoDeBando");
   }
 
   buscarPersonasDeMiBando() {
@@ -424,7 +420,7 @@ class Persona extends GameObject {
     this.sprite.loop = false;
     // Marcar como muerto PRIMERO para evitar que se actualice la barra durante el proceso
     this.muerto = true;
-    this.recienConvertido = false;
+
     // this.render();
     // Limpiar la barra de vida DESPUÉS de marcar como muerto
 

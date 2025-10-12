@@ -20,6 +20,14 @@ class FSM {
   }
 
   setState(state) {
+    if (!this.states[state]) {
+      return console.warn(
+        "ERROR setState",
+        this.owner.nombre,
+        state,
+        "no existe este estado"
+      );
+    }
     if (this.states[state] === this.currentState) {
       return;
     }

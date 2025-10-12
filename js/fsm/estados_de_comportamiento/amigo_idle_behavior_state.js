@@ -1,13 +1,11 @@
-class EnemigoIdleBehaviorState extends FSMState {
-  onEnter() {}
-  onExit() {}
+class AmigoIdleBehaviorState extends FSMState {
   onUpdate() {
     super.onUpdate();
 
     this.owner.percibirEntorno();
 
     //hacer cosas
-    // this.owner.seguirAlLider();
+    this.owner.seguirAlLider();
     this.owner.cohesion();
 
     this.owner.separacion();
@@ -26,9 +24,12 @@ class EnemigoIdleBehaviorState extends FSMState {
 
     if (this.owner.enemigoMasCerca) {
       this.owner.asignarTarget(this.owner.enemigoMasCerca);
-      this.fsm.setState("enCombate");
     }
   }
 
-  doChecks() {}
+  doChecks() {
+    if (this.owner.enemigoMasCerca) {
+      this.fsm.setState("enCombate");
+    }
+  }
 }
