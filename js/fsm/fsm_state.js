@@ -6,7 +6,9 @@ class FSMState {
     this.prevState = null;
   }
 
-  onEnter() {}
+  onEnter() {
+    this.currentFrame = 0;
+  }
   onExit() {}
   onUpdate() {
     this.currentFrame++;

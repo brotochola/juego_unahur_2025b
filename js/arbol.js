@@ -16,6 +16,8 @@ class Arbol extends EntidadEstatica {
     this.offsetSkew2 = Math.random() * Math.PI * 2; // Offset aleatorio para que no todos se muevan igual
     this.velocidadSkew2 = 0.1 + Math.random() * 0.05; // Velocidad muy lenta
     this.cantidadDeSkew2 = 0.005 + Math.random() * 0.01;
+
+    this.actualizarMiPosicionEnLaGrilla();
   }
 
   async crearSprite() {

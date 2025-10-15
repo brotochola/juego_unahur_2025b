@@ -12,12 +12,12 @@ class PasadoDeBandoBehaviorState extends FSMState {
   }
   onExit() {}
   onUpdate() {
-    console.log(
-      "onUpdate PasadoDeBandoBehaviorState",
-      this.owner.nombre,
-      this.currentFrame,
-      this.cantFrames
-    );
+    // console.log(
+    //   "onUpdate PasadoDeBandoBehaviorState",
+    //   this.owner.nombre,
+    //   this.currentFrame,
+    //   this.cantFrames
+    // );
     super.onUpdate();
 
     this.owner.percibirEntorno();

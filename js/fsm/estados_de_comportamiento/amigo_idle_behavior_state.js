@@ -4,11 +4,10 @@ class AmigoIdleBehaviorState extends FSMState {
 
     this.owner.percibirEntorno();
 
-    //hacer cosas
+    this.owner.separacion();
+
     this.owner.seguirAlLider();
     this.owner.cohesion();
-
-    this.owner.separacion();
 
     // this.owner.perseguir();
 
@@ -21,10 +20,6 @@ class AmigoIdleBehaviorState extends FSMState {
     this.owner.aplicarFisica();
 
     this.owner.calcularAnguloYVelocidadLineal();
-
-    if (this.owner.enemigoMasCerca) {
-      this.owner.asignarTarget(this.owner.enemigoMasCerca);
-    }
   }
 
   doChecks() {

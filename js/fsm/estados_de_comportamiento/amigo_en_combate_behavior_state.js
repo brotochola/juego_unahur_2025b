@@ -4,8 +4,6 @@ class AmigoEnCombateBehaviorState extends FSMState {
 
     this.owner.percibirEntorno();
 
-    //hacer cosas
-
     this.owner.separacion();
 
     this.owner.perseguir();

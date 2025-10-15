@@ -43,6 +43,7 @@ class Juego {
     this.minZoom = 0.1;
     this.maxZoom = 2;
     this.zoomStep = 0.1;
+    this.grilla = new Grilla(this, 150, this.anchoDelMapa, this.altoDelMapa);
 
     this.initPIXI();
     this.setupResizeHandler();
@@ -99,6 +100,12 @@ class Juego {
     this.pixiApp.stage.sortableChildren = true;
     this.crearNivel();
     this.ui = new UI(this);
+  }
+
+  meterATodosLosObstaculosALaGrilla() {
+    for (let obstaculo of this.obstaculos) {
+      obstaculo.actualizarMiPosicionEnLaGrilla();
+    }
   }
 
   agregarListenersDeTeclado() {
@@ -393,6 +400,7 @@ class Juego {
   }
 
   gameLoop(time) {
+    console.log("gameLoop", time, this.ahora);
     //borrar lo q hay en los graficos debug
     if (this.graficoDebug) this.graficoDebug.clear();
 
@@ -415,6 +423,8 @@ class Juego {
     this.calcularFPS();
 
     if (!this.debug) return;
+    // Dibujar las celdas de la grilla
+    // Object.values(this.grilla.celdas).forEach((celda) => celda.dibujar());
     for (let obstaculo of this.obstaculos) obstaculo.dibujarCirculo();
     for (let unpersona of this.personas) unpersona.dibujarCirculo();
   }

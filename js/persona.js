@@ -137,6 +137,29 @@ class Persona extends GameObject {
   }
 
   getPersonasCerca() {
+    const cantDeCeldasQuePuedoVer = Math.ceil(
+      this.vision / this.juego.grilla.anchoCelda
+    );
+    // console.log(
+    //   "cantDeCeldasQuePuedoVer",
+    //   cantDeCeldasQuePuedoVer,
+    //   this.nombre,
+    //   this.vision,
+    //   this.juego.grilla.anchoCelda
+    // );
+    const personasQueEstanEnMisCeldasVecinas =
+      this.celdaActual.obtenerEntidadesAcaYEnCEldasVecinas(
+        cantDeCeldasQuePuedoVer
+      );
+
+    return personasQueEstanEnMisCeldasVecinas.filter(
+      (persona) =>
+        calcularDistancia(this.posicion, persona.posicion) < this.vision &&
+        !persona.muerto
+    );
+  }
+
+  getPersonasCercaVIEJO() {
     return this.juego.personas.filter(
       (persona) =>
         calcularDistancia(this.posicion, persona.posicion) < this.vision &&
@@ -159,7 +182,11 @@ class Persona extends GameObject {
   buscarObstaculosBienCerquitaMio() {
     this.obstaculosCercaMio = [];
     this.obstaculosConLosQueMeEstoyChocando = [];
-    for (let obstaculo of this.juego.obstaculos) {
+    const obstaculosCercasegunLaGrilla = this.celdaActual
+      .obtenerEntidadesAcaYEnCEldasVecinas(1)
+      .filter((k) => this.juego.obstaculos.includes(k));
+
+    for (let obstaculo of obstaculosCercasegunLaGrilla) {
       const dist = calcularDistancia(
         this.posicion,
         obstaculo.getPosicionCentral()
@@ -364,7 +391,10 @@ class Persona extends GameObject {
   }
 
   separacion() {
-    for (const persona of this.juego.personas) {
+    const personasEnMiCeldaYAlrededores =
+      this.celdaActual.obtenerEntidadesAcaYEnCEldasVecinas(1); //this.juego.personas;
+
+    for (const persona of personasEnMiCeldaYAlrededores) {
       if (persona == this) continue;
       const distancia = calcularDistancia(this.posicion, persona.posicion);
       if (distancia > this.radio + persona.radio) continue;
@@ -644,6 +674,8 @@ class Persona extends GameObject {
     this.container.parent = null;
     this.container = null;
     this.sprite = null;
+    if (this.behaviorFSM) this.behaviorFSM.destroy();
+    this.behaviorFSM = null;
     if (this.animationFSM) this.animationFSM.destroy();
     this.animationFSM = null;
   }

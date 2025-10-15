@@ -487,4 +487,27 @@ class GameObject {
   calcularPosicionEnMundoNoIsometrico() {
     return isometricToCartesian(this.getPosicionCentral());
   }
+
+  actualizarMiPosicionEnLaGrilla() {
+    let nuevaCelda = this.juego.grilla.obtenerCeldaEnPosicion(
+      this.posicion.x,
+      this.posicion.y
+    );
+
+    // Si es la misma celda que en el frame anterior, no hacer nada
+    if (this.celdaActual === nuevaCelda) {
+      return;
+    }
+
+    // Sacar de la celda anterior si existe
+    if (this.celdaActual) {
+      this.celdaActual.sacame(this);
+    }
+
+    // Agregar a la nueva celda
+    nuevaCelda.agregame(this);
+
+    this.celdaFrameAnterior = this.celdaActual;
+    this.celdaActual = nuevaCelda;
+  }
 }

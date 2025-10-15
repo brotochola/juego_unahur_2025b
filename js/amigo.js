@@ -68,13 +68,7 @@ class Amigo extends Persona {
   tick() {
     if (this.muerto) return;
     this.verificarSiEstoyMuerto();
-    // console.log(
-    //   "tick Amigo",
-    //   this.nombre,
-    //   this.bando,
-    //   this.behaviorFSM.currentStateName
-    // );
-
+    this.actualizarMiPosicionEnLaGrilla();
     if (this.behaviorFSM) this.behaviorFSM.update();
 
     if (this.animationFSM) this.animationFSM.update();

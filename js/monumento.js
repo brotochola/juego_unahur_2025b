@@ -8,6 +8,8 @@ class Monumento extends EntidadEstatica {
     this.isometric = true;
     this.crearSprite();
     this.juego.obstaculos.push(this);
+
+    this.actualizarMiPosicionEnLaGrilla();
   }
 
   async crearSprite() {

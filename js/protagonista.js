@@ -13,7 +13,7 @@ class Protagonista extends Persona {
 
     // Configuración especial del protagonista
     this.vida = 1;
-    this.vision = Infinity; // Visión ilimitada
+    this.vision = 1000; // Visión ilimitada
     this.bando = 1; // Bando del jugador
     this.crearSpritesheetAnimado(this.bando);
     this.container.label = "prota";
@@ -42,7 +42,7 @@ Si esta muy lejos del target, repelo obstaculos de forma piola, para ir llegando
 y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
 
 */
-
+    this.actualizarMiPosicionEnLaGrilla();
     this.verificarSiEstoyMuerto();
 
     this.irAlTarget(); // Control por mouse

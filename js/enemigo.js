@@ -23,7 +23,10 @@ class Enemigo extends Persona {
 
   tick() {
     if (this.muerto) return;
+
     this.verificarSiEstoyMuerto();
+
+    this.actualizarMiPosicionEnLaGrilla();
 
     if (this.behaviorFSM) this.behaviorFSM.update();
 
