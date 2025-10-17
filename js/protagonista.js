@@ -45,6 +45,8 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
     this.actualizarMiPosicionEnLaGrilla();
     this.verificarSiEstoyMuerto();
 
+    this.moverConLasTeclas();
+
     this.irAlTarget(); // Control por mouse
     this.percibirEntorno();
     this.noChocarConObstaculos();
@@ -59,6 +61,26 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
     // Datos para animación
     this.calcularAnguloYVelocidadLineal();
     if (this.animationFSM) this.animationFSM.update();
+  }
+
+  moverConLasTeclas() {
+    if (this.juego.teclado.a) {
+      this.aceleracion.x -= this.velocidadMaxima;
+      this.juego.mouse.up = null;
+    }
+    if (this.juego.teclado.d) {
+      this.aceleracion.x += this.velocidadMaxima;
+      this.juego.mouse.up = null;
+    }
+
+    if (this.juego.teclado.w) {
+      this.aceleracion.y -= this.velocidadMaxima;
+      this.juego.mouse.up = null;
+    }
+    if (this.juego.teclado.s) {
+      this.aceleracion.y += this.velocidadMaxima;
+      this.juego.mouse.up = null;
+    }
   }
 
   irAlTarget() {

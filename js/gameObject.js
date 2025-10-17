@@ -471,7 +471,7 @@ class GameObject {
     luz += this.juego.sistemaDeIluminacion.cantidadDeLuzDelDia;
 
     for (let farol of this.juego.faroles) {
-      if (farol == this || farol.estado == 0) continue;
+      if (/*farol == this ||*/ farol.estado == 0) continue;
       const dist = calcularDistancia(farol.posicion, this.posicion);
       luz +=
         (farol.cantidadDeLuz *

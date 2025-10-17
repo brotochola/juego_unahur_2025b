@@ -40,7 +40,7 @@ class Juego {
 
     // Variables para el zoom
     this.zoom = 1;
-    this.minZoom = 0.1;
+    this.minZoom = 0.75;
     this.maxZoom = 2;
     this.zoomStep = 0.1;
     this.grilla = new Grilla(this, 150, this.anchoDelMapa, this.altoDelMapa);
@@ -164,7 +164,7 @@ class Juego {
     await this.cargarTexturas();
     this.crearFondo();
 
-    this.nivel = new Nivel("assets/pixelart/plaza_de_mayo_15.json", this);
+    this.nivel = new Nivel("assets/pixelart/plaza_de_mayo_17.json", this);
 
     // this.crearArboles();
     // this.crearCasitasRandom();
@@ -307,8 +307,8 @@ class Juego {
     }
   }
   crearProtagonista() {
-    const x = 3500;
-    const y = 1500;
+    const x = 6000;
+    const y = 1400;
     const protagonista = new Protagonista(x, y, this);
     this.personas.push(protagonista);
     this.protagonista = protagonista;
@@ -375,10 +375,11 @@ class Juego {
           this.cambiarZoom(nuevoZoom);
 
           // Recentrar la cámara en el targetCamara
-          this.moverContainerPrincipalA(
-            -this.targetCamara.posicion.x * this.zoom + this.width / 2,
-            -this.targetCamara.posicion.y * this.zoom + this.height / 2
-          );
+          // this.moverContainerPrincipalA(
+          //   -this.targetCamara.posicion.x * this.zoom + this.width / 2,
+          //   -this.targetCamara.posicion.y * this.zoom + this.height / 2
+          // );
+          this.hacerQLaCamaraSigaAAlguien(1);
         }
       },
       { passive: false }
@@ -400,7 +401,7 @@ class Juego {
   }
 
   gameLoop(time) {
-    console.log("gameLoop", time, this.ahora);
+    // console.log("gameLoop", time, this.ahora);
     //borrar lo q hay en los graficos debug
     if (this.graficoDebug) this.graficoDebug.clear();
 
@@ -485,14 +486,38 @@ class Juego {
     this.debug = !this.debug;
   }
 
-  hacerQLaCamaraSigaAAlguien() {
+  hacerQLaCamaraSigaAAlguien(factorLerp = 0.1) {
     if (!this.targetCamara) return;
-    // Ajustar la posición considerando el zoom actual
-    let targetX = -this.targetCamara.posicion.x * this.zoom + this.width / 2;
-    let targetY = -this.targetCamara.posicion.y * this.zoom + this.height / 2;
 
-    const x = (targetX - this.containerPrincipal.x) * 0.1;
-    const y = (targetY - this.containerPrincipal.y) * 0.1;
+    const centerOfTheLimits = this.nivel.getCenterOfTheLimits();
+
+    const halfWidth = this.width / 2;
+    const halfHeight = this.height / 2;
+    //estos ratios son entre -1 y 1
+    const xOffsetRatio =
+      (this.targetCamara.posicion.x - centerOfTheLimits.x) /
+      (centerOfTheLimits.x - this.nivel.getLimits().left.x);
+
+    const yOffsetRatio =
+      (this.targetCamara.posicion.y - centerOfTheLimits.y) /
+      (centerOfTheLimits.y - this.nivel.getLimits().top.y);
+
+    //ya se q lo maximo q quiero mover la camara cuando estamos llegando al limite
+    //es la mitad del ancho o del alto de la pantalla
+    // es decir, no quiero mostrar lo q no esta hecho del nivel
+
+    const offsetX = xOffsetRatio * halfWidth * 0.9; //0.9 porq sino es mucho y no se llega a ver el ultimo rincon del mapa
+    const offsetY = yOffsetRatio * halfHeight * 0.9;
+
+    // Ajustar la posición considerando el zoom actual
+    //y agregamos los offsetX e Y
+    let targetX =
+      -this.targetCamara.posicion.x * this.zoom + this.width / 2 + offsetX;
+    let targetY =
+      -this.targetCamara.posicion.y * this.zoom + this.height / 2 + offsetY;
+
+    const x = (targetX - this.containerPrincipal.x) * factorLerp;
+    const y = (targetY - this.containerPrincipal.y) * factorLerp;
 
     this.moverContainerPrincipalA(
       this.containerPrincipal.x + x,

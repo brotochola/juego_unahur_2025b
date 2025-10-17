@@ -58,6 +58,31 @@ class Nivel {
     this.offsetY = -minY + changuiY;
   }
 
+  getLimits() {
+    return {
+      top: { x: 6382, y: 616 }, //top
+      right: { x: 9585, y: 2530 }, //right
+      bottom: { x: 6002, y: 4439 }, //bototm
+      left: { x: 2336, y: 2622 }, //left
+    };
+  }
+  getCenterOfTheLimits() {
+    const limits = this.getLimits();
+
+    return {
+      x: (limits.left.x + limits.right.x) / 2,
+      y: (limits.top.y + limits.bottom.y) / 2,
+    };
+  }
+  getDistanceToLimits(quien) {
+    const limits = this.getLimits();
+    const top = calcularDistancia(quien.posicion, limits.top);
+    const right = calcularDistancia(quien.posicion, limits.right);
+    const bottom = calcularDistancia(quien.posicion, limits.bottom);
+    const left = calcularDistancia(quien.posicion, limits.left);
+    return { top, right, bottom, left };
+  }
+
   /**
    * Parsea los datos del JSON y los asigna a las propiedades de la clase
    * @param {Object} data - Datos del JSON
