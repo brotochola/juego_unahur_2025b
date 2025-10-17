@@ -1,9 +1,9 @@
 class Nivel {
-  constructor(jsonUrl, juego) {
+  constructor(jsonUrl, juego, callback) {
     this.juego = juego;
     this.jsonUrl = jsonUrl;
     this.items = [];
-
+    this.callback = callback;
     this.loaded = false;
 
     this.cargarNivel();
@@ -25,45 +25,63 @@ class Nivel {
     }
 
     const data = await response.json();
-    this.parsearDatos(data);
+    await this.parsearDatos(data);
     this.loaded = true;
+    if (this.callback) this.callback();
   }
 
   detectarLimites() {
     const changuiX = 500;
     const changuiY = 500;
+    this.offsetX = 0;
+    this.offsetY = 0;
     // Si no hay items, usar offsets por defecto
     if (!this.items || this.items.length === 0) {
-      this.offsetX = -4000;
-      this.offsetY = -4000;
-      return;
+      return console.warn("No hay items en el nivel");
     }
 
     // Encontrar las coordenadas mínimas
-    let minX = this.items[0].x;
-    let minY = this.items[0].y;
+    this.minX = this.items[0].x;
+    this.minY = this.items[0].y;
+    this.maxX = this.items[0].x;
+    this.maxY = this.items[0].y;
 
     this.items.forEach((item) => {
-      if (item.x < minX) {
-        minX = item.x;
+      if (item.background) return;
+      if (item.x < this.minX) {
+        this.minX = item.x;
       }
-      if (item.y < minY) {
-        minY = item.y;
+      if (item.y < this.minY) {
+        this.minY = item.y;
+      }
+      if (item.x > this.maxX) {
+        this.maxX = item.x;
+      }
+      if (item.y > this.maxY) {
+        this.maxY = item.y;
       }
     });
 
+    console.log(
+      "minX, minY, maxX, maxY",
+      this.minX,
+      this.minY,
+      this.maxX,
+      this.maxY
+    );
+
     // Calcular offsets para centrar o posicionar correctamente
     // El offset negativo mueve los elementos hacia el origen
-    this.offsetX = -minX + changuiX;
-    this.offsetY = -minY + changuiY;
+    this.offsetX = 0; //-this.minX + changuiX;
+    this.offsetY = 0; //-this.minY + changuiY;
   }
 
   getLimits() {
     return {
-      top: { x: 6382, y: 616 }, //top
-      right: { x: 9585, y: 2530 }, //right
-      bottom: { x: 6002, y: 4439 }, //bototm
-      left: { x: 2336, y: 2622 }, //left
+      top: { x: (this.minX + this.maxX) / 2, y: this.minY }, //top
+      right: { x: this.maxX, y: (this.minY + this.maxY) / 2 }, //right
+      bottom: { x: (this.minX + this.maxX) / 2, y: this.maxY }, //bototm
+      left: { x: this.minX, y: (this.minY + this.maxY) / 2 }, //left
     };
   }
   getCenterOfTheLimits() {
@@ -198,6 +216,7 @@ class Nivel {
         sprite.zIndex = -999999999 + item.y;
       }
     }
+    return 1;
   }
 
   /**

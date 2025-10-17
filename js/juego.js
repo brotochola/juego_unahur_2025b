@@ -164,12 +164,19 @@ class Juego {
     await this.cargarTexturas();
     this.crearFondo();
 
-    this.nivel = new Nivel("assets/pixelart/plaza_de_mayo_17.json", this);
+    this.nivel = new Nivel(
+      "assets/pixelart/plaza_de_mayo_17.json",
+      this,
+      () => {
+        console.log("nivel cargado");
+        this.crearProtagonista(this.nivel.getCenterOfTheLimits());
+        this.targetCamara = this.protagonista;
+      }
+    );
 
     // this.crearArboles();
     // this.crearCasitasRandom();
-    this.crearProtagonista();
-    this.targetCamara = this.protagonista;
+
     // this.crearEnemigos(200, 2);
     // this.crearEnemigos(40, 3);
     // this.crearEnemigos(40, 4);
@@ -306,9 +313,9 @@ class Juego {
       this.crearUnAmigo(x, y);
     }
   }
-  crearProtagonista() {
-    const x = 6000;
-    const y = 1400;
+  crearProtagonista(posicion) {
+    const x = posicion.x ?? 6000;
+    const y = posicion.y ?? 1400;
     const protagonista = new Protagonista(x, y, this);
     this.personas.push(protagonista);
     this.protagonista = protagonista;
@@ -493,22 +500,26 @@ class Juego {
 
     const halfWidth = this.width / 2;
     const halfHeight = this.height / 2;
+    const limits = this.nivel.getLimits();
+    let offsetX = 0;
+    let offsetY = 0;
     //estos ratios son entre -1 y 1
-    const xOffsetRatio =
-      (this.targetCamara.posicion.x - centerOfTheLimits.x) /
-      (centerOfTheLimits.x - this.nivel.getLimits().left.x);
+    if (limits) {
+      const xOffsetRatio =
+        (this.targetCamara.posicion.x - centerOfTheLimits.x) /
+        (centerOfTheLimits.x - limits.left.x);
 
-    const yOffsetRatio =
-      (this.targetCamara.posicion.y - centerOfTheLimits.y) /
-      (centerOfTheLimits.y - this.nivel.getLimits().top.y);
+      const yOffsetRatio =
+        (this.targetCamara.posicion.y - centerOfTheLimits.y) /
+        (centerOfTheLimits.y - limits.top.y);
 
-    //ya se q lo maximo q quiero mover la camara cuando estamos llegando al limite
-    //es la mitad del ancho o del alto de la pantalla
-    // es decir, no quiero mostrar lo q no esta hecho del nivel
+      //ya se q lo maximo q quiero mover la camara cuando estamos llegando al limite
+      //es la mitad del ancho o del alto de la pantalla
+      // es decir, no quiero mostrar lo q no esta hecho del nivel
 
-    const offsetX = xOffsetRatio * halfWidth * 0.9; //0.9 porq sino es mucho y no se llega a ver el ultimo rincon del mapa
-    const offsetY = yOffsetRatio * halfHeight * 0.9;
-
+      offsetX = xOffsetRatio * halfWidth * 0.9; //0.9 porq sino es mucho y no se llega a ver el ultimo rincon del mapa
+      offsetY = yOffsetRatio * halfHeight * 0.9;
+    }
     // Ajustar la posición considerando el zoom actual
     //y agregamos los offsetX e Y
     let targetX =
