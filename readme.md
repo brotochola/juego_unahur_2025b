@@ -14,13 +14,7 @@ Pendiente:
 
 - MAPA:
 
-  - ponerle limite al mapa, con casitas y cosas
-  - ponerle limite a la camara
-
 - GAME OBJECT:
-
-  - Calcular z index a partir de posiciones isometricas
-
 - PERSONAS:
 
   - agregarles metodo "hablar(😁)" q muestre un globito de dialogo con el emoji

@@ -346,6 +346,31 @@ class Persona extends GameObject {
     this.aceleracion.y += this.factorAlineacion * vectorNuevo.y;
   }
 
+  repelerEnemigos() {
+    if (this.enemigosCerca.length == 0) return;
+
+    let vectorPromedioDePosiciones = { x: 0, y: 0 };
+
+    for (const persona of this.enemigosCerca) {
+      if (persona !== this) {
+        vectorPromedioDePosiciones.x += persona.posicion.x;
+        vectorPromedioDePosiciones.y += persona.posicion.y;
+      }
+    }
+
+    vectorPromedioDePosiciones.x /= this.enemigosCerca.length;
+    vectorPromedioDePosiciones.y /= this.enemigosCerca.length;
+
+    let vectorNuevo = {
+      x: vectorPromedioDePosiciones.x - this.posicion.x,
+      y: vectorPromedioDePosiciones.y - this.posicion.y,
+    };
+    vectorNuevo = limitarVector(vectorNuevo, 1);
+
+    this.aceleracion.x += this.factorEscapar * vectorNuevo.x;
+    this.aceleracion.y += this.factorEscapar * vectorNuevo.y;
+  }
+
   cohesion() {
     let cont = 0;
     //verctor vacio donde vamos a ir sumando posiciones

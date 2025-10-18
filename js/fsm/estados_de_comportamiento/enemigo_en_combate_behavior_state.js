@@ -28,6 +28,11 @@ class EnemigoEnCombateBehaviorState extends FSMState {
   }
 
   doChecks() {
+    if (this.owner.vida < 0.5) {
+      this.fsm.setState("huyendo");
+      return;
+    }
+
     if (!this.owner.enemigoMasCerca) {
       this.fsm.setState("idle");
     }

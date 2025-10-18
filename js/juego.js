@@ -360,6 +360,9 @@ class Juego {
     };
 
     this.pixiApp.canvas.onmousedown = (event) => {
+      if (event.button == 1) {
+        this.quePasaCuandoTocamosElBotonDeLaRuedita(event.x, event.y);
+      }
       this.mouse.down = this.convertirCoordenadaDelMouse(event.x, event.y);
       this.mouse.apretado = true;
     };
@@ -396,6 +399,23 @@ class Juego {
       },
       { passive: false }
     );
+  }
+
+  quePasaCuandoTocamosElBotonDeLaRuedita(x, y) {
+    const posicion = this.convertirCoordenadaDelMouse(x, y);
+    let distanciaMinima = Infinity;
+    let personaMasCerca = null;
+    for (let i = 0; i < this.personas.length; i++) {
+      const persona = this.personas[i];
+      const distancia = calcularDistancia(persona.posicion, posicion);
+      if (distancia < distanciaMinima && distancia < persona.radio * 5) {
+        distanciaMinima = distancia;
+        personaMasCerca = persona;
+      }
+    }
+    if (personaMasCerca) {
+      this.targetCamara = personaMasCerca;
+    }
   }
   ponerCruzTargetDondeElMouseHizoClick(posicion) {
     this.cruzTarget.x = posicion.x;

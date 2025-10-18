@@ -23,6 +23,7 @@ class Amigo extends Persona {
         idle: AmigoIdleBehaviorState,
         enCombate: AmigoEnCombateBehaviorState,
         pasadoDeBando: PasadoDeBandoBehaviorState,
+        huyendo: AmigoHuyendoBehaviorState,
       },
       initialState: "idle",
     });

@@ -16,6 +16,7 @@ class Enemigo extends Persona {
         idle: EnemigoIdleBehaviorState,
         enCombate: EnemigoEnCombateBehaviorState,
         pasadoDeBando: PasadoDeBandoBehaviorState,
+        huyendo: EnemigoHuyendoBehaviorState,
       },
       initialState: "idle",
     });
