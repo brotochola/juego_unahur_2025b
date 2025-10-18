@@ -2,8 +2,10 @@ class Celda {
   constructor(juego, anchoCelda, x, y) {
     this.anchoCelda = anchoCelda;
     this.juego = juego;
-    this.entidadesAca = [];
-    this.id = x + "_" + y;
+    // Usar Set en vez de Array para operaciones O(1) en agregar/sacar
+    // Set.add() = O(1), Set.delete() = O(1) vs Array.splice() = O(n)
+    this.entidadesAca = new Set();
+    this.id = juego.grilla.obtenerHashDePosicion(x, y);
     this.x = x;
     this.y = y;
     this.celdasVecinasCache = {}; // Caché indexado por cantDeCeldasParaMirar
@@ -11,32 +13,35 @@ class Celda {
 
   agregame(quien) {
     if (!quien) return;
-    this.entidadesAca.push(quien);
+    // Set.add() es O(1) - más rápido que Array.push() para grandes cantidades
+    this.entidadesAca.add(quien);
   }
 
   sacame(quien) {
     if (!quien) return;
-    for (let i = 0; i < this.entidadesAca.length; i++) {
-      const entidad = this.entidadesAca[i];
-      if (quien.id == entidad.id) {
-        this.entidadesAca.splice(i, 1);
-        return;
-      }
-    }
+    // Set.delete() es O(1) - MUY superior al Array.splice() que era O(n)
+    // Antes: recorría todo el array buscando la entidad
+    // Ahora: eliminación directa en tiempo constante
+    this.entidadesAca.delete(quien);
   }
 
   obtenerEntidadesAcaYEnCEldasVecinas(cantDeCeldasParaMirar) {
-    let celdasVecinas = [];
-    let entidadesCerca = [];
+    // Obtener celdas vecinas desde el caché
+    const celdasVecinas =
+      this.obtenerCeldasVecinas(cantDeCeldasParaMirar) || [];
+    const entidadesCerca = [];
 
-    celdasVecinas = this.obtenerCeldasVecinas(cantDeCeldasParaMirar) || [];
-    entidadesCerca = celdasVecinas
-      .map((celda) => celda && celda.entidadesAca)
-      .flat()
-      .filter((animal) => !!animal);
+    // Agregar las entidades de esta celda primero
+    // Set es iterable, así que spread operator funciona perfecto
+    entidadesCerca.push(...this.entidadesAca);
 
-    // Agregar las entidades de la celda actual
-    entidadesCerca = entidadesCerca.concat(this.entidadesAca);
+    // Agregar entidades de celdas vecinas
+    // Optimizado: una sola pasada sin map/flat/filter intermedios
+    for (const celda of celdasVecinas) {
+      if (celda && celda.entidadesAca) {
+        entidadesCerca.push(...celda.entidadesAca);
+      }
+    }
 
     return entidadesCerca;
   }
@@ -64,7 +69,7 @@ class Celda {
     }
 
     // Guardar en caché antes de retornar
-    this.celdasVecinasCache[cantDeCeldasParaMirar] = arr;
+    this.celdasVecinasCache[cantDeCeldasParaMirar] = arr.filter((k) => !!k);
     return arr;
   }
 
@@ -77,8 +82,9 @@ class Celda {
     const posY = this.y * this.anchoCelda;
 
     // Color dependiendo de si hay entidades o no
-    const color = this.entidadesAca.length > 0 ? 0xff0000 : 0x00ff00;
-    const alpha = this.entidadesAca.length > 0 ? 0.3 : 0.1;
+    // Set usa .size en vez de .length
+    const color = this.entidadesAca.size > 0 ? 0xff0000 : 0x00ff00;
+    const alpha = this.entidadesAca.size > 0 ? 0.3 : 0.1;
 
     // Dibujar el rectángulo de la celda
     graficoDebug.rect(posX, posY, this.anchoCelda, this.anchoCelda);

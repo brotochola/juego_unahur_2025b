@@ -184,7 +184,7 @@ class Persona extends GameObject {
     this.obstaculosConLosQueMeEstoyChocando = [];
     const obstaculosCercasegunLaGrilla = this.celdaActual
       .obtenerEntidadesAcaYEnCEldasVecinas(1)
-      .filter((k) => this.juego.obstaculos.includes(k));
+      .filter((k) => k instanceof EntidadEstatica);
 
     for (let obstaculo of obstaculosCercasegunLaGrilla) {
       const dist = calcularDistancia(
@@ -395,7 +395,8 @@ class Persona extends GameObject {
       this.celdaActual.obtenerEntidadesAcaYEnCEldasVecinas(1); //this.juego.personas;
 
     for (const persona of personasEnMiCeldaYAlrededores) {
-      if (persona == this) continue;
+      if (persona == this || !(persona instanceof Persona) || persona.muerto)
+        continue;
       const distancia = calcularDistancia(this.posicion, persona.posicion);
       if (distancia > this.radio + persona.radio) continue;
       let vectorNuevo = {
@@ -456,6 +457,11 @@ class Persona extends GameObject {
 
     this.borrarmeComoTargetDeTodos();
     this.quitarmeDeLosArrays();
+  }
+
+  mostrarOEsconderBarraVida() {
+    if (!this.containerBarraVida) return;
+    this.containerBarraVida.visible = !!this.enemigoMasCerca;
   }
 
   quitarmeDeLosArrays() {
@@ -662,7 +668,7 @@ class Persona extends GameObject {
      */
     if (!this.container || !this.sprite) return;
     super.render();
-
+    this.mostrarOEsconderBarraVida();
     this.cambiarDeAnimacionSegunLaVelocidadYAngulo();
   }
 
