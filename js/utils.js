@@ -3,9 +3,7 @@ function radianesAGrados(radianes) {
 }
 
 function calcularDistancia(obj1, obj2) {
-  const dx = obj2.x - obj1.x;
-  const dy = obj2.y - obj1.y;
-  return Math.sqrt(dx * dx + dy * dy);
+  return Math.hypot(obj2.x - obj1.x, obj2.y - obj1.y);
 }
 
 function limitarVector(vector, magnitudMaxima = 1) {

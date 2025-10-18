@@ -35,8 +35,9 @@ class Persona extends GameObject {
     this.crearSombra();
     this.esperarAQueTengaSpriteCargado(() => {
       this.crearGloboDeDialogo();
-      this.crearFSMparaAnimacion();
     });
+
+    this.crearFSMparaAnimacion();
   }
 
   crearFSMparaAnimacion() {
@@ -317,6 +318,7 @@ class Persona extends GameObject {
     this.sprite.label = "animatedSprite" + this.id;
 
     this.container.addChild(this.sprite);
+    this.sprite.changeAnimation("idle");
   }
 
   alineacion() {

@@ -10,6 +10,14 @@ class Celda {
     this.x = x;
     this.y = y;
     this.celdasVecinasCache = {}; // Caché indexado por cantDeCeldasParaMirar
+    this.precargarCeldasVecinas();
+  }
+  precargarCeldasVecinas() {
+    setTimeout(() => {
+      for (let i = 1; i <= 7; i++) {
+        this.obtenerCeldasVecinas(i);
+      }
+    }, Math.random() * 100 + 100);
   }
 
   agregarAlSetPorClaseYTipo(quien) {
@@ -82,16 +90,15 @@ class Celda {
     let arr = [];
     for (let x = -cantDeCeldasParaMirar; x <= cantDeCeldasParaMirar; x++) {
       for (let y = -cantDeCeldasParaMirar; y <= cantDeCeldasParaMirar; y++) {
-        {
-          const newX = this.x + x;
-          const newY = this.y + y;
+        const newGridX = this.x + x;
+        const newGridY = this.y + y;
 
-          try {
-            const hash = this.juego.grilla.obtenerHashDePosicion(newX, newY);
-            const celda = this.juego.grilla.celdas[hash];
-            if (this != celda) arr.push(celda);
-          } catch (e) {}
-        }
+        const celda = this.juego.grilla.obtenerCeldaEnCoordenadas(
+          newGridX,
+          newGridY
+        );
+
+        if (this != celda) arr.push(celda);
       }
     }
 

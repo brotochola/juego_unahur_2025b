@@ -1,5 +1,7 @@
 class IdleAnimationState extends FSMState {
-  onEnter() {}
+  onEnter() {
+    // this.owner.sprite.changeAnimation("idle");
+  }
   onExit() {}
   onUpdate() {
     if (

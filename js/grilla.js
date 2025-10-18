@@ -21,24 +21,29 @@ class Grilla {
     return "x_" + x + "_y_" + y;
   }
 
-  obtenerCeldaEnPosicion(x, y) {
-    const nuevaX = Math.floor(x / this.anchoCelda);
-    const nuevaY = Math.floor(y / this.anchoCelda);
-    const hash = this.obtenerHashDePosicion(nuevaX, nuevaY);
-
+  // Obtener o crear una celda usando coordenadas de grilla (grid coordinates)
+  obtenerCeldaEnCoordenadas(gridX, gridY) {
+    const hash = this.obtenerHashDePosicion(gridX, gridY);
     let celda = this.celdas[hash];
 
     if (!celda) {
-      // console.log("nueva celda", nuevaX, nuevaY);
+      // console.log("nueva celda", gridX, gridY);
       celda = this.celdas[hash] = new Celda(
         this.juego,
         this.anchoCelda,
-        nuevaX,
-        nuevaY
+        gridX,
+        gridY
       );
     }
 
     return celda;
+  }
+
+  // Obtener o crear una celda usando posición en píxeles (pixel position)
+  obtenerCeldaEnPosicion(x, y) {
+    const gridX = Math.floor(x / this.anchoCelda);
+    const gridY = Math.floor(y / this.anchoCelda);
+    return this.obtenerCeldaEnCoordenadas(gridX, gridY);
   }
 
   dibujarGrilla() {
