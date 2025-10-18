@@ -62,14 +62,6 @@ class Nivel {
       }
     });
 
-    console.log(
-      "minX, minY, maxX, maxY",
-      this.minX,
-      this.minY,
-      this.maxX,
-      this.maxY
-    );
-
     // Calcular offsets para centrar o posicionar correctamente
     // El offset negativo mueve los elementos hacia el origen
     this.offsetX = 0; //-this.minX + changuiX;
@@ -191,7 +183,8 @@ class Nivel {
         item.type.toLowerCase().startsWith("edificio") ||
         item.type.toLowerCase().startsWith("casa") ||
         item.type.toLowerCase().startsWith("basura") ||
-        item.type.toLowerCase().startsWith("cabildo")
+        item.type.toLowerCase().startsWith("cabildo") ||
+        item.type.toLowerCase().startsWith("catedral")
       ) {
         // const tipoDeMonumento = parseInt(item.type.replace("monumento", ""));
         const monumento = new Monumento(
@@ -213,7 +206,7 @@ class Nivel {
         sprite.y = item.y + this.offsetY;
         this.juego.containerBG.addChild(sprite);
         sprite.label = item.type;
-        sprite.zIndex = -999999999 + item.y;
+        sprite.zIndex = -99999999 - item.y;
       }
     }
     return 1;

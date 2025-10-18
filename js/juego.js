@@ -167,7 +167,7 @@ class Juego {
     await this.cargarTexturas();
 
     this.nivel = new Nivel(
-      "assets/pixelart/plaza_de_mayo_17.json",
+      "assets/pixelart/plaza_de_mayo_20.json",
       this,
       () => {
         console.log("nivel cargado");
