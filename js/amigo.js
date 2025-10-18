@@ -70,7 +70,5 @@ class Amigo extends Persona {
     this.verificarSiEstoyMuerto();
     this.actualizarMiPosicionEnLaGrilla();
     if (this.behaviorFSM) this.behaviorFSM.update();
-
-    if (this.animationFSM) this.animationFSM.update();
   }
 }

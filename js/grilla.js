@@ -40,4 +40,8 @@ class Grilla {
 
     return celda;
   }
+
+  dibujarGrilla() {
+    Object.values(this.celdas).forEach((celda) => celda.dibujar());
+  }
 }

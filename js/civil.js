@@ -17,7 +17,7 @@ class Civil extends Persona {
   tick() {
     if (this.muerto) return;
     this.verificarSiEstoyMuerto();
-
+    this.actualizarMiPosicionEnLaGrilla();
     this.percibirEntorno();
     this.caminarSinRumbo();
     // this.cohesion();

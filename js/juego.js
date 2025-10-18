@@ -31,11 +31,12 @@ class Juego {
   teclado = {};
   ahora = performance.now();
   BASE_Z_INDEX = 50000;
+  anchoDelMapa;
+  altoDelMapa;
 
   constructor() {
     this.updateDimensions();
-    this.anchoDelMapa = 5000;
-    this.altoDelMapa = 5000;
+
     this.mouse = { posicion: { x: 0, y: 0 } };
 
     // Variables para el zoom
@@ -133,8 +134,10 @@ class Juego {
     this.fondo = new PIXI.TilingSprite(await PIXI.Assets.load("assets/bg.jpg"));
     this.fondo.zIndex = -999999999999999999999;
     this.fondo.tileScale.set(0.5);
-    this.fondo.width = this.anchoDelMapa;
-    this.fondo.height = this.altoDelMapa;
+    this.fondo.width = this.anchoDelMapa + this.width / 2;
+    this.fondo.height = this.altoDelMapa + this.height / 2;
+    this.fondo.x = this.nivel.minX - this.width / 2;
+    this.fondo.y = this.nivel.minY - this.height / 2;
     this.containerBG.addChild(this.fondo);
   }
 
@@ -162,13 +165,15 @@ class Juego {
     this.crearGraficoDebug();
 
     await this.cargarTexturas();
-    this.crearFondo();
 
     this.nivel = new Nivel(
       "assets/pixelart/plaza_de_mayo_17.json",
       this,
       () => {
         console.log("nivel cargado");
+        this.anchoDelMapa = this.nivel.maxX - this.nivel.minX;
+        this.altoDelMapa = this.nivel.maxY - this.nivel.minY;
+        this.crearFondo();
         this.crearProtagonista(this.nivel.getCenterOfTheLimits());
         this.targetCamara = this.protagonista;
       }
@@ -432,7 +437,7 @@ class Juego {
 
     if (!this.debug) return;
     // Dibujar las celdas de la grilla
-    // Object.values(this.grilla.celdas).forEach((celda) => celda.dibujar());
+    this.grilla.dibujarGrilla();
     for (let obstaculo of this.obstaculos) obstaculo.dibujarCirculo();
     for (let unpersona of this.personas) unpersona.dibujarCirculo();
   }

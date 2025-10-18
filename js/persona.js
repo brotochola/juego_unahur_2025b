@@ -3,6 +3,7 @@ class Persona extends GameObject {
     super(x, y, juego);
     this.container.label = "persona - " + this.id;
     this.noPuedoPegarPeroEstoyEnCombate = false;
+    this.tiempoQueEmpiezaACaminarConTargetRandom = 0;
     this.muerto = false;
     this.bando = 0; //bando default
 
@@ -532,6 +533,14 @@ class Persona extends GameObject {
         },
       };
     }
+    const cantidadDeTiempoQueLlevaCaminando =
+      performance.now() - this.tiempoQueEmpiezaACaminarConTargetRandom;
+
+    if (cantidadDeTiempoQueLlevaCaminando > Math.random() * 5000 + 5000) {
+      this.tiempoQueEmpiezaACaminarConTargetRandom = performance.now();
+      this.targetRandom = null;
+      return;
+    }
 
     if (
       calcularDistancia(this.posicion, this.targetRandom.posicion) <
@@ -670,6 +679,7 @@ class Persona extends GameObject {
     super.render();
     this.mostrarOEsconderBarraVida();
     this.cambiarDeAnimacionSegunLaVelocidadYAngulo();
+    if (this.animationFSM) this.animationFSM.update();
   }
 
   borrar() {

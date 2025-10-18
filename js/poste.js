@@ -6,6 +6,7 @@ class Poste extends EntidadEstatica {
     this.container.label = "poste" + this.id;
     this.crearSprite();
     this.juego.obstaculos.push(this);
+    this.actualizarMiPosicionEnLaGrilla();
   }
 
   async crearSprite() {

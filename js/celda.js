@@ -5,16 +5,38 @@ class Celda {
     // Usar Set en vez de Array para operaciones O(1) en agregar/sacar
     // Set.add() = O(1), Set.delete() = O(1) vs Array.splice() = O(n)
     this.entidadesAca = new Set();
+    this.entidadesPorClase = {};
     this.id = juego.grilla.obtenerHashDePosicion(x, y);
     this.x = x;
     this.y = y;
     this.celdasVecinasCache = {}; // Caché indexado por cantDeCeldasParaMirar
   }
 
+  agregarAlSetPorClaseYTipo(quien) {
+    let aCualSetVa = quien.constructor.name.toLowerCase();
+    if (aCualSetVa === "enemigo") {
+      aCualSetVa = "enemigo" + quien.bando;
+    }
+    if (!this.entidadesPorClase[aCualSetVa])
+      this.entidadesPorClase[aCualSetVa] = new Set();
+    this.entidadesPorClase[aCualSetVa].add(quien);
+  }
+
+  sacarDelSetPorClaseYTipo(quien) {
+    let aCualSetVa = quien.constructor.name.toLowerCase();
+    if (aCualSetVa === "enemigo") {
+      aCualSetVa = "enemigo" + quien.bando;
+    }
+    if (this.entidadesPorClase[aCualSetVa]) {
+      this.entidadesPorClase[aCualSetVa].delete(quien);
+    }
+  }
+
   agregame(quien) {
     if (!quien) return;
     // Set.add() es O(1) - más rápido que Array.push() para grandes cantidades
     this.entidadesAca.add(quien);
+    this.agregarAlSetPorClaseYTipo(quien);
   }
 
   sacame(quien) {
@@ -23,6 +45,11 @@ class Celda {
     // Antes: recorría todo el array buscando la entidad
     // Ahora: eliminación directa en tiempo constante
     this.entidadesAca.delete(quien);
+    this.sacarDelSetPorClaseYTipo(quien);
+  }
+
+  getEnemigosPorBando(bando) {
+    return this.entidadesPorClase["enemigo" + bando];
   }
 
   obtenerEntidadesAcaYEnCEldasVecinas(cantDeCeldasParaMirar) {

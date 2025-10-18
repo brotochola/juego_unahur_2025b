@@ -29,7 +29,5 @@ class Enemigo extends Persona {
     this.actualizarMiPosicionEnLaGrilla();
 
     if (this.behaviorFSM) this.behaviorFSM.update();
-
-    if (this.animationFSM) this.animationFSM.update();
   }
 }
