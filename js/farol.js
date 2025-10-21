@@ -1,6 +1,8 @@
 class Farol extends EntidadEstatica {
   constructor(x, y, juego, tipo, scaleX) {
     super(x, y, juego);
+    juego.faroles.push(this);
+    juego.cosasQueDanLuz.push(this);
     this.radioLuz = 900;
     this.radio = 11;
     this.alphaNormal = 0.6;
@@ -29,20 +31,6 @@ class Farol extends EntidadEstatica {
     if (!this.spriteGradiente) return;
 
     this.spriteGradiente.alpha = this.estado * this.funcionando;
-  }
-
-  calcularRadioLuz() {
-    this.radioLuz = this.container.height ** 1.3;
-  }
-  crearSpriteDeLuz() {
-    this.spriteDeLuz = crearSpriteConGradiente(this.radioLuz * 0.3);
-    this.spriteDeLuz.zIndex = 2;
-    this.spriteDeLuz.label = "spriteDeLuz";
-    this.spriteDeLuz.alpha = this.alphaNormal;
-    this.container.addChild(this.spriteDeLuz);
-    this.spriteDeLuz.scale.y = 1;
-    this.spriteDeLuz.tint = 0xffff99;
-    this.spriteDeLuz.y = -this.sprite.height * 0.9;
   }
 
   async crearSprite() {

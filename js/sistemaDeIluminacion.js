@@ -75,7 +75,7 @@ class SistemaDeIluminacion {
     this.containerParaRenderizar.addChild(this.spriteNegro);
 
     // Crear sprites de gradiente para cada farol
-    for (let farol of this.juego.faroles) {
+    for (let farol of this.juego.cosasQueDanLuz) {
       farol.spriteGradiente = crearSpriteConGradiente(farol.radioLuz, 0xffffcc);
       farol.spriteGradiente.zIndex = 2;
       this.containerParaRenderizar.addChild(farol.spriteGradiente);
@@ -217,7 +217,17 @@ class SistemaDeIluminacion {
   }
 
   actualizarGradientsDeLosFaroles() {
-    for (let farol of this.juego.faroles) {
+    for (let farol of this.juego.cosasQueDanLuz) {
+      // Si el farol/fuego no tiene spriteGradiente, crearlo
+      if (!farol.spriteGradiente) {
+        farol.spriteGradiente = crearSpriteConGradiente(
+          farol.radioLuz,
+          0xffffcc
+        );
+        farol.spriteGradiente.zIndex = 2;
+        this.containerParaRenderizar.addChild(farol.spriteGradiente);
+      }
+
       if (!farol.estoyVisibleEnPantalla(1.33)) {
         farol.spriteGradiente.visible = false;
         continue;

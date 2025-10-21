@@ -9,12 +9,16 @@ const Z_INDEX = {
 
 class Juego {
   pixiApp;
+  gameObjects = [];
+  fuegos = [];
+  faroles = [];
+  cosasQueDanLuz = [];
   personas = [];
   amigos = [];
   enemigos = [];
   civiles = [];
   policias = [];
-  faroles = [];
+
   monumentos = [];
   obstaculos = [];
   arboles = [];
@@ -120,6 +124,8 @@ class Juego {
           this.mouse.posicion.x,
           this.mouse.posicion.y
         );
+      } else if (event.key == "f") {
+        this.crearFuego(this.mouse.posicion.x, this.mouse.posicion.y);
       }
     };
     window.onkeyup = (event) => {
@@ -247,24 +253,42 @@ class Juego {
       "assets/bg.jpg",
       "assets/pixelart/target.png",
       "assets/pixelart/globo_de_dialogo.png",
+      "assets/pixelart/fuego/fuego.png",
+      "assets/pixelart/fuego/fuego.json",
     ]);
   }
 
-  crearUnEnemigo(bando, x, y, callback) {
+  crearUnEnemigo(bando, x, y, callback, data) {
     const persona = new Enemigo(x, y, this, bando);
     this.personas.push(persona);
     this.enemigos.push(persona);
     if (callback instanceof Function)
       persona.esperarAQueTengaSpriteCargado(() => callback());
+
+    if (!data) return;
+
+    const keys = Object.keys(data);
+    for (let key of keys) {
+      persona[key] = data[key];
+    }
+
     return persona;
   }
 
-  crearUnAmigo(x, y, callback) {
+  crearUnAmigo(x, y, callback, data) {
     const persona = new Amigo(x, y, this);
     this.personas.push(persona);
     this.amigos.push(persona);
     if (callback instanceof Function)
       persona.esperarAQueTengaSpriteCargado(() => callback());
+
+    if (!data) return;
+
+    const keys = Object.keys(data);
+    for (let key of keys) {
+      persona[key] = data[key];
+    }
+
     return persona;
   }
 
@@ -318,12 +342,19 @@ class Juego {
       this.crearUnAmigo(x, y);
     }
   }
-  crearProtagonista(posicion) {
+  crearProtagonista(posicion, data) {
     const x = posicion.x ?? 6000;
     const y = posicion.y ?? 1400;
     const protagonista = new Protagonista(x, y, this);
     this.personas.push(protagonista);
     this.protagonista = protagonista;
+
+    if (!data) return;
+
+    const keys = Object.keys(data);
+    for (let key of keys) {
+      protagonista[key] = data[key];
+    }
   }
 
   segunQueTeclaEstaApretadaHacerCosas() {
@@ -442,6 +473,8 @@ class Juego {
 
     for (let arbol of this.arboles) arbol.tick();
     for (let farol of this.faroles) farol.tick();
+    for (let fuego of this.fuegos) fuego.tick();
+    // for (let fuego of this.fuegos) fuego.render();
 
     for (let obstaculo of this.obstaculos) obstaculo.render();
 
@@ -577,31 +610,77 @@ class Juego {
   finDelJuego() {
     alert("Te moriste! fin del juego");
   }
+  crearFuego(x, y) {
+    const fuego = new Fuego(x, y, this);
+  }
 
   getPersonaRandom() {
     return this.personas[Math.floor(this.personas.length * Math.random())];
   }
 
-  // asignarTargets() {
-  //   for (let cone of this.personas) {
-  //     cone.asignarTarget(this.getpersonaRandom());
-  //   }
-  // }
+  borrarATodasLasPersonas() {
+    for (let persona of this.personas) {
+      persona.borrar();
+    }
+  }
 
-  // asignarElMouseComoTargetATodosLospersonas() {
-  //   for (let cone of this.personas) {
-  //     cone.asignarTarget(this.mouse);
-  //   }
-  // }
+  serializarTodosLosGameObjects(clase) {
+    if (clase)
+      return this.gameObjects
+        .filter((gameObject) => gameObject instanceof clase)
+        .map((gameObject) => gameObject.serializar());
+    return this.gameObjects.map((gameObject) => gameObject.serializar());
+  }
 
-  // asignarPerseguidorRandomATodos() {
-  //   for (let cone of this.personas) {
-  //     cone.perseguidor = this.getpersonaRandom();
-  //   }
-  // }
-  // asignarElMouseComoPerseguidorATodosLospersonas() {
-  //   for (let cone of this.personas) {
-  //     cone.perseguidor = this.mouse;
-  //   }
-  // }
+  guardarEstaPartidaEnElLocalStorage(nombre) {
+    let objetoPaGuardar = {
+      nivel: this.nivel.jsonUrl,
+      personas: this.serializarTodosLosGameObjects(Persona),
+      minutoDelDia: this.sistemaDeIluminacion.minutoDelDia,
+      numeroDeDia: this.sistemaDeIluminacion.numeroDeDia,
+    };
+
+    localStorage[nombre] = JSON.stringify(objetoPaGuardar);
+  }
+
+  cargarPartidaDelLocalStorage(nombre) {
+    const dataDelLocalStorage = localStorage[nombre];
+    if (!dataDelLocalStorage) {
+      console.warn("No se encontró la partida en el localStorage");
+      return;
+    }
+
+    this.borrarATodasLasPersonas();
+
+    let objetoCargado = JSON.parse(dataDelLocalStorage);
+    // console.log("objetoCargado", objetoCargado);
+
+    for (let persona of objetoCargado.personas) {
+      if (persona.clase === "Protagonista") {
+        this.crearProtagonista(persona.posicion, persona);
+      } else if (persona.clase === "Amigo") {
+        console.log("creando amigo", persona);
+        this.crearUnAmigo(
+          persona.posicion.x,
+          persona.posicion.y,
+          null,
+          persona
+        );
+      } else if (persona.clase === "Enemigo") {
+        this.crearUnEnemigo(
+          persona.bando,
+          persona.posicion.x,
+          persona.posicion.y,
+          null,
+          persona
+        );
+      }
+    }
+
+    //que hora y dia eran cuando guardamos
+    this.sistemaDeIluminacion.minutoDelDia = objetoCargado.minutoDelDia;
+    this.sistemaDeIluminacion.numeroDeDia = objetoCargado.numeroDeDia;
+
+    this.targetCamara = this.protagonista;
+  }
 }

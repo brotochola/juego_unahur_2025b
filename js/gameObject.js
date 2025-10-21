@@ -27,6 +27,7 @@ class GameObject {
   vidaMaxima = 1;
 
   constructor(x, y, juego) {
+    juego.gameObjects.push(this);
     // Rango de visión aleatorio entre 400-700 píxeles
     this.vision = Math.random() * 300 + 400;
 
@@ -385,6 +386,7 @@ class GameObject {
 
     this.container.x = this.posicion.x;
     this.container.y = this.posicion.y;
+
     try {
       this.container.zIndex = this.calcularZindex();
     } catch (e) {
@@ -470,7 +472,7 @@ class GameObject {
 
     luz += this.juego.sistemaDeIluminacion.cantidadDeLuzDelDia;
 
-    for (let farol of this.juego.faroles) {
+    for (let farol of this.juego.cosasQueDanLuz) {
       if (/*farol == this ||*/ farol.estado == 0) continue;
       const dist = calcularDistancia(farol.posicion, this.posicion);
       luz +=
@@ -509,5 +511,25 @@ class GameObject {
 
     this.celdaFrameAnterior = this.celdaActual;
     this.celdaActual = nuevaCelda;
+  }
+
+  serializar() {
+    return {
+      clase: this.constructor.name,
+      id: this.id,
+      nombre: this.nombre,
+      tipo: this.tipo,
+      bando: this.bando,
+      vida: this.vida,
+      vidaMaxima: this.vidaMaxima,
+      radio: this.radio,
+      rangoDeAtaque: this.rangoDeAtaque,
+      vision: this.vision,
+      factorPerseguir: this.factorPerseguir,
+      posicion: this.posicion,
+      velocidad: this.velocidad,
+      aceleracionMaxima: this.aceleracionMaxima,
+      velocidadMaxima: this.velocidadMaxima,
+    };
   }
 }

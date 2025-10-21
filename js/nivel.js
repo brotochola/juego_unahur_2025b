@@ -162,7 +162,6 @@ class Nivel {
           tipoDeFarol,
           item.scaleX
         );
-        this.juego.faroles.push(farol);
       } else if (item.type.toLowerCase().startsWith("bondi")) {
         const tipoDeBondi = parseInt(item.type.replace("bondi", ""));
         const bondi = new Bondi(
