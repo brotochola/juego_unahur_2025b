@@ -82,7 +82,7 @@ class Persona extends GameObject {
     this.textoDeDialogo.text = emoji.trim();
     this.hablarTimeout = setTimeout(() => {
       this.containerDialogo.visible = false;
-    }, 1000);
+    }, 250);
   }
 
   async crearGloboDeDialogo() {
@@ -319,22 +319,22 @@ class Persona extends GameObject {
       fuerzaRepulsionTotal.y * this.factorRepelerSuavementeObstaculos;
   }
   percibirEntorno() {
-    if (this.juego.CONFIG.percibir_cada_10_frames && !this.esMiNumeroDeFrame())
+    if (Juego.CONFIG.percibir_cada_10_frames && !this.esMiNumeroDeFrame())
       return;
 
-    this.amigosCerca = this.juego.CONFIG.usar_grilla
+    this.amigosCerca = Juego.CONFIG.usar_grilla
       ? this.getAmigosCerca()
       : this.getAmigosCercaSinUsarGrilla();
 
-    this.enemigosCerca = this.juego.CONFIG.usar_grilla
+    this.enemigosCerca = Juego.CONFIG.usar_grilla
       ? this.getEnemigosCerca()
       : this.getEnemigosCercaSinUsarGrilla();
     //de los enemigos cerca, el mas cercano
-    this.enemigoMasCerca = this.juego.CONFIG.comparar_distancias_cuadradas
+    this.enemigoMasCerca = Juego.CONFIG.comparar_distancias_cuadradas
       ? this.buscarEnemigoMasCercaComparandoDistanciasCuadradas()
       : this.buscarEnemigoMasCercaComparandoDistanciasComunes();
 
-    if (this.juego.CONFIG.usar_grilla) {
+    if (Juego.CONFIG.usar_grilla) {
       this.buscarObstaculosBienCerquitaMio();
     } else {
       this.buscarObstaculosBienCerquitaMioSinUsarGrilla();
@@ -404,11 +404,9 @@ class Persona extends GameObject {
     let vectorPromedioDeVelocidades = { x: 0, y: 0 };
     for (const persona of this.amigosCerca) {
       if (persona !== this) {
-       
-          cont++;
-          vectorPromedioDeVelocidades.x += persona.velocidad.x;
-          vectorPromedioDeVelocidades.y += persona.velocidad.y;
-        
+        cont++;
+        vectorPromedioDeVelocidades.x += persona.velocidad.x;
+        vectorPromedioDeVelocidades.y += persona.velocidad.y;
       }
     }
     if (cont == 0) return;
@@ -416,13 +414,17 @@ class Persona extends GameObject {
     vectorPromedioDeVelocidades.x /= cont;
     vectorPromedioDeVelocidades.y /= cont;
 
-    let vectorNuevo = {
-      x: vectorPromedioDeVelocidades.x - this.velocidad.x,
-      y: vectorPromedioDeVelocidades.y - this.velocidad.y,
-    };
-    vectorNuevo = limitarVector(vectorNuevo, 1);
+    // Usar VectorPool para cálculo temporal
+    const vectorNuevo = VectorPool.get(
+      vectorPromedioDeVelocidades.x - this.velocidad.x,
+      vectorPromedioDeVelocidades.y - this.velocidad.y
+    );
+    vectorNuevo.limit(1);
+
     this.aceleracion.x += this.factorAlineacion * vectorNuevo.x;
     this.aceleracion.y += this.factorAlineacion * vectorNuevo.y;
+
+    VectorPool.release(vectorNuevo);
   }
 
   repelerEnemigos() {
@@ -440,14 +442,17 @@ class Persona extends GameObject {
     vectorPromedioDePosiciones.x /= this.enemigosCerca.length;
     vectorPromedioDePosiciones.y /= this.enemigosCerca.length;
 
-    let vectorNuevo = {
-      x: vectorPromedioDePosiciones.x - this.posicion.x,
-      y: vectorPromedioDePosiciones.y - this.posicion.y,
-    };
-    vectorNuevo = limitarVector(vectorNuevo, 1);
+    // Usar VectorPool para cálculo temporal
+    const vectorNuevo = VectorPool.get(
+      vectorPromedioDePosiciones.x - this.posicion.x,
+      vectorPromedioDePosiciones.y - this.posicion.y
+    );
+    vectorNuevo.limit(1);
 
     this.aceleracion.x += this.factorEscapar * vectorNuevo.x;
     this.aceleracion.y += this.factorEscapar * vectorNuevo.y;
+
+    VectorPool.release(vectorNuevo);
   }
 
   cohesion() {
@@ -459,10 +464,17 @@ class Persona extends GameObject {
     for (const persona of this.amigosCerca) {
       if (persona === this || persona === this.juego.protagonista) continue;
       //si la persona ota no soy yo y no es el protagonista
-    
+
       const sumaDeRadios = this.radio + persona.radio;
       const distanciaMinima = sumaDeRadios * 3;
-      if (laDistanciaEntreDosObjetosEstaEntreDosDistancias(this.posicion, persona.posicion, distanciaMinima, this.vision)) {
+      if (
+        laDistanciaEntreDosObjetosEstaEntreDosDistancias(
+          this.posicion,
+          persona.posicion,
+          distanciaMinima,
+          this.vision
+        )
+      ) {
         //si la persona esta muy cerca no nos acercamos a ella
         cont++;
         vectorPromedioDePosiciones.x += persona.posicion.x;
@@ -474,11 +486,6 @@ class Persona extends GameObject {
     vectorPromedioDePosiciones.x /= cont;
     vectorPromedioDePosiciones.y /= cont;
 
-    let vectorNuevo = limitarVector({
-      x: vectorPromedioDePosiciones.x - this.posicion.x,
-      y: vectorPromedioDePosiciones.y - this.posicion.y,
-    });
-
     const distanciaMinima = this.radio * 14;
     if (
       laDistanciaEntreDosObjetosEsMenorQue(
@@ -488,6 +495,13 @@ class Persona extends GameObject {
       )
     )
       return;
+
+    // Usar VectorPool para cálculo temporal
+    const vectorNuevo = VectorPool.get(
+      vectorPromedioDePosiciones.x - this.posicion.x,
+      vectorPromedioDePosiciones.y - this.posicion.y
+    );
+    vectorNuevo.limit(1);
 
     const distanciaAlPromedioDePosiciones = calcularDistancia(
       this.posicion,
@@ -500,6 +514,8 @@ class Persona extends GameObject {
 
     this.aceleracion.x += this.factorCohesion * vectorNuevo.x;
     this.aceleracion.y += this.factorCohesion * vectorNuevo.y;
+
+    VectorPool.release(vectorNuevo);
   }
 
   separacion() {
@@ -518,13 +534,17 @@ class Persona extends GameObject {
         )
       )
         continue;
-      let vectorNuevo = {
-        x: this.posicion.x - persona.posicion.x,
-        y: this.posicion.y - persona.posicion.y,
-      };
+
+      // Usar VectorPool para cálculo temporal
+      const vectorNuevo = VectorPool.get(
+        this.posicion.x - persona.posicion.x,
+        this.posicion.y - persona.posicion.y
+      );
 
       this.aceleracion.x += vectorNuevo.x;
       this.aceleracion.y += vectorNuevo.y;
+
+      VectorPool.release(vectorNuevo);
     }
   }
 
@@ -560,13 +580,43 @@ class Persona extends GameObject {
     }
   }
 
+  quitarGloboDeDialogo() {
+    // Cancelar el timeout de hablar si existe
+    if (this.hablarTimeout) {
+      clearTimeout(this.hablarTimeout);
+      this.hablarTimeout = null;
+    }
+
+    if (this.containerDialogo) {
+      this.containerDialogo.visible = false;
+
+      // Destruir el globo de diálogo
+      if (this.globoDeDialogo) {
+        this.globoDeDialogo.destroy();
+        this.globoDeDialogo = null;
+      }
+
+      // Destruir el texto de diálogo
+      if (this.textoDeDialogo) {
+        this.textoDeDialogo.destroy();
+        this.textoDeDialogo = null;
+      }
+
+      // Remover y destruir el container
+      this.container.removeChild(this.containerDialogo);
+      this.containerDialogo.destroy(true);
+      this.containerDialogo = null;
+    }
+  }
+
   morir() {
-    this.hablar("💀");
+    // this.hablar("💀");
     if (this.muerto) return;
     if (this.animationFSM) this.animationFSM.destroy();
     this.container.label = "persona muerta - " + this.id;
     this.quitarSombra();
     this.quitarBarritaVida();
+    this.quitarGloboDeDialogo();
     this.sprite.changeAnimation("hurt");
     this.celdaActual.sacame(this);
     this.sprite.loop = false;
@@ -578,6 +628,9 @@ class Persona extends GameObject {
 
     this.borrarmeComoTargetDeTodos();
     this.quitarmeDeLosArrays();
+
+    // OPTIMIZACIÓN: Agregar al array de muertos para fade out batch
+    this.juego.personasMuertas.push(this);
   }
 
   mostrarOEsconderBarraVida() {
@@ -586,22 +639,13 @@ class Persona extends GameObject {
   }
 
   quitarmeDeLosArrays() {
-    // console.log("quitarmeDeLosArrays", this.id);
-    this.juego.personas = this.juego.personas.filter(
-      (persona) => persona !== this
-    );
-    this.juego.enemigos = this.juego.enemigos.filter(
-      (persona) => persona !== this
-    );
-    this.juego.amigos = this.juego.amigos.filter((persona) => persona !== this);
-
-    this.juego.policias = this.juego.policias.filter(
-      (persona) => persona !== this
-    );
-
-    this.juego.civiles = this.juego.civiles.filter(
-      (persona) => persona !== this
-    );
+    // OPTIMIZACIÓN: Usar removerDeArrayConSwapAndPop() para O(1) performance
+    // Esta función utilitaria usa swap-and-pop en lugar de filter() o splice()
+    removerDeArrayConSwapAndPop(this.juego.personas, this);
+    removerDeArrayConSwapAndPop(this.juego.enemigos, this);
+    removerDeArrayConSwapAndPop(this.juego.amigos, this);
+    removerDeArrayConSwapAndPop(this.juego.policias, this);
+    removerDeArrayConSwapAndPop(this.juego.civiles, this);
   }
 
   pegarSiEstaEnMiRango() {
@@ -683,11 +727,15 @@ class Persona extends GameObject {
     const difX = this.targetRandom.posicion.x - this.posicion.x;
     const difY = this.targetRandom.posicion.y - this.posicion.y;
 
-    const vectorNuevo = limitarVector({ x: difX, y: difY }, 1);
+    // Usar VectorPool para cálculo temporal
+    const vectorNuevo = VectorPool.get(difX, difY);
+    vectorNuevo.limit(1);
 
     // Aplicar fuerza de persecución escalada por el factor específico del objeto
     this.aceleracion.x += vectorNuevo.x * this.factorPerseguir;
     this.aceleracion.y += vectorNuevo.y * this.factorPerseguir;
+
+    VectorPool.release(vectorNuevo);
   }
 
   buscarEnemigoMasCercaComparandoDistanciasComunes() {
@@ -810,7 +858,7 @@ class Persona extends GameObject {
     if (!this.container || !this.sprite) return;
 
     if (
-      this.juego.CONFIG.no_renderizar_lo_q_no_se_ve &&
+      Juego.CONFIG.no_renderizar_lo_q_no_se_ve &&
       !this.estoyVisibleEnPantalla(1.1)
     ) {
       this.container.visible = false;
@@ -828,6 +876,7 @@ class Persona extends GameObject {
     this.celdaActual.sacame(this);
     this.juego.containerPrincipal.removeChild(this.container);
     this.quitarBarritaVida();
+    this.quitarGloboDeDialogo();
     this.borrarmeComoTargetDeTodos();
     this.quitarmeDeLosArrays();
     this.container.parent = null;

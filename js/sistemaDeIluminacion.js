@@ -275,29 +275,61 @@ class SistemaDeIluminacion {
   }
 
   actualizarSombrasProyectadas(farol) {
-    // Obtener todos los objetos que pueden estar iluminados
-    const todosLosObjetos = [
-      ...this.juego.personas,
-      //   ...this.juego.arboles,
-      //   ...this.juego.autos,
-      // ...this.juego.monumentos,
-      // ...this.juego.objetosInanimados,
-    ];
+    // Si las sombras están desactivadas, salir
+    if (!Juego.CONFIG.usar_sombras_proyectadas) return;
 
     const posDelFarol = farol.getPosicionEnPantalla();
     const zoom = this.juego.zoom;
 
-    // Dibujar líneas a todos los objetos dentro del radioLuz
-    for (let objeto of todosLosObjetos) {
-      // Evitar dibujarse líneas a sí mismo si está en objetosInanimados
+    // OPTIMIZACIÓN 1: Usar grilla espacial para obtener solo objetos cercanos
+    let objetosCercanos;
+
+    if (Juego.CONFIG.usar_grilla && farol.celdaActual) {
+      // Calcular cuántas celdas necesitamos buscar según el radioLuz
+      const celdasABuscar = Math.ceil(
+        farol.radioLuz / this.juego.grilla.anchoCelda
+      );
+
+      // Obtener entidades en celdas cercanas y filtrar solo personas vivas
+      const entidadesCerca =
+        farol.celdaActual.obtenerEntidadesAcaYEnCEldasVecinas(celdasABuscar);
+
+      // Filtrar solo personas (no arboles, autos, etc) y que estén vivas
+      objetosCercanos = entidadesCerca.filter(
+        (entidad) => entidad instanceof Persona && !entidad.muerto
+      );
+    } else {
+      // Fallback: usar todas las personas (modo anterior)
+      objetosCercanos = this.juego.personas.filter(
+        (persona) => !persona.muerto
+      );
+    }
+
+    // OPTIMIZACIÓN 2: Filtrar por distancia usando la función optimizada
+    // Solo procesar objetos que están dentro del radioLuz
+    for (let objeto of objetosCercanos) {
+      // Evitar dibujarse líneas a sí mismo
       if (objeto === farol) continue;
+
+      // OPTIMIZACIÓN 3: Check rápido de visibilidad
       if (!objeto.estoyVisibleEnPantalla(1)) continue;
 
-      // Calcular distancia desde el farol hasta el objeto
+      // OPTIMIZACIÓN 4: Usar comparación de distancia optimizada
+      if (
+        !laDistanciaEntreDosObjetosEsMenorQue(
+          farol.posicion,
+          objeto.posicion,
+          farol.radioLuz
+        )
+      )
+        continue;
+
+      // Si llegamos aquí, el objeto está dentro del radioLuz
+      // Calcular distancia real solo cuando es necesario
       const distancia = calcularDistancia(farol.posicion, objeto.posicion);
 
-      // Si el objeto está dentro del radioLuz, dibujar línea
-      if (distancia <= farol.radioLuz) {
+      // Prevenir división por cero
+      if (distancia <= farol.radioLuz && distancia > 0) {
         // Calcular puntos tangentes al círculo del objeto
         const dx = objeto.posicion.x - farol.posicion.x;
         const dy = objeto.posicion.y - farol.posicion.y;

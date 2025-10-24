@@ -347,7 +347,9 @@ class GameObject {
     const difY = this.target.posicion.y - this.posicion.y;
 
     // Normalizar el vector para obtener solo la dirección (magnitud = 1)
-    const vectorNuevo = limitarVector({ x: difX, y: difY }, 1);
+    // Usar VectorPool para cálculo temporal
+    const vectorNuevo = VectorPool.get(difX, difY);
+    vectorNuevo.limit(1);
 
     // if (dist < this.rangoDeAtaque) {
     //   // Curva cúbica de desaceleración: f(x) = (x/r)³
@@ -360,6 +362,8 @@ class GameObject {
     // Aplicar fuerza de persecución escalada por el factor específico del objeto
     this.aceleracion.x += vectorNuevo.x * this.factorPerseguir;
     this.aceleracion.y += vectorNuevo.y * this.factorPerseguir;
+
+    VectorPool.release(vectorNuevo);
   }
 
   escapar() {
@@ -388,11 +392,16 @@ class GameObject {
     // Vector hacia el perseguidor
     const difX = this.perseguidor.posicion.x - this.posicion.x;
     const difY = this.perseguidor.posicion.y - this.posicion.y;
-    const vectorNuevo = limitarVector({ x: difX, y: difY }, 1);
+
+    // Usar VectorPool para cálculo temporal
+    const vectorNuevo = VectorPool.get(difX, difY);
+    vectorNuevo.limit(1);
 
     // Aplicar fuerza en dirección opuesta (huir)
     this.aceleracion.x += -vectorNuevo.x * this.factorEscapar;
     this.aceleracion.y += -vectorNuevo.y * this.factorEscapar;
+
+    VectorPool.release(vectorNuevo);
   }
 
   asignarVelocidad(x, y) {
@@ -510,7 +519,7 @@ class GameObject {
   }
 
   actualizarMiPosicionEnLaGrilla() {
-    if (!this.juego.CONFIG.usar_grilla) return;
+    if (!Juego.CONFIG.usar_grilla) return;
     let nuevaCelda = this.juego.grilla.obtenerCeldaEnPosicion(
       this.posicion.x,
       this.posicion.y

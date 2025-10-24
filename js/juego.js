@@ -8,10 +8,21 @@ const Z_INDEX = {
 };
 
 class Juego {
+  // Configuración estática - accesible globalmente como Juego.CONFIG
+  static CONFIG = {
+    usar_grilla: true,
+    percibir_cada_10_frames: true,
+    no_renderizar_lo_q_no_se_ve: true,
+    comparar_distancias_cuadradas: true,
+    usar_pool_vectores: true,
+    usar_sombras_proyectadas: true, // Activar/desactivar sombras para comparar performance
+  };
+
   pixiApp;
   gameObjects = [];
   fuegos = [];
   faroles = [];
+  personasMuertas = []; // Array específico para personas muertas (para fade out)
   cosasQueDanLuz = [];
   personas = [];
   amigos = [];
@@ -37,13 +48,6 @@ class Juego {
   BASE_Z_INDEX = 50000;
   anchoDelMapa;
   altoDelMapa;
-
-  CONFIG = {
-    usar_grilla: true,
-    percibir_cada_10_frames: true,
-    no_renderizar_lo_q_no_se_ve: true,
-    comparar_distancias_cuadradas: true,
-  };
 
   constructor() {
     this.FRAMENUM = 0;
@@ -106,6 +110,7 @@ class Juego {
     //agregamos el metodo this.gameLoop al ticker.
     //es decir: en cada frame vamos a ejecutar el metodo this.gameLoop
     this.pixiApp.ticker.add(this.gameLoop.bind(this));
+    this.pixiApp.ticker.maxFPS = 60;
 
     this.agregarListenersDeTeclado();
 
@@ -210,7 +215,7 @@ class Juego {
     this.crearCruzTarget();
 
     // Crear el sistema de iluminación
-    // this.sistemaDeIluminacion = new SistemaDeIluminacion(this);
+    this.sistemaDeIluminacion = new SistemaDeIluminacion(this);
     this.particleSystem = new ParticleSystem(this);
   }
 
@@ -505,34 +510,47 @@ class Juego {
   }
 
   chequearQueNoHayaMuertosConBarraDeVida() {
-    this.containerPrincipal.children
-      .filter((child) => child.label.startsWith("persona muerta"))
-      .forEach((k) => {
-        const containerBarraVida = k.children.find((k) =>
-          k.label.startsWith("containerBarraVida")
-        );
+    // OPTIMIZACIÓN: Iterar solo sobre personas muertas en lugar de filter() todo el containerPrincipal
+    // Antes: O(n) filter sobre TODOS los children cada frame
+    // Ahora: O(m) donde m = solo personas muertas (típicamente <10)
 
-        const spriteAnimado = k.children.find((k) =>
-          k.label.startsWith("animatedSprite")
-        );
+    for (let i = this.personasMuertas.length - 1; i >= 0; i--) {
+      const persona = this.personasMuertas[i];
 
-        //fade out muertos
-        if (spriteAnimado) {
-          spriteAnimado.alpha *= 0.996;
-          spriteAnimado.alpha -= 0.0001;
+      if (!persona.sprite || !persona.container) {
+        // Si ya fue destruido, remover del array usando swap-and-pop
+        removerDeArrayConSwapAndPop(this.personasMuertas, i, true);
+        continue;
+      }
 
-          if (spriteAnimado.alpha < 0.01) {
-            k.removeChild(spriteAnimado);
-            spriteAnimado.destroy();
-            this.containerPrincipal.removeChild(k);
+      const spriteAnimado = persona.sprite;
+
+      // Fade out gradual
+      if (spriteAnimado) {
+        spriteAnimado.alpha *= 0.996;
+        spriteAnimado.alpha -= 0.0001;
+
+        // Si el fade terminó, destruir completamente
+        if (spriteAnimado.alpha < 0.01) {
+          if (persona.container) {
+            this.containerPrincipal.removeChild(persona.container);
+            persona.container.destroy({ children: true });
           }
-        }
 
-        if (containerBarraVida) {
-          k.removeChild(containerBarraVida);
-          containerBarraVida.destroy();
+          // Remover del array de muertos usando swap-and-pop
+          removerDeArrayConSwapAndPop(this.personasMuertas, i, true);
         }
-      });
+      }
+
+      // Limpiar barra de vida si todavía existe (redundancia por seguridad)
+      if (persona.containerBarraVida && persona.containerBarraVida.parent) {
+        persona.containerBarraVida.parent.removeChild(
+          persona.containerBarraVida
+        );
+        persona.containerBarraVida.destroy();
+        persona.containerBarraVida = null;
+      }
+    }
   }
   calcularFPS() {
     this.deltaTime = performance.now() - this.ahora;

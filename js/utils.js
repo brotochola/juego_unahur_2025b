@@ -9,6 +9,56 @@ function calcularDistancia(obj1, obj2) {
 function calcularDistanciaCuadrada(obj1, obj2) {
   return (obj2.x - obj1.x) ** 2 + (obj2.y - obj1.y) ** 2;
 }
+
+/**
+ * Remueve un elemento de un array usando el patrón swap-and-pop para O(1) performance.
+ * Este método es mucho más eficiente que splice() o filter() porque:
+ * - No necesita mover todos los elementos posteriores (splice es O(n))
+ * - No crea un nuevo array (filter es O(n) + allocación)
+ * - Solo hace 2 operaciones: swap + pop = O(1)
+ *
+ * NOTA: Este método NO preserva el orden del array.
+ *
+ * @param {Array} array - El array del cual remover el elemento
+ * @param {*|number} itemOIndice - El item a remover o su índice
+ * @param {boolean} esIndice - Si true, itemOIndice es un índice; si false, es el item
+ * @returns {boolean} true si se removió exitosamente, false si no se encontró
+ *
+ * @example
+ * // Remover por item
+ * const arr = [1, 2, 3, 4, 5];
+ * removerDeArrayConSwapAndPop(arr, 3); // arr = [1, 2, 5, 4]
+ *
+ * @example
+ * // Remover por índice (más rápido si ya tienes el índice)
+ * const arr = [1, 2, 3, 4, 5];
+ * removerDeArrayConSwapAndPop(arr, 2, true); // arr = [1, 2, 5, 4]
+ */
+function removerDeArrayConSwapAndPop(array, itemOIndice, esIndice = false) {
+  if (!array || array.length === 0) return false;
+
+  let index;
+
+  if (esIndice) {
+    index = itemOIndice;
+    // Validar que el índice esté en rango
+    if (index < 0 || index >= array.length) return false;
+  } else {
+    // Buscar el item
+    index = array.indexOf(itemOIndice);
+    if (index === -1) return false;
+  }
+
+  // Swap con el último elemento (si no es ya el último)
+  const lastIndex = array.length - 1;
+  if (index !== lastIndex) {
+    array[index] = array[lastIndex];
+  }
+
+  // Remover el último elemento
+  array.pop();
+  return true;
+}
 function limitarVector(vector, magnitudMaxima = 1) {
   const magnitudActual = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
 
@@ -466,7 +516,7 @@ function generateName() {
 }
 
 function laDistanciaEntreDosObjetosEsMenorQue(obj1, obj2, distanciaMaxima) {
-  if (juego.CONFIG.comparar_distancias_cuadradas) {
+  if (Juego.CONFIG.comparar_distancias_cuadradas) {
     const distanciaCuadrada = calcularDistanciaCuadrada(obj1, obj2);
     return distanciaCuadrada < distanciaMaxima * distanciaMaxima;
   } else {
@@ -476,7 +526,7 @@ function laDistanciaEntreDosObjetosEsMenorQue(obj1, obj2, distanciaMaxima) {
 }
 
 function laDistanciaEntreDosObjetosEsMayorQue(obj1, obj2, distanciaMinima) {
-  if (juego.CONFIG.comparar_distancias_cuadradas) {
+  if (Juego.CONFIG.comparar_distancias_cuadradas) {
     const distanciaCuadrada = calcularDistanciaCuadrada(obj1, obj2);
     return distanciaCuadrada > distanciaMinima * distanciaMinima;
   } else {
@@ -491,7 +541,7 @@ function laDistanciaEntreDosObjetosEstaEntreDosDistancias(
   distanciaMinima,
   distanciaMaxima
 ) {
-  if (juego.CONFIG.comparar_distancias_cuadradas) {
+  if (Juego.CONFIG.comparar_distancias_cuadradas) {
     const distanciaCuadrada = calcularDistanciaCuadrada(obj1, obj2);
     return (
       distanciaCuadrada > distanciaMinima * distanciaMinima &&

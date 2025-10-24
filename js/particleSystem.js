@@ -8,9 +8,29 @@ class ParticleSystem {
   }
   constructor(juego) {
     this.juego = juego;
-    this.particulas = [];
+    this.particulas = []; // Array para iterar en update
+    this.particulasActivas = new Set(); // Set para operaciones O(1)
+    this.pool = []; // Pool de partículas inactivas reutilizables
+    this.maxPoolSize = 100; // Tamaño máximo del pool
     this.pregenerarTexturas();
+    this.pregenerarPool();
     this.gravedad = { x: 0, y: 0, z: 0.5 };
+  }
+
+  pregenerarPool() {
+    // Pre-crear partículas para el pool
+    // Esto evita allocation durante el gameplay
+    for (let i = 0; i < 300; i++) {
+      const particula = new Particula(
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 },
+        ParticleSystem.getRandomSangre(),
+        this
+      );
+      particula.sprite.visible = false;
+      this.juego.containerPrincipal.addChild(particula.sprite);
+      this.pool.push(particula);
+    }
   }
   pregenerarTexturas() {
     //creo 10 circulos de sangre
@@ -66,21 +86,63 @@ class ParticleSystem {
   }
 
   crearUnaParticula(pos, velocidadInicial, textura) {
-    const particula = new Particula(pos, velocidadInicial, textura, this);
+    let particula;
+
+    // Intentar obtener una partícula del pool
+    if (this.pool.length > 0) {
+      particula = this.pool.pop();
+      particula.reinicializar(pos, velocidadInicial, textura);
+    } else {
+      // Si el pool está vacío, crear una nueva (fallback)
+      particula = new Particula(pos, velocidadInicial, textura, this);
+      this.juego.containerPrincipal.addChild(particula.sprite);
+    }
+
+    // Activar la partícula
     this.particulas.push(particula);
-    this.juego.containerPrincipal.addChild(particula.sprite);
+    this.particulasActivas.add(particula);
+    particula.sprite.visible = true;
   }
 
   quitarParticula(particula) {
-    this.juego.containerPrincipal.removeChild(particula.sprite);
-    this.particulas = this.particulas.filter((p) => p !== particula);
-    particula.sprite.destroy();
+    // Remover de las estructuras activas
+    this.particulasActivas.delete(particula);
+
+    // OPTIMIZACIÓN: Usar removerDeArrayConSwapAndPop() para O(1) performance
+    removerDeArrayConSwapAndPop(this.particulas, particula);
+
+    // Devolver al pool en lugar de destruir
+    if (this.pool.length < this.maxPoolSize) {
+      particula.reset();
+      particula.sprite.visible = false;
+      this.pool.push(particula);
+    } else {
+      // Si el pool está lleno, destruir (esto casi nunca debería pasar)
+      this.juego.containerPrincipal.removeChild(particula.sprite);
+      particula.sprite.destroy();
+    }
   }
 
   update() {
     for (let i = 0; i < this.particulas.length; i++) {
       this.particulas[i].update(this.gravedad);
     }
+  }
+
+  /**
+   * Obtiene estadísticas del pool para debugging
+   * @returns {Object} Estadísticas del sistema de partículas
+   */
+  getStats() {
+    return {
+      activas: this.particulas.length,
+      enPool: this.pool.length,
+      total: this.particulas.length + this.pool.length,
+      poolUsage: `${Math.round(
+        (this.particulas.length / (this.particulas.length + this.pool.length)) *
+          100
+      )}%`,
+    };
   }
 }
 
@@ -100,6 +162,38 @@ class Particula {
     this.sprite.y = this.posicion.y + this.posicion.z;
     this.sprite.alpha = 1;
     this.sprite.anchor.set(0.5, 0.5); // Centrar el sprite
+  }
+
+  /**
+   * Reinicializa una partícula del pool con nuevos valores
+   * Esto es mucho más rápido que crear una nueva partícula
+   */
+  reinicializar(pos, velocidadInicial, textura) {
+    this.posicion.x = pos.x;
+    this.posicion.y = pos.y;
+    this.posicion.z = pos.z;
+
+    this.velocidad.x = velocidadInicial.x;
+    this.velocidad.y = velocidadInicial.y;
+    this.velocidad.z = velocidadInicial.z;
+
+    this.sprite.texture = textura;
+    this.sprite.x = this.posicion.x;
+    this.sprite.y = this.posicion.y + this.posicion.z;
+    this.sprite.alpha = 1;
+  }
+
+  /**
+   * Resetea la partícula a un estado por defecto antes de devolverla al pool
+   */
+  reset() {
+    this.posicion.x = 0;
+    this.posicion.y = 0;
+    this.posicion.z = 0;
+    this.velocidad.x = 0;
+    this.velocidad.y = 0;
+    this.velocidad.z = 0;
+    this.sprite.alpha = 1;
   }
 
   quitar() {
