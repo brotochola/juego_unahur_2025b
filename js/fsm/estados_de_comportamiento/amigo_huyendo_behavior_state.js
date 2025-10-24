@@ -1,5 +1,6 @@
 class AmigoHuyendoBehaviorState extends FSMState {
   onEnter() {
+    this.owner.hablar("😨");
     this.originalFactorEscapar = this.owner.factorEscapar;
     this.originalFactorSeguirAlLider = this.owner.factorSeguirAlLider;
     this.owner.factorEscapar = 0.5;

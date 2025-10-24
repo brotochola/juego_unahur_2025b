@@ -1,5 +1,7 @@
 class EnemigoIdleBehaviorState extends FSMState {
-  onEnter() {}
+  onEnter() {
+    this.owner.hablar("😊");
+  }
   onExit() {}
   onUpdate() {
     super.onUpdate();

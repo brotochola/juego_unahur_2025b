@@ -1,4 +1,11 @@
 class Persona extends GameObject {
+  obstaculosCercaMio = [];
+  obstaculosConLosQueMeEstoyChocando = [];
+  amigosCerca = [];
+  enemigosCerca = [];
+  enemigoMasCerca = null;
+  distanciaAlEnemigoMasCerca = Infinity;
+
   constructor(x, y, juego) {
     super(x, y, juego);
     this.container.label = "persona - " + this.id;
@@ -40,6 +47,10 @@ class Persona extends GameObject {
     this.crearFSMparaAnimacion();
   }
 
+  esMiNumeroDeFrame() {
+    return this.juego.FRAMENUM % 10 == this.id % 10;
+  }
+
   crearFSMparaAnimacion() {
     this.animationFSM = new FSM(this, {
       states: {
@@ -64,9 +75,11 @@ class Persona extends GameObject {
   }
 
   hablar(emoji) {
+    if (!this.containerDialogo || !this.textoDeDialogo) return;
+
     if (this.hablarTimeout) clearTimeout(this.hablarTimeout);
     this.containerDialogo.visible = true;
-    this.textoDeDialogo.text = emoji;
+    this.textoDeDialogo.text = emoji.trim();
     this.hablarTimeout = setTimeout(() => {
       this.containerDialogo.visible = false;
     }, 1000);
@@ -107,17 +120,29 @@ class Persona extends GameObject {
 
     this.borrar();
     let amigo;
+    const dataParaCrearALaPErsona = {
+      id: this.id,
+      nombre: this.nombre,
+      vida: this.vida,
+      coraje: this.coraje,
+      vision: this.vision,
+    };
     if (cualBando == 1) {
-      amigo = this.juego.crearUnAmigo(pos.x, pos.y);
+      amigo = this.juego.crearUnAmigo(
+        pos.x,
+        pos.y,
+        null,
+        dataParaCrearALaPErsona
+      );
     } else {
-      amigo = this.juego.crearUnEnemigo(cualBando, pos.x, pos.y);
+      amigo = this.juego.crearUnEnemigo(
+        cualBando,
+        pos.x,
+        pos.y,
+        null,
+        dataParaCrearALaPErsona
+      );
     }
-
-    amigo.id = this.id;
-    amigo.vida = this.vida;
-    amigo.coraje = this.coraje;
-    amigo.vision = this.vision;
-    amigo.nombre = this.nombre;
 
     amigo.behaviorFSM.setState("pasadoDeBando");
   }
@@ -137,47 +162,77 @@ class Persona extends GameObject {
         persona.bando != "civil"
     );
   }
-
-  getPersonasCerca() {
-    const cantDeCeldasQuePuedoVer = Math.ceil(
-      this.vision / this.juego.grilla.anchoCelda
-    );
-    // console.log(
-    //   "cantDeCeldasQuePuedoVer",
-    //   cantDeCeldasQuePuedoVer,
-    //   this.nombre,
-    //   this.vision,
-    //   this.juego.grilla.anchoCelda
-    // );
-    const personasQueEstanEnMisCeldasVecinas =
-      this.celdaActual.obtenerEntidadesAcaYEnCEldasVecinas(
-        cantDeCeldasQuePuedoVer
-      );
-
-    return personasQueEstanEnMisCeldasVecinas.filter(
+  getAmigosCercaSinUsarGrilla() {
+    return this.juego.personas.filter(
       (persona) =>
-        calcularDistancia(this.posicion, persona.posicion) < this.vision &&
-        !persona.muerto
+        !persona.muerto &&
+        persona.bando === this.bando &&
+        laDistanciaEntreDosObjetosEsMenorQue(
+          this.posicion,
+          persona.posicion,
+          this.vision
+        )
     );
   }
 
-  getPersonasCercaVIEJO() {
+  getEnemigosCercaSinUsarGrilla() {
     return this.juego.personas.filter(
       (persona) =>
-        calcularDistancia(this.posicion, persona.posicion) < this.vision &&
-        !persona.muerto
+        !persona.muerto &&
+        persona.bando != this.bando &&
+        persona.bando != "policia" &&
+        persona.bando != "civil" &&
+        laDistanciaEntreDosObjetosEsMenorQue(
+          this.posicion,
+          persona.posicion,
+          this.vision
+        )
     );
   }
 
   getAmigosCerca() {
-    return this.personasCerca.filter((persona) =>
-      this.amigos.includes(persona)
+    const cantDeCeldasQuePuedoVer = Math.ceil(
+      this.vision / this.juego.grilla.anchoCelda
+    );
+
+    // Usar el método optimizado por bando para obtener solo personas de mi bando
+    const amigosQueEstanEnMisCeldasVecinas =
+      this.celdaActual.obtenerPersonasPorBandoEnCeldasVecinas(
+        this.bando, // Buscar solo mi bando
+        cantDeCeldasQuePuedoVer
+      );
+
+    // Filtrar por distancia y si están vivos
+    return amigosQueEstanEnMisCeldasVecinas.filter(
+      (amigo) =>
+        laDistanciaEntreDosObjetosEsMenorQue(
+          this.posicion,
+          amigo.posicion,
+          this.vision
+        ) && !amigo.muerto
     );
   }
 
   getEnemigosCerca() {
-    return this.personasCerca.filter((persona) =>
-      this.enemigos.includes(persona)
+    const cantDeCeldasQuePuedoVer = Math.ceil(
+      this.vision / this.juego.grilla.anchoCelda
+    );
+
+    // Usar el método optimizado por bando para obtener todas las personas excepto las de mi bando
+    const enemigosEnCeldas =
+      this.celdaActual.obtenerPersonasPorBandosExcluidosEnCeldasVecinas(
+        [this.bando, "policia", "civil"], // Excluir mi bando, policía y civil
+        cantDeCeldasQuePuedoVer
+      );
+
+    // Filtrar por distancia, si están vivos, y excluir policías y civiles si no soy uno de ellos
+    return enemigosEnCeldas.filter(
+      (enemigo) =>
+        laDistanciaEntreDosObjetosEsMenorQue(
+          this.posicion,
+          enemigo.posicion,
+          this.vision
+        ) && !enemigo.muerto
     );
   }
 
@@ -189,6 +244,25 @@ class Persona extends GameObject {
       .filter((k) => k instanceof EntidadEstatica);
 
     for (let obstaculo of obstaculosCercasegunLaGrilla) {
+      const dist = calcularDistancia(
+        this.posicion,
+        obstaculo.getPosicionCentral()
+      );
+
+      const distDeColision = this.radio + obstaculo.radio;
+      const distConChangui = distDeColision + this.radio * 10;
+      if (dist < distConChangui && dist > distDeColision) {
+        this.obstaculosCercaMio.push(obstaculo);
+      } else if (dist < distDeColision) {
+        this.obstaculosConLosQueMeEstoyChocando.push(obstaculo);
+      }
+    }
+  }
+
+  buscarObstaculosBienCerquitaMioSinUsarGrilla() {
+    this.obstaculosCercaMio = [];
+    this.obstaculosConLosQueMeEstoyChocando = [];
+    for (let obstaculo of this.juego.obstaculos) {
       const dist = calcularDistancia(
         this.posicion,
         obstaculo.getPosicionCentral()
@@ -245,22 +319,26 @@ class Persona extends GameObject {
       fuerzaRepulsionTotal.y * this.factorRepelerSuavementeObstaculos;
   }
   percibirEntorno() {
-    // mirar alrededor
-    //todos los enemigos
-    this.enemigos = this.buscarEnemigos();
-    //todos los amigos
-    this.amigos = this.buscarPersonasDeMiBando();
+    if (this.juego.CONFIG.percibir_cada_10_frames && !this.esMiNumeroDeFrame())
+      return;
 
-    //todas las personas en mi rango de vision
-    this.personasCerca = this.getPersonasCerca();
-    //de esas personas cuales son amigas
-    this.amigosCerca = this.getAmigosCerca();
-    //de esas personas cuales son enemigos
-    this.enemigosCerca = this.getEnemigosCerca();
+    this.amigosCerca = this.juego.CONFIG.usar_grilla
+      ? this.getAmigosCerca()
+      : this.getAmigosCercaSinUsarGrilla();
+
+    this.enemigosCerca = this.juego.CONFIG.usar_grilla
+      ? this.getEnemigosCerca()
+      : this.getEnemigosCercaSinUsarGrilla();
     //de los enemigos cerca, el mas cercano
-    this.enemigoMasCerca = this.buscarEnemigoMasCerca();
+    this.enemigoMasCerca = this.juego.CONFIG.comparar_distancias_cuadradas
+      ? this.buscarEnemigoMasCercaComparandoDistanciasCuadradas()
+      : this.buscarEnemigoMasCercaComparandoDistanciasComunes();
 
-    this.buscarObstaculosBienCerquitaMio();
+    if (this.juego.CONFIG.usar_grilla) {
+      this.buscarObstaculosBienCerquitaMio();
+    } else {
+      this.buscarObstaculosBienCerquitaMioSinUsarGrilla();
+    }
   }
 
   noChocarConObstaculos() {
@@ -326,12 +404,11 @@ class Persona extends GameObject {
     let vectorPromedioDeVelocidades = { x: 0, y: 0 };
     for (const persona of this.amigosCerca) {
       if (persona !== this) {
-        const distancia = calcularDistancia(this.posicion, persona.posicion);
-        if (distancia < this.vision) {
+       
           cont++;
           vectorPromedioDeVelocidades.x += persona.velocidad.x;
           vectorPromedioDeVelocidades.y += persona.velocidad.y;
-        }
+        
       }
     }
     if (cont == 0) return;
@@ -382,10 +459,10 @@ class Persona extends GameObject {
     for (const persona of this.amigosCerca) {
       if (persona === this || persona === this.juego.protagonista) continue;
       //si la persona ota no soy yo y no es el protagonista
-      const distancia = calcularDistancia(this.posicion, persona.posicion);
+    
       const sumaDeRadios = this.radio + persona.radio;
       const distanciaMinima = sumaDeRadios * 3;
-      if (distancia < this.vision && distancia > distanciaMinima) {
+      if (laDistanciaEntreDosObjetosEstaEntreDosDistancias(this.posicion, persona.posicion, distanciaMinima, this.vision)) {
         //si la persona esta muy cerca no nos acercamos a ella
         cont++;
         vectorPromedioDePosiciones.x += persona.posicion.x;
@@ -402,13 +479,20 @@ class Persona extends GameObject {
       y: vectorPromedioDePosiciones.y - this.posicion.y,
     });
 
+    const distanciaMinima = this.radio * 14;
+    if (
+      laDistanciaEntreDosObjetosEsMenorQue(
+        this.posicion,
+        vectorPromedioDePosiciones,
+        distanciaMinima
+      )
+    )
+      return;
+
     const distanciaAlPromedioDePosiciones = calcularDistancia(
       this.posicion,
       vectorPromedioDePosiciones
     );
-
-    const distanciaMinima = this.radio * 14;
-    if (distanciaAlPromedioDePosiciones < distanciaMinima) return;
 
     const factorDistancia = distanciaAlPromedioDePosiciones / distanciaMinima;
     vectorNuevo.x *= factorDistancia;
@@ -425,8 +509,15 @@ class Persona extends GameObject {
     for (const persona of personasEnMiCeldaYAlrededores) {
       if (persona == this || !(persona instanceof Persona) || persona.muerto)
         continue;
-      const distancia = calcularDistancia(this.posicion, persona.posicion);
-      if (distancia > this.radio + persona.radio) continue;
+      const distanciaMinima = this.radio + persona.radio;
+      if (
+        laDistanciaEntreDosObjetosEsMayorQue(
+          this.posicion,
+          persona.posicion,
+          distanciaMinima
+        )
+      )
+        continue;
       let vectorNuevo = {
         x: this.posicion.x - persona.posicion.x,
         y: this.posicion.y - persona.posicion.y,
@@ -470,12 +561,14 @@ class Persona extends GameObject {
   }
 
   morir() {
+    this.hablar("💀");
     if (this.muerto) return;
     if (this.animationFSM) this.animationFSM.destroy();
     this.container.label = "persona muerta - " + this.id;
     this.quitarSombra();
     this.quitarBarritaVida();
     this.sprite.changeAnimation("hurt");
+    this.celdaActual.sacame(this);
     this.sprite.loop = false;
     // Marcar como muerto PRIMERO para evitar que se actualice la barra durante el proceso
     this.muerto = true;
@@ -570,8 +663,11 @@ class Persona extends GameObject {
     }
 
     if (
-      calcularDistancia(this.posicion, this.targetRandom.posicion) <
-      this.distanciaParaLlegarALTarget
+      laDistanciaEntreDosObjetosEsMenorQue(
+        this.posicion,
+        this.targetRandom.posicion,
+        this.distanciaParaLlegarALTarget
+      )
     ) {
       this.targetRandom = null;
     }
@@ -594,36 +690,45 @@ class Persona extends GameObject {
     this.aceleracion.y += vectorNuevo.y * this.factorPerseguir;
   }
 
-  buscarEnemigoMasCerca() {
-    /**
-     * ALGORITMO DE BÚSQUEDA DEL ENEMIGO MÁS CERCANO
-     *
-     * Implementa búsqueda lineal optimizada:
-     * 1. Inicializar con distancia infinita
-     * 2. Iterar por todos los enemigos
-     * 3. Calcular distancia euclidiana: d = √((x₂-x₁)² + (y₂-y₁)²)
-     * 4. Filtrar por rango de visión
-     * 5. Mantener el mínimo encontrado
-     *
-     * Complejidad: O(n) donde n = número de enemigos
-     *
-     * Optimización futura posible: Spatial hashing o Quadtree
-     * para reducir a O(log n) en escenarios con muchos agentes
-     */
+  buscarEnemigoMasCercaComparandoDistanciasComunes() {
+    // Filtrar enemigos dentro del rango de visión
+    if (this.enemigosCerca.length == 0) return null;
     let enemigoMasCerca = null;
     let distanciaMasCerca = Infinity;
-
     for (let i = 0; i < this.enemigosCerca.length; i++) {
       const enemigo = this.enemigosCerca[i];
-      const distancia = calcularDistancia(this.posicion, enemigo.posicion);
-
-      // Actualizar si es más cercano Y está dentro del rango de visión
-      if (distancia < distanciaMasCerca && distancia < this.vision) {
+      const distancia = calcularDistancia(
+        this.getPosicionCentral(),
+        enemigo.getPosicionCentral()
+      );
+      if (distancia < distanciaMasCerca) {
         distanciaMasCerca = distancia;
         enemigoMasCerca = enemigo;
       }
     }
+
     this.distanciaAlEnemigoMasCerca = distanciaMasCerca;
+    return enemigoMasCerca;
+  }
+
+  buscarEnemigoMasCercaComparandoDistanciasCuadradas() {
+    // Filtrar enemigos dentro del rango de visión
+    if (this.enemigosCerca.length == 0) return null;
+    let enemigoMasCerca = null;
+    let distanciaCuadradaMasCerca = Infinity;
+    for (let i = 0; i < this.enemigosCerca.length; i++) {
+      const enemigo = this.enemigosCerca[i];
+      const distanciaCuadrada = calcularDistanciaCuadrada(
+        this.getPosicionCentral(),
+        enemigo.getPosicionCentral()
+      );
+      if (distanciaCuadrada < distanciaCuadradaMasCerca) {
+        distanciaCuadradaMasCerca = distanciaCuadrada;
+        enemigoMasCerca = enemigo;
+      }
+    }
+
+    this.distanciaAlEnemigoMasCerca = Math.sqrt(distanciaCuadradaMasCerca);
     return enemigoMasCerca;
   }
 
@@ -703,6 +808,16 @@ class Persona extends GameObject {
 
      */
     if (!this.container || !this.sprite) return;
+
+    if (
+      this.juego.CONFIG.no_renderizar_lo_q_no_se_ve &&
+      !this.estoyVisibleEnPantalla(1.1)
+    ) {
+      this.container.visible = false;
+      return;
+    }
+    this.container.visible = true;
+
     super.render();
     this.mostrarOEsconderBarraVida();
     this.cambiarDeAnimacionSegunLaVelocidadYAngulo();
@@ -710,6 +825,7 @@ class Persona extends GameObject {
   }
 
   borrar() {
+    this.celdaActual.sacame(this);
     this.juego.containerPrincipal.removeChild(this.container);
     this.quitarBarritaVida();
     this.borrarmeComoTargetDeTodos();

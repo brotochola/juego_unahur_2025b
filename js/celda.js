@@ -6,6 +6,7 @@ class Celda {
     // Set.add() = O(1), Set.delete() = O(1) vs Array.splice() = O(n)
     this.entidadesAca = new Set();
     this.entidadesPorClase = {};
+    this.entidadesPorBando = {}; // Almacenamiento optimizado por bando
     this.id = juego.grilla.obtenerHashDePosicion(x, y);
     this.x = x;
     this.y = y;
@@ -28,6 +29,13 @@ class Celda {
     if (!this.entidadesPorClase[aCualSetVa])
       this.entidadesPorClase[aCualSetVa] = new Set();
     this.entidadesPorClase[aCualSetVa].add(quien);
+
+    // También guardar por bando si es una Persona (tiene propiedad bando)
+    if (quien.bando !== undefined) {
+      if (!this.entidadesPorBando[quien.bando])
+        this.entidadesPorBando[quien.bando] = new Set();
+      this.entidadesPorBando[quien.bando].add(quien);
+    }
   }
 
   sacarDelSetPorClaseYTipo(quien) {
@@ -37,6 +45,11 @@ class Celda {
     }
     if (this.entidadesPorClase[aCualSetVa]) {
       this.entidadesPorClase[aCualSetVa].delete(quien);
+    }
+
+    // También sacar del set por bando si corresponde
+    if (quien.bando !== undefined && this.entidadesPorBando[quien.bando]) {
+      this.entidadesPorBando[quien.bando].delete(quien);
     }
   }
 
@@ -79,6 +92,93 @@ class Celda {
     }
 
     return entidadesCerca;
+  }
+
+  obtenerEntidadesPorClaseYTipoAca(clase, tipo) {
+    // Si es enemigo, concatenar con el bando (tipo), sino usar solo la clase
+    const key = clase === "enemigo" ? clase + tipo : clase;
+    return this.entidadesPorClase[key] || new Set();
+  }
+
+  obtenerEntidadesPorClaseYTipoAcaYEnCEldasVecinas(
+    clase,
+    tipo,
+    cantDeCeldasParaMirar = 1
+  ) {
+    const key = clase === "enemigo" ? clase + tipo : clase;
+    const celdasVecinas =
+      this.obtenerCeldasVecinas(cantDeCeldasParaMirar) || [];
+    const entidadesCerca = [];
+
+    // Agregar entidades de esta celda
+    const entidadesAca = this.entidadesPorClase[key];
+    if (entidadesAca) {
+      entidadesCerca.push(...entidadesAca);
+    }
+
+    // Agregar entidades de celdas vecinas
+    for (const celda of celdasVecinas) {
+      if (celda && celda.entidadesPorClase[key]) {
+        entidadesCerca.push(...celda.entidadesPorClase[key]);
+      }
+    }
+
+    return entidadesCerca;
+  }
+
+  obtenerPersonasPorBandosExcluidosEnCeldasVecinas(
+    bandosAExcluir,
+    cantDeCeldasParaMirar
+  ) {
+    const celdasVecinas =
+      this.obtenerCeldasVecinas(cantDeCeldasParaMirar) || [];
+    const personas = [];
+
+    const agregarDeBando = (bando) => {
+      // De esta celda
+      if (this.entidadesPorBando[bando]) {
+        personas.push(...this.entidadesPorBando[bando]);
+      }
+      // De celdas vecinas
+      for (const celda of celdasVecinas) {
+        if (celda && celda.entidadesPorBando[bando]) {
+          personas.push(...celda.entidadesPorBando[bando]);
+        }
+      }
+    };
+
+    // Iterar todos los bandos posibles (1-7 para pandillas)
+    for (let i = 1; i <= 7; i++) {
+      if (!bandosAExcluir.includes(i)) {
+        agregarDeBando(i);
+      }
+    }
+
+    // También buscar policías y civiles si no están excluidos
+    if (!bandosAExcluir.includes("policia")) agregarDeBando("policia");
+    if (!bandosAExcluir.includes("civil")) agregarDeBando("civil");
+
+    return personas;
+  }
+
+  obtenerPersonasPorBandoEnCeldasVecinas(bando, cantDeCeldasParaMirar) {
+    const celdasVecinas =
+      this.obtenerCeldasVecinas(cantDeCeldasParaMirar) || [];
+    const personas = [];
+
+    // De esta celda
+    if (this.entidadesPorBando[bando]) {
+      personas.push(...this.entidadesPorBando[bando]);
+    }
+
+    // De celdas vecinas
+    for (const celda of celdasVecinas) {
+      if (celda && celda.entidadesPorBando[bando]) {
+        personas.push(...celda.entidadesPorBando[bando]);
+      }
+    }
+
+    return personas;
   }
 
   obtenerCeldasVecinas(cantDeCeldasParaMirar) {

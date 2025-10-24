@@ -38,7 +38,15 @@ class Juego {
   anchoDelMapa;
   altoDelMapa;
 
+  CONFIG = {
+    usar_grilla: true,
+    percibir_cada_10_frames: true,
+    no_renderizar_lo_q_no_se_ve: true,
+    comparar_distancias_cuadradas: true,
+  };
+
   constructor() {
+    this.FRAMENUM = 0;
     this.updateDimensions();
 
     this.mouse = { posicion: { x: 0, y: 0 } };
@@ -202,7 +210,7 @@ class Juego {
     this.crearCruzTarget();
 
     // Crear el sistema de iluminación
-    this.sistemaDeIluminacion = new SistemaDeIluminacion(this);
+    // this.sistemaDeIluminacion = new SistemaDeIluminacion(this);
     this.particleSystem = new ParticleSystem(this);
   }
 
@@ -464,6 +472,7 @@ class Juego {
   }
 
   gameLoop(time) {
+    this.FRAMENUM++;
     // console.log("gameLoop", time, this.ahora);
     //borrar lo q hay en los graficos debug
     if (this.graficoDebug) this.graficoDebug.clear();

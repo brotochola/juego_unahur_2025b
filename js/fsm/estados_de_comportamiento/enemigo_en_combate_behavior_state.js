@@ -1,5 +1,7 @@
 class EnemigoEnCombateBehaviorState extends FSMState {
-  onEnter() {}
+  onEnter() {
+    this.owner.hablar("😠");
+  }
   onExit() {}
   onUpdate() {
     super.onUpdate();

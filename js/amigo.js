@@ -31,24 +31,43 @@ class Amigo extends Persona {
 
   seguirAlLider() {
     if (!this.juego.protagonista) return;
-    const dist = calcularDistancia(
-      this.posicion,
-      this.juego.protagonista.posicion
-    );
-    if (dist > this.vision) return;
+
+    // Si está muy lejos, no hace nada
+    if (
+      laDistanciaEntreDosObjetosEsMayorQue(
+        this.posicion,
+        this.juego.protagonista.posicion,
+        this.vision
+      )
+    )
+      return;
 
     const difX = this.juego.protagonista.posicion.x - this.posicion.x;
     const difY = this.juego.protagonista.posicion.y - this.posicion.y;
 
     const vectorNuevo = limitarVector({ x: difX, y: difY }, 1);
 
-    if (dist < this.radioLlegadaAlLider) {
+    if (
+      laDistanciaEntreDosObjetosEsMenorQue(
+        this.posicion,
+        this.juego.protagonista.posicion,
+        this.radioLlegadaAlLider
+      )
+    ) {
       //esta muy cerca, se aleja
+      const dist = calcularDistancia(
+        this.posicion,
+        this.juego.protagonista.posicion
+      );
       vectorNuevo.x *= -this.radioLlegadaAlLider / dist;
       vectorNuevo.y *= -this.radioLlegadaAlLider / dist;
     } else if (
-      dist < this.radioParaBajarLaVelocidad &&
-      dist > this.radioLlegadaAlLider
+      laDistanciaEntreDosObjetosEstaEntreDosDistancias(
+        this.posicion,
+        this.juego.protagonista.posicion,
+        this.radioLlegadaAlLider,
+        this.radioParaBajarLaVelocidad
+      )
     ) {
       //si estoy a una distancia q no es al ladito y tampoco es tan lejos.
       return;
@@ -58,7 +77,14 @@ class Amigo extends Persona {
 
       // vectorNuevo.x *= factor;
       // vectorNuevo.y *= factor;
-    } else if (dist < this.vision && dist > this.radioParaBajarLaVelocidad) {
+    } else if (
+      laDistanciaEntreDosObjetosEstaEntreDosDistancias(
+        this.posicion,
+        this.juego.protagonista.posicion,
+        this.radioParaBajarLaVelocidad,
+        this.vision
+      )
+    ) {
       //esta lejos, va de una
     }
 
@@ -68,6 +94,7 @@ class Amigo extends Persona {
 
   tick() {
     if (this.muerto) return;
+
     this.verificarSiEstoyMuerto();
     this.actualizarMiPosicionEnLaGrilla();
     if (this.behaviorFSM) this.behaviorFSM.update();

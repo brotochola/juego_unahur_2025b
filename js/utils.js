@@ -6,6 +6,9 @@ function calcularDistancia(obj1, obj2) {
   return Math.hypot(obj2.x - obj1.x, obj2.y - obj1.y);
 }
 
+function calcularDistanciaCuadrada(obj1, obj2) {
+  return (obj2.x - obj1.x) ** 2 + (obj2.y - obj1.y) ** 2;
+}
 function limitarVector(vector, magnitudMaxima = 1) {
   const magnitudActual = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
 
@@ -460,4 +463,42 @@ function generateName() {
   const surname = allSurnames[Math.floor(Math.random() * allSurnames.length)];
 
   return `${firstName} ${surname}`;
+}
+
+function laDistanciaEntreDosObjetosEsMenorQue(obj1, obj2, distanciaMaxima) {
+  if (juego.CONFIG.comparar_distancias_cuadradas) {
+    const distanciaCuadrada = calcularDistanciaCuadrada(obj1, obj2);
+    return distanciaCuadrada < distanciaMaxima * distanciaMaxima;
+  } else {
+    const distancia = calcularDistancia(obj1, obj2);
+    return distancia < distanciaMaxima;
+  }
+}
+
+function laDistanciaEntreDosObjetosEsMayorQue(obj1, obj2, distanciaMinima) {
+  if (juego.CONFIG.comparar_distancias_cuadradas) {
+    const distanciaCuadrada = calcularDistanciaCuadrada(obj1, obj2);
+    return distanciaCuadrada > distanciaMinima * distanciaMinima;
+  } else {
+    const distancia = calcularDistancia(obj1, obj2);
+    return distancia > distanciaMinima;
+  }
+}
+
+function laDistanciaEntreDosObjetosEstaEntreDosDistancias(
+  obj1,
+  obj2,
+  distanciaMinima,
+  distanciaMaxima
+) {
+  if (juego.CONFIG.comparar_distancias_cuadradas) {
+    const distanciaCuadrada = calcularDistanciaCuadrada(obj1, obj2);
+    return (
+      distanciaCuadrada > distanciaMinima * distanciaMinima &&
+      distanciaCuadrada < distanciaMaxima * distanciaMaxima
+    );
+  } else {
+    const distancia = calcularDistancia(obj1, obj2);
+    return distancia > distanciaMinima && distancia < distanciaMaxima;
+  }
 }

@@ -4,6 +4,7 @@ class PasadoDeBandoBehaviorState extends FSMState {
   //no pegan, no se mueven
 
   onEnter() {
+    this.owner.hablar("🤷");
     try {
       this.cantFrames = AnimatedCharacter.getDurationInFrames("spellcast");
     } catch (e) {
@@ -12,12 +13,6 @@ class PasadoDeBandoBehaviorState extends FSMState {
   }
   onExit() {}
   onUpdate() {
-    // console.log(
-    //   "onUpdate PasadoDeBandoBehaviorState",
-    //   this.owner.nombre,
-    //   this.currentFrame,
-    //   this.cantFrames
-    // );
     super.onUpdate();
 
     this.owner.percibirEntorno();

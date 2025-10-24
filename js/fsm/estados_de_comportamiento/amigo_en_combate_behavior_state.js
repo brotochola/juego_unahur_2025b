@@ -1,4 +1,7 @@
 class AmigoEnCombateBehaviorState extends FSMState {
+  onEnter() {
+    this.owner.hablar("😠");
+  }
   onUpdate() {
     super.onUpdate();
 

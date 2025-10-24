@@ -1,5 +1,6 @@
 class EnemigoHuyendoBehaviorState extends FSMState {
   onEnter() {
+    this.owner.hablar("😨");
     this.originalFactorEscapar = this.owner.factorEscapar;
     this.owner.factorEscapar = 0.5;
   }

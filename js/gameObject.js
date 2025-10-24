@@ -325,9 +325,22 @@ class GameObject {
   perseguir() {
     if (!this.target) return;
 
+    if (
+      laDistanciaEntreDosObjetosEsMayorQue(
+        this.posicion,
+        this.target.posicion,
+        this.vision
+      ) ||
+      laDistanciaEntreDosObjetosEsMenorQue(
+        this.posicion,
+        this.target.posicion,
+        this.rangoDeAtaque
+      )
+    )
+      return;
+
     const dist = calcularDistancia(this.posicion, this.target.posicion);
     this.distanciaAlTarget = dist;
-    if (dist > this.vision || dist < this.rangoDeAtaque) return;
 
     // Vector de dirección hacia el objetivo
     const difX = this.target.posicion.x - this.posicion.x;
@@ -363,8 +376,14 @@ class GameObject {
      * Esto crea un comportamiento de evasión realista
      */
     if (!this.perseguidor) return;
-    const dist = calcularDistancia(this.posicion, this.perseguidor.posicion);
-    if (dist > this.vision) return;
+    if (
+      laDistanciaEntreDosObjetosEsMayorQue(
+        this.posicion,
+        this.perseguidor.posicion,
+        this.vision
+      )
+    )
+      return;
 
     // Vector hacia el perseguidor
     const difX = this.perseguidor.posicion.x - this.posicion.x;
@@ -491,6 +510,7 @@ class GameObject {
   }
 
   actualizarMiPosicionEnLaGrilla() {
+    if (!this.juego.CONFIG.usar_grilla) return;
     let nuevaCelda = this.juego.grilla.obtenerCeldaEnPosicion(
       this.posicion.x,
       this.posicion.y
