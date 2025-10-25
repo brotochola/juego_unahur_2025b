@@ -262,7 +262,7 @@ class SistemaDeIluminacion {
     // Crear sprite que mostrará la RenderTexture
     this.spriteDeIluminacion = new PIXI.Sprite(this.renderTexture);
     this.spriteDeIluminacion.label = "spriteDeIluminacion";
-    this.spriteDeIluminacion.zIndex = Z_INDEX.containerIluminacion;
+    this.spriteDeIluminacion.zIndex = Juego.Z_INDEX.containerIluminacion;
     this.spriteDeIluminacion.blendMode = "multiply";
     this.spriteDeIluminacion.alpha = 0.99;
     this.juego.pixiApp.stage.addChild(this.spriteDeIluminacion);
@@ -305,7 +305,7 @@ class SistemaDeIluminacion {
 
     this.spriteAmarilloParaElAtardecer.alpha = 0;
     this.spriteAmarilloParaElAtardecer.zIndex =
-      Z_INDEX.spriteAmarilloParaElAtardecer;
+      Juego.Z_INDEX.spriteAmarilloParaElAtardecer;
     this.spriteAmarilloParaElAtardecer.blendMode = "multiply";
     this.juego.pixiApp.stage.addChild(this.spriteAmarilloParaElAtardecer);
   }

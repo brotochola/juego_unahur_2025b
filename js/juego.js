@@ -1,13 +1,13 @@
-const Z_INDEX = {
-  containerBG: 0,
-  graficoSombrasProyectadas: 1,
-  containerIluminacion: 2,
-  containerPrincipal: 3,
-  spriteAmarilloParaElAtardecer: 4,
-  containerUI: 5,
-};
-
 class Juego {
+  static Z_INDEX = {
+    containerBG: 0,
+    graficoSombrasProyectadas: 1,
+    containerIluminacion: 2,
+    containerPrincipal: 3,
+    spriteAmarilloParaElAtardecer: 4,
+    containerUI: 5,
+    cables: 999999999999,
+  };
   // Configuración estática - accesible globalmente como Juego.CONFIG
   static CONFIG = {
     usar_grilla: true,
@@ -52,7 +52,8 @@ class Juego {
   enemigos = [];
   civiles = [];
   policias = [];
-
+  postes = [];
+  cables = [];
   monumentos = [];
   obstaculos = [];
   arboles = [];
@@ -180,7 +181,7 @@ class Juego {
   crearContainerBG() {
     this.containerBG = new PIXI.Container();
     this.containerBG.label = "containerBG";
-    this.containerBG.zIndex = Z_INDEX.containerBG;
+    this.containerBG.zIndex = Juego.Z_INDEX.containerBG;
 
     this.pixiApp.stage.addChild(this.containerBG);
   }
@@ -194,13 +195,14 @@ class Juego {
   async crearNivel() {
     this.containerPrincipal = new PIXI.Container();
     this.containerPrincipal.label = "containerPrincipal";
-    this.containerPrincipal.zIndex = Z_INDEX.containerPrincipal;
+    this.containerPrincipal.zIndex = Juego.Z_INDEX.containerPrincipal;
     this.pixiApp.stage.addChild(this.containerPrincipal);
 
     this.crearContainerBG();
     this.crearGraficoDebug();
 
     await this.cargarTexturas();
+    this.crearGraficoParaCables();
 
     this.nivel = new Nivel(
       "assets/pixelart/plaza_de_mayo_21.json",
@@ -234,6 +236,13 @@ class Juego {
     // Crear el sistema de iluminación
     this.sistemaDeIluminacion = new SistemaDeIluminacion(this);
     this.particleSystem = new ParticleSystem(this);
+  }
+
+  crearGraficoParaCables() {
+    this.graficoParaCables = new PIXI.Graphics();
+    this.graficoParaCables.zIndex = Juego.Z_INDEX.cables;
+    this.graficoParaCables.label = "graficoParaCables";
+    this.containerPrincipal.addChild(this.graficoParaCables);
   }
 
   async crearCruzTarget() {

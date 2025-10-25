@@ -7,6 +7,14 @@ class Poste extends EntidadEstatica {
     this.crearSprite();
     this.juego.obstaculos.push(this);
     // this.actualizarMiPosicionEnLaGrilla();
+    this.juego.postes.push(this);
+    this.cables = [];
+  }
+  agregarCable(otroPoste) {
+    console.log("agregando cable", this.id, otroPoste.id);
+    const cable = Cable.crearCable(this, otroPoste, this.juego);
+    this.cables.push(cable);
+    otroPoste.cables.push(cable);
   }
 
   async crearSprite() {

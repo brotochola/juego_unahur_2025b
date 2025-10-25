@@ -26,8 +26,29 @@ class Nivel {
 
     const data = await response.json();
     await this.parsearDatos(data);
+    this.ponerCablesEntrePostes();
     this.loaded = true;
+
     if (this.callback) this.callback();
+  }
+
+  ponerCablesEntrePostes() {
+    //necesito q esten todos los postes cargados para poder poner los cables
+    //sino hacia esto en la clase cable
+    for (let poste of this.juego.postes) {
+      const postesCercanos =
+        poste.celdaActual.obtenerEntidadesPorClaseYTipoAcaYEnCEldasVecinas(
+          "poste",
+          "",
+          2
+        );
+
+      for (let otroPoste of postesCercanos) {
+        if (otroPoste !== poste) {
+          poste.agregarCable(otroPoste);
+        }
+      }
+    }
   }
 
   detectarLimites() {

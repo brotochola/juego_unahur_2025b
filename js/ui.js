@@ -4,7 +4,7 @@ class UI {
     this.juego = juego;
     this.container = new PIXI.Container();
     this.container.label = "ui";
-    this.container.zIndex = Z_INDEX.containerUI || 9;
+    this.container.zIndex = Juego.Z_INDEX.containerUI || 9;
     this.juego.pixiApp.stage.addChild(this.container);
     this.estiloDeTexto = {
       fontSize: 30,
@@ -16,6 +16,7 @@ class UI {
     };
     this.crearTextoDeLaHora();
     this.crearIndicadorDeAmigos();
+    this.crearIndicadorDeFPS();
     this.resize();
   }
   crearIndicadorDeAmigos() {
@@ -35,11 +36,23 @@ class UI {
     this.container.addChild(this.textoDeLaHora);
   }
 
+  crearIndicadorDeFPS() {
+    this.indicadorDeFPS = new PIXI.Text({
+      text: "FPS: 60",
+      style: this.estiloDeTexto,
+    });
+    this.indicadorDeFPS.anchor.set(0, 0);
+    this.indicadorDeFPS.label = "indicadorDeFPS";
+    this.container.addChild(this.indicadorDeFPS);
+  }
+
   resize() {
     this.textoDeLaHora.x = this.juego.width - this.margen;
     this.textoDeLaHora.y = this.margen;
     this.indicadorDeAmigos.x = this.juego.width - this.margen;
     this.indicadorDeAmigos.y = this.margen + 50;
+    this.indicadorDeFPS.x = this.margen;
+    this.indicadorDeFPS.y = this.margen;
   }
   getStringDeBandos() {
     let str = "";
@@ -62,5 +75,10 @@ class UI {
     this.textoDeLaHora.text = convertirCantidadDeMinutosDelDiaAStringDeHora(
       this.juego.sistemaDeIluminacion.minutoDelDia
     );
+
+    // Actualizar FPS
+    if (this.indicadorDeFPS && this.juego.fps) {
+      this.indicadorDeFPS.text = `FPS: ${Math.round(this.juego.fps)}`;
+    }
   }
 }
