@@ -161,14 +161,18 @@ for (let i = 0; i < 200; i++) {
 ```javascript
 Juego.CONFIG.max_sombras_por_farol = 5; // Menos sombras
 Juego.CONFIG.usar_sombras_proyectadas = false; // Desactivar completamente
+Juego.CONFIG.frames_entre_updates_tint = 15; // Actualizar iluminación menos frecuentemente
+Juego.CONFIG.escala_textura_sombras = 0.05; // Sombras muy pixeladas (mejor performance)
 ```
 
 ### Para hardware de gama alta:
 
 ```javascript
 Juego.CONFIG.max_sombras_por_farol = 25; // Más sombras
+Juego.CONFIG.frames_entre_updates_tint = 5; // Actualizaciones más frecuentes (más suave)
+Juego.CONFIG.escala_textura_sombras = 0.2; // Menos pixelado (más calidad)
 // Aumentar tamaño del pool si hay muchos faroles
-// En sistemaDeIluminacion.js línea 116
+// En sistemaDeIluminacion.js línea 165
 const poolSize = 200; // Aumentar de 100 a 200
 ```
 

@@ -16,6 +16,10 @@ class Persona extends GameObject {
 
     this.nombre = generateName();
 
+    // Inicializar tracking de alpha acumulado de sombras
+    this.alphaAcumuladoDeSombras = 0;
+    this.misSombrasProyectadas = [];
+
     this.rateOfFire = 600; //medido en milisegundos
     this.ultimoGolpe = 0;
 

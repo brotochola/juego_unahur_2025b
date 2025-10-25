@@ -166,7 +166,12 @@ class SistemaDeIluminacion {
    * Esto evita crear/destruir sprites constantemente
    */
   pregenerarPoolDeSombras() {
-    const poolSize = 100; // Ajustar según cantidad de personajes
+    // Calcular tamaño del pool dinámicamente basado en cantidad de luces y personajes
+    const cantidadFaroles = this.juego.cosasQueDanLuz.length || 10;
+    const maxSombrasPorFarol = Juego.CONFIG.max_sombras_por_farol || 15;
+
+    // Pool size = faroles × sombras por farol, con un mínimo de 100
+    const poolSize = Math.max(100, cantidadFaroles * maxSombrasPorFarol);
 
     for (let i = 0; i < poolSize; i++) {
       const spriteSombra = new PIXI.Sprite(this.texturaSombra);
@@ -182,7 +187,12 @@ class SistemaDeIluminacion {
       this.poolSombras.push(spriteSombra);
     }
 
-    console.log(`✅ Pool de ${poolSize} sprites pixelados de sombra creado`);
+    this.poolSizeOriginal = poolSize; // Guardar para advertencias
+    this.poolWarningShown = false; // Flag para mostrar advertencia solo una vez
+
+    console.log(
+      `✅ Pool de ${poolSize} sprites pixelados de sombra creado (${cantidadFaroles} faroles × ${maxSombrasPorFarol} sombras)`
+    );
   }
 
   /**
@@ -196,7 +206,19 @@ class SistemaDeIluminacion {
       return sprite;
     }
 
-    // Si el pool está vacío, crear uno nuevo (fallback)
+    // Si el pool está vacío, crear uno nuevo (fallback) y advertir
+    if (!this.poolWarningShown) {
+      console.warn(
+        `⚠️ Pool de sombras agotado! Creando sprites adicionales. Considera aumentar max_sombras_por_farol o reducir la cantidad de faroles/personajes.`
+      );
+      console.warn(
+        `   Sombras activas: ${
+          this.sombrasActivas.length
+        }, Pool size original: ${this.poolSizeOriginal || "desconocido"}`
+      );
+      this.poolWarningShown = true;
+    }
+
     const sprite = new PIXI.Sprite(this.texturaSombra);
     sprite.anchor.set(0.5, 0);
     sprite.blendMode = "multiply";
@@ -358,6 +380,15 @@ class SistemaDeIluminacion {
     this.actualizarSpriteAmarilloParaElAtardecer();
     this.prenderOApagarTodosLosFarolesSegunLaHoraDelDia();
 
+    // OPTIMIZACIÓN: Si es de día completo, no hacer nada de iluminación
+    if (this.cantidadDeLuzDelDia >= 0.99999) {
+      // Asegurar que todo esté visible al 100%
+      if (this.spriteDeIluminacion) {
+        this.spriteDeIluminacion.alpha = 0;
+      }
+      return; // Skip todo el sistema de iluminación
+    }
+
     if (this.graficoSombrasProyectadas) {
       this.graficoSombrasProyectadas.clear();
     }
@@ -365,8 +396,17 @@ class SistemaDeIluminacion {
     if (this.activo) {
       this.actualizarGradientsDeLosFaroles();
       this.actualizarSpriteDeIluminacion();
-      this.cambiarTintDeTodosLosObjetosParaSimularIluminacion();
-      this.cambiarElAlphaDeLasSombrasSegunLaCantidadDeLuzDelDia();
+
+      // OPTIMIZACIÓN: Actualizar tints solo cada N frames (es muy costoso)
+      const framesEntreUpdates = Juego.CONFIG.frames_entre_updates_tint || 10;
+      if (this.juego.FRAMENUM % framesEntreUpdates === 0) {
+        this.cambiarTintDeTodosLosObjetosParaSimularIluminacion();
+      }
+
+      // OPTIMIZACIÓN: Actualizar sombras de personajes también cada N frames
+      if (this.juego.FRAMENUM % framesEntreUpdates === 0) {
+        this.cambiarElAlphaDeLasSombrasSegunLaCantidadDeLuzDelDia();
+      }
     }
   }
 
@@ -416,7 +456,20 @@ class SistemaDeIluminacion {
       this.limpiarSombrasActivas();
     }
 
+    // NUEVO: Resetear el alpha acumulado de sombras para cada persona
+    for (let persona of this.juego.personas) {
+      persona.alphaAcumuladoDeSombras = 0;
+    }
+
     for (let farol of this.juego.cosasQueDanLuz) {
+      // OPTIMIZACIÓN 1: Skip faroles apagados (estado === 0)
+      if (farol.estado === 0) {
+        if (farol.spriteGradiente) {
+          farol.spriteGradiente.visible = false;
+        }
+        continue;
+      }
+
       // Si el farol/fuego no tiene spriteGradiente, crearlo
       if (!farol.spriteGradiente) {
         farol.spriteGradiente = crearSpriteConGradiente(
@@ -427,16 +480,21 @@ class SistemaDeIluminacion {
         this.containerParaRenderizar.addChild(farol.spriteGradiente);
       }
 
+      // OPTIMIZACIÓN 2: No procesar faroles fuera de pantalla (con margen)
       if (!farol.estoyVisibleEnPantalla(1.33)) {
         farol.spriteGradiente.visible = false;
         continue;
       }
 
+      // El farol está prendido y visible
       farol.spriteGradiente.visible = true;
       const posicionEnPantalla = farol.getPosicionEnPantalla();
       farol.spriteGradiente.x = posicionEnPantalla.x;
       farol.spriteGradiente.y = posicionEnPantalla.y;
       farol.spriteGradiente.scale.set(this.juego.zoom);
+
+      // OPTIMIZACIÓN 3: Solo calcular sombras si están activadas
+      if (!Juego.CONFIG.usar_sombras_proyectadas) continue;
 
       // Elegir método de sombras según configuración
       if (Juego.CONFIG.usar_sombras_con_texturas) {
@@ -479,8 +537,18 @@ class SistemaDeIluminacion {
     }
 
     // Ordenar por distancia y tomar solo los más cercanos
+    // PRIORIDAD: Personajes sin sombras primero, luego por distancia
     if (objetosCercanos.length > MAX_SOMBRAS) {
       objetosCercanos.sort((a, b) => {
+        // Priorizar personajes que no tienen sombras aún
+        const aSinSombra = (a.misSombrasProyectadas?.length || 0) === 0 ? 0 : 1;
+        const bSinSombra = (b.misSombrasProyectadas?.length || 0) === 0 ? 0 : 1;
+
+        if (aSinSombra !== bSinSombra) {
+          return aSinSombra - bSinSombra; // Sin sombra primero
+        }
+
+        // Si ambos tienen o no tienen sombras, ordenar por distancia
         const distA = calcularDistanciaCuadrada(posDelFarol, a.posicion);
         const distB = calcularDistanciaCuadrada(posDelFarol, b.posicion);
         return distA - distB;
@@ -515,6 +583,8 @@ class SistemaDeIluminacion {
       const spriteSombra = this.obtenerSpriteSombraDelPool();
       if (!spriteSombra) continue;
 
+      objeto.misSombrasProyectadas.push(spriteSombra);
+
       // Posicionar la sombra más cerca del objeto (10px hacia el farol)
       const posObjeto = objeto.getPosicionEnPantalla();
       const offsetCerca = 10 * zoom; // Ajustar por zoom
@@ -546,7 +616,25 @@ class SistemaDeIluminacion {
       let cantDeSombra = (farol.radioLuz ** 1.5 / distancia ** 2) * 0.33;
       if (cantDeSombra > 0.4) cantDeSombra = 0.4;
       if (cantDeSombra < 0.05) cantDeSombra = 0.05;
+
+      // LIMITADOR: Asegurar que el alpha total de todas las sombras no supere 0.8
+      const MAX_ALPHA_TOTAL = 0.8;
+      const alphaDisponible = MAX_ALPHA_TOTAL - objeto.alphaAcumuladoDeSombras;
+
+      if (alphaDisponible <= 0) {
+        // Ya llegamos al límite, no agregar más sombras a este objeto
+        this.devolverSpriteSombraAlPool(spriteSombra);
+        objeto.misSombrasProyectadas.pop(); // Remover la referencia que agregamos
+        continue;
+      }
+
+      // Ajustar el alpha si excede el disponible
+      if (cantDeSombra > alphaDisponible) {
+        cantDeSombra = alphaDisponible;
+      }
+
       spriteSombra.alpha = cantDeSombra;
+      objeto.alphaAcumuladoDeSombras += cantDeSombra;
 
       // Z-index para que se dibuje correctamente
       spriteSombra.zIndex = 3;
@@ -730,6 +818,23 @@ class SistemaDeIluminacion {
         let cantDeSombra = (farol.radioLuz ** 1.5 / distancia ** 2) * 0.33;
         if (cantDeSombra > 0.33) cantDeSombra = 0.33;
         if (cantDeSombra < 0) cantDeSombra = 0;
+
+        // LIMITADOR: Asegurar que el alpha total de todas las sombras no supere 0.8
+        const MAX_ALPHA_TOTAL = 0.8;
+        const alphaDisponible =
+          MAX_ALPHA_TOTAL - objeto.alphaAcumuladoDeSombras;
+
+        if (alphaDisponible <= 0) {
+          // Ya llegamos al límite, no dibujar más sombras para este objeto
+          continue;
+        }
+
+        // Ajustar el alpha si excede el disponible
+        if (cantDeSombra > alphaDisponible) {
+          cantDeSombra = alphaDisponible;
+        }
+
+        objeto.alphaAcumuladoDeSombras += cantDeSombra;
 
         this.graficoSombrasProyectadas.fill({
           color: 0x000000,

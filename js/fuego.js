@@ -1,7 +1,7 @@
 class Fuego extends EntidadEstatica {
   constructor(x, y, juego) {
     super(x, y, juego);
-    this.radio = 50;
+    this.radio = 25;
     this.cantidadDeLuz = 1;
     juego.fuegos.push(this);
     juego.cosasQueDanLuz.push(this);
@@ -36,7 +36,7 @@ class Fuego extends EntidadEstatica {
     this.sprite.scale.y = this.escala;
     this.sprite.scale.x = Math.random() > 0.5 ? this.escala : -this.escala;
     this.render();
-
+    this.radio = this.sprite.width * 0.25;
     this.calcularRadioLuz();
     this.crearSpriteDeLuz();
   }

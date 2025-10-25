@@ -71,6 +71,7 @@ class GameObject {
   }
 
   crearBarritaVida() {
+    if (!this.sprite) return;
     this.containerBarraVida = new PIXI.Container();
     this.containerBarraVida.label = "containerBarraVida";
     this.container.addChild(this.containerBarraVida);
@@ -481,6 +482,7 @@ class GameObject {
   }
 
   cambiarTintParaSimularIluminacion() {
+    if (!this.sprite || !this.container) return;
     if (!this.juego.sistemaDeIluminacion?.isActivo()) {
       this.container.tint = 0xffffff;
       return;

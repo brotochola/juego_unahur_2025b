@@ -26,6 +26,11 @@ class Juego {
     // Efecto pixelado de sombras (solo con usar_sombras_con_texturas: true)
     // 1.0 = sin pixelado, 0.1 = muy pixelado, 0.05 = ultra pixelado
     escala_textura_sombras: 0.1, // Valor por defecto (recomendado: 0.05-0.2)
+
+    // OPTIMIZACIÓN: Frecuencia de actualización de tints (cambios de color por iluminación)
+    // Actualizar tints cada N frames (1 = cada frame, 10 = cada 10 frames)
+    // Valores más altos = mejor performance pero menos suave
+    frames_entre_updates_tint: 10, // Recomendado: 5-15
   };
 
   pixiApp;
