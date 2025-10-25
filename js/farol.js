@@ -15,7 +15,6 @@ class Farol extends EntidadEstatica {
     this.estado = 1;
     this.fallado = Math.random() > 0.95;
     this.funcionando = 1;
-    this.actualizarMiPosicionEnLaGrilla();
   }
 
   prender() {

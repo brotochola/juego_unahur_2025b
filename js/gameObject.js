@@ -420,11 +420,6 @@ class GameObject {
     } catch (e) {
       console.warn(e);
     }
-    try {
-      this.cambiarTintParaSimularIluminacion();
-    } catch (e) {
-      console.warn(e);
-    }
 
     this.actualizarBarritaVida();
   }
@@ -467,6 +462,11 @@ class GameObject {
     this.container.addChild(this.sombra);
   }
 
+  cambiarAlphaDeLaSombra(alpha) {
+    if (!this.sombra) return;
+    this.sombra.alpha = alpha * 0.6 + 0.2;
+  }
+
   estoyVisibleEnPantalla(changui = 1) {
     //el changui es un multiplicador para el tamaño de pantalla
     //1 es el tamaño normal de la pantalla
@@ -502,12 +502,12 @@ class GameObject {
 
     for (let farol of this.juego.cosasQueDanLuz) {
       if (/*farol == this ||*/ farol.estado == 0) continue;
-      const dist = calcularDistancia(farol.posicion, this.posicion);
+      const dist = calcularDistanciaCuadrada(farol.posicion, this.posicion);
       luz +=
         (farol.cantidadDeLuz *
           this.juego.distanciaALaQueLosObjetosTienenTodaLaLuz **
             this.juego.factorMagicoArriba) /
-        dist ** this.juego.factorMagicoAbajo;
+        (dist * 5);
     }
 
     if (luz > 1) luz = 1;

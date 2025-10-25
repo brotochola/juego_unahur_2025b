@@ -17,7 +17,7 @@ class Arbol extends EntidadEstatica {
     this.velocidadSkew2 = 0.1 + Math.random() * 0.05; // Velocidad muy lenta
     this.cantidadDeSkew2 = 0.005 + Math.random() * 0.01;
 
-    this.actualizarMiPosicionEnLaGrilla();
+    // this.actualizarMiPosicionEnLaGrilla();
   }
 
   async crearSprite() {

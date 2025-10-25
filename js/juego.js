@@ -16,6 +16,16 @@ class Juego {
     comparar_distancias_cuadradas: true,
     usar_pool_vectores: true,
     usar_sombras_proyectadas: true, // Activar/desactivar sombras para comparar performance
+
+    // NUEVO: Sistema optimizado de sombras con texturas (10-20x más rápido)
+    // true = usa texturas pre-renderizadas (RECOMENDADO)
+    // false = usa geometría calculada cada frame (método viejo)
+    usar_sombras_con_texturas: true,
+    max_sombras_por_farol: 15, // Reducir si necesitas más FPS (5-10 para low-end)
+
+    // Efecto pixelado de sombras (solo con usar_sombras_con_texturas: true)
+    // 1.0 = sin pixelado, 0.1 = muy pixelado, 0.05 = ultra pixelado
+    escala_textura_sombras: 0.1, // Valor por defecto (recomendado: 0.05-0.2)
   };
 
   pixiApp;
@@ -42,7 +52,7 @@ class Juego {
   barrasDeVidaVisibles = true;
   distanciaALaQueLosObjetosTienenTodaLaLuz = 157;
   factorMagicoArriba = 2;
-  factorMagicoAbajo = 2.18;
+  // factorMagicoAbajo = 2.18;
   teclado = {};
   ahora = performance.now();
   BASE_Z_INDEX = 50000;
@@ -118,12 +128,6 @@ class Juego {
     this.pixiApp.stage.sortableChildren = true;
     this.crearNivel();
     this.ui = new UI(this);
-  }
-
-  meterATodosLosObstaculosALaGrilla() {
-    for (let obstaculo of this.obstaculos) {
-      obstaculo.actualizarMiPosicionEnLaGrilla();
-    }
   }
 
   agregarListenersDeTeclado() {

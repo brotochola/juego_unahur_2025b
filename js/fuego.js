@@ -5,6 +5,7 @@ class Fuego extends EntidadEstatica {
     this.cantidadDeLuz = 1;
     juego.fuegos.push(this);
     juego.cosasQueDanLuz.push(this);
+    juego.obstaculos.push(this);
     this.container.label = "fuego" + this.id;
     this.crearSprite();
     // this.juego.obstaculos.push(this);

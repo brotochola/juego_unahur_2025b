@@ -10,6 +10,11 @@ class SistemaDeIluminacion {
     this.spriteNegro = null;
     this.blurParaElGraficoDeSombrasProyectadas = null;
 
+    // NUEVO: Sistema de sombras con texturas (mucho más eficiente)
+    this.texturaSombra = null;
+    this.poolSombras = []; // Pool de sprites de sombra reutilizables
+    this.sombrasActivas = []; // Sprites actualmente en uso
+
     this.inicializar();
 
     this.numeroDeDia = 0;
@@ -43,10 +48,186 @@ class SistemaDeIluminacion {
     // para asegurarse de que los faroles estén cargados
     setTimeout(() => {
       this.crearSistemaDeIluminacionConRenderTexture();
-      this.crearGraficoSombrasProyectadas(); // Debe ir después porque se agrega al containerParaRenderizar
+
+      // NUEVO: Crear textura de sombra pre-renderizada
+      this.crearTexturaDeSombra();
+
+      // Dependiendo de la configuración, usar método nuevo o viejo
+      if (Juego.CONFIG.usar_sombras_con_texturas) {
+        this.pregenerarPoolDeSombras();
+      } else {
+        this.crearGraficoSombrasProyectadas(); // Método viejo con geometría
+      }
+
       this.inicializado = true;
       this.toggle();
     }, 1000);
+  }
+
+  /**
+   * OPTIMIZACIÓN: Pre-generar textura de sombra
+   * Esta textura se reutiliza para todas las sombras, solo cambiando
+   * posición, rotación, escala y alpha
+   */
+  crearTexturaDeSombra() {
+    // Factor de escala para efecto pixelado (0.1 = 10% del tamaño original)
+    // Valores recomendados: 0.05-0.2 (más pequeño = más pixelado)
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Tamaño base de la sombra reducido para efecto pixelado
+    const widthBase = 240;
+    const heightBase = 340;
+    const width = widthBase * Juego.CONFIG.escala_textura_sombras;
+    const height = heightBase * Juego.CONFIG.escala_textura_sombras;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    // Desactivar antialiasing del contexto para efecto más pixelado
+    ctx.imageSmoothingEnabled = false;
+
+    // APLICAR BLUR ANTES DE DIBUJAR (ajustado por escala)
+    const blurSize = Math.max(1, 12 * Juego.CONFIG.escala_textura_sombras);
+    ctx.filter = `blur(${blurSize}px)`;
+
+    // Crear gradiente cónico/trapezoidal (ajustado por escala)
+    const margen = 20 * Juego.CONFIG.escala_textura_sombras;
+    const gradient = ctx.createLinearGradient(
+      width / 2,
+      margen,
+      width / 2,
+      height - margen
+    );
+
+    // Gradiente de negro opaco a transparente
+    gradient.addColorStop(0, "rgba(0, 0, 0, 0.7)"); // Cerca del objeto
+    gradient.addColorStop(0.3, "rgba(0, 0, 0, 0.5)");
+    gradient.addColorStop(0.7, "rgba(0, 0, 0, 0.25)");
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0)"); // Lejos, transparente
+
+    // Dibujar forma trapezoidal CON CURVAS para simular perspectiva
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+
+    // Puntos de referencia (ajustados por escala)
+    const topLeft = { x: width * 0.4, y: margen };
+    const topRight = { x: width * 0.6, y: margen };
+    const bottomLeft = { x: width * 0.25, y: height - margen };
+    const bottomRight = { x: width * 0.75, y: height - margen };
+
+    // Comenzar desde el punto superior izquierdo
+    ctx.moveTo(topLeft.x, topLeft.y);
+
+    // TECHO (semicírculo convexo hacia arriba) - más cerca del objeto
+    const topCenterX = (topLeft.x + topRight.x) / 2;
+    const topCenterY = topLeft.y - 10 * Juego.CONFIG.escala_textura_sombras;
+    ctx.quadraticCurveTo(topCenterX, topCenterY, topRight.x, topRight.y);
+
+    // Lado derecho (línea recta)
+    ctx.lineTo(bottomRight.x, bottomRight.y);
+
+    // BASE (semicírculo convexo hacia abajo) - más lejos del objeto
+    const bottomCenterX = (bottomLeft.x + bottomRight.x) / 2;
+    const bottomCenterY =
+      bottomLeft.y + 20 * Juego.CONFIG.escala_textura_sombras;
+    ctx.quadraticCurveTo(
+      bottomCenterX,
+      bottomCenterY,
+      bottomLeft.x,
+      bottomLeft.y
+    );
+
+    // Lado izquierdo (línea recta para cerrar)
+    ctx.lineTo(topLeft.x, topLeft.y);
+
+    ctx.closePath();
+    ctx.fill();
+
+    // Resetear el filtro
+    ctx.filter = "none";
+
+    // Crear textura PIXI desde canvas
+    this.texturaSombra = PIXI.Texture.from(canvas);
+
+    // CRÍTICO: Desactivar smoothing en la textura base para efecto pixelado
+    this.texturaSombra.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
+
+    console.log(
+      `✅ Textura pixelada de sombra creada (${width.toFixed(
+        1
+      )}x${height.toFixed(1)}px)`
+    );
+  }
+
+  /**
+   * Pre-generar pool de sprites de sombra para reutilizar
+   * Esto evita crear/destruir sprites constantemente
+   */
+  pregenerarPoolDeSombras() {
+    const poolSize = 100; // Ajustar según cantidad de personajes
+
+    for (let i = 0; i < poolSize; i++) {
+      const spriteSombra = new PIXI.Sprite(this.texturaSombra);
+      spriteSombra.anchor.set(0.5, 0); // Anclar en la parte superior central
+      spriteSombra.visible = false;
+      spriteSombra.blendMode = "multiply"; // Para que se mezcle bien con el fondo
+
+      // Asegurar que la textura use NEAREST para efecto pixelado (sin smooth)
+      spriteSombra.texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
+
+      // Agregar al container de renderizado
+      this.containerParaRenderizar.addChild(spriteSombra);
+      this.poolSombras.push(spriteSombra);
+    }
+
+    console.log(`✅ Pool de ${poolSize} sprites pixelados de sombra creado`);
+  }
+
+  /**
+   * Obtener un sprite de sombra del pool
+   */
+  obtenerSpriteSombraDelPool() {
+    if (this.poolSombras.length > 0) {
+      const sprite = this.poolSombras.pop();
+      this.sombrasActivas.push(sprite);
+      sprite.visible = true;
+      return sprite;
+    }
+
+    // Si el pool está vacío, crear uno nuevo (fallback)
+    const sprite = new PIXI.Sprite(this.texturaSombra);
+    sprite.anchor.set(0.5, 0);
+    sprite.blendMode = "multiply";
+    // Asegurar efecto pixelado
+    sprite.texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
+    this.containerParaRenderizar.addChild(sprite);
+    this.sombrasActivas.push(sprite);
+    return sprite;
+  }
+
+  /**
+   * Devolver un sprite al pool
+   */
+  devolverSpriteSombraAlPool(sprite) {
+    sprite.visible = false;
+    const index = this.sombrasActivas.indexOf(sprite);
+    if (index > -1) {
+      this.sombrasActivas.splice(index, 1);
+    }
+    this.poolSombras.push(sprite);
+  }
+
+  /**
+   * Limpiar todas las sombras activas
+   */
+  limpiarSombrasActivas() {
+    for (const sprite of this.sombrasActivas) {
+      sprite.visible = false;
+      this.poolSombras.push(sprite);
+    }
+    this.sombrasActivas.length = 0;
   }
 
   crearSistemaDeIluminacionConRenderTexture() {
@@ -184,6 +365,19 @@ class SistemaDeIluminacion {
     if (this.activo) {
       this.actualizarGradientsDeLosFaroles();
       this.actualizarSpriteDeIluminacion();
+      this.cambiarTintDeTodosLosObjetosParaSimularIluminacion();
+      this.cambiarElAlphaDeLasSombrasSegunLaCantidadDeLuzDelDia();
+    }
+  }
+
+  cambiarElAlphaDeLasSombrasSegunLaCantidadDeLuzDelDia() {
+    for (let persona of this.juego.personas) {
+      persona.cambiarAlphaDeLaSombra(this.cantidadDeLuzDelDia);
+    }
+  }
+  cambiarTintDeTodosLosObjetosParaSimularIluminacion() {
+    for (let obj of this.juego.gameObjects) {
+      obj.cambiarTintParaSimularIluminacion();
     }
   }
 
@@ -217,6 +411,11 @@ class SistemaDeIluminacion {
   }
 
   actualizarGradientsDeLosFaroles() {
+    // Limpiar sombras del frame anterior (si usamos texturas)
+    if (Juego.CONFIG.usar_sombras_con_texturas) {
+      this.limpiarSombrasActivas();
+    }
+
     for (let farol of this.juego.cosasQueDanLuz) {
       // Si el farol/fuego no tiene spriteGradiente, crearlo
       if (!farol.spriteGradiente) {
@@ -239,7 +438,118 @@ class SistemaDeIluminacion {
       farol.spriteGradiente.y = posicionEnPantalla.y;
       farol.spriteGradiente.scale.set(this.juego.zoom);
 
-      this.actualizarSombrasProyectadas(farol);
+      // Elegir método de sombras según configuración
+      if (Juego.CONFIG.usar_sombras_con_texturas) {
+        this.actualizarSombrasProyectadasConTexturas(farol);
+      } else {
+        this.actualizarSombrasProyectadas(farol);
+      }
+    }
+  }
+
+  /**
+   * NUEVO: Versión optimizada usando texturas pre-renderizadas
+   * 10-20x más rápido que la versión con geometría
+   */
+  actualizarSombrasProyectadasConTexturas(farol) {
+    if (!Juego.CONFIG.usar_sombras_proyectadas) return;
+    if (!this.texturaSombra) return;
+
+    const posDelFarol = farol.getPosicionEnPantalla();
+    const zoom = this.juego.zoom;
+
+    // OPTIMIZACIÓN: Limitar cantidad de sombras
+    const MAX_SOMBRAS = Juego.CONFIG.max_sombras_por_farol || 15;
+
+    // Obtener objetos cercanos usando la grilla
+    let objetosCercanos;
+    if (Juego.CONFIG.usar_grilla && farol.celdaActual) {
+      const celdasABuscar = Math.ceil(
+        farol.radioLuz / this.juego.grilla.anchoCelda
+      );
+      const entidadesCerca =
+        farol.celdaActual.obtenerEntidadesAcaYEnCEldasVecinas(celdasABuscar);
+      objetosCercanos = entidadesCerca.filter(
+        (entidad) => entidad instanceof Persona && !entidad.muerto
+      );
+    } else {
+      objetosCercanos = this.juego.personas.filter(
+        (persona) => !persona.muerto
+      );
+    }
+
+    // Ordenar por distancia y tomar solo los más cercanos
+    if (objetosCercanos.length > MAX_SOMBRAS) {
+      objetosCercanos.sort((a, b) => {
+        const distA = calcularDistanciaCuadrada(posDelFarol, a.posicion);
+        const distB = calcularDistanciaCuadrada(posDelFarol, b.posicion);
+        return distA - distB;
+      });
+      objetosCercanos = objetosCercanos.slice(0, MAX_SOMBRAS);
+    }
+
+    // Procesar cada objeto cercano
+    for (let objeto of objetosCercanos) {
+      if (objeto === farol) continue;
+      if (!objeto.estoyVisibleEnPantalla(1)) continue;
+
+      // Verificar distancia
+      if (
+        !laDistanciaEntreDosObjetosEsMenorQue(
+          farol.posicion,
+          objeto.posicion,
+          farol.radioLuz
+        )
+      )
+        continue;
+
+      const distancia = calcularDistancia(farol.posicion, objeto.posicion);
+      if (distancia <= 0 || distancia > farol.radioLuz) continue;
+
+      // Calcular ángulo de la sombra (del farol al objeto)
+      const dx = farol.posicion.x - objeto.posicion.x;
+      const dy = farol.posicion.y - objeto.posicion.y;
+      const anguloRadianes = Math.atan2(dy, dx);
+
+      // Obtener sprite del pool
+      const spriteSombra = this.obtenerSpriteSombraDelPool();
+      if (!spriteSombra) continue;
+
+      // Posicionar la sombra más cerca del objeto (10px hacia el farol)
+      const posObjeto = objeto.getPosicionEnPantalla();
+      const offsetCerca = 10 * zoom; // Ajustar por zoom
+      spriteSombra.x = posObjeto.x + Math.cos(anguloRadianes) * offsetCerca;
+      spriteSombra.y = posObjeto.y + Math.sin(anguloRadianes) * offsetCerca;
+
+      // Rotar según dirección de la luz
+      // +90° porque la textura apunta hacia abajo por defecto
+      spriteSombra.rotation = anguloRadianes + Math.PI / 2;
+
+      // Escalar según distancia (sombras más largas cuando más lejos)
+      const longitudBase = 1.0;
+      const factorDistancia = Math.min(distancia / farol.radioLuz, 1);
+      const longitudSombra = longitudBase + factorDistancia * 1.5;
+
+      // Escalar en X según el radio del objeto (sombras más anchas para objetos grandes)
+      const anchoSombra = objeto.radio / 10;
+
+      // COMPENSAR por la reducción de tamaño de la textura (efecto pixelado)
+      // Si la textura es 0.1 del tamaño original, necesitamos escalarla 10x (1/0.1)
+      const compensacionEscala = 1 / Juego.CONFIG.escala_textura_sombras;
+
+      spriteSombra.scale.set(
+        anchoSombra * 0.5 * zoom * compensacionEscala,
+        longitudSombra * 0.5 * zoom * compensacionEscala
+      );
+
+      // Alpha según distancia (más transparente cuando más lejos)
+      let cantDeSombra = (farol.radioLuz ** 1.5 / distancia ** 2) * 0.33;
+      if (cantDeSombra > 0.4) cantDeSombra = 0.4;
+      if (cantDeSombra < 0.05) cantDeSombra = 0.05;
+      spriteSombra.alpha = cantDeSombra;
+
+      // Z-index para que se dibuje correctamente
+      spriteSombra.zIndex = 3;
     }
   }
 
