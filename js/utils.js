@@ -552,3 +552,7 @@ function laDistanciaEntreDosObjetosEstaEntreDosDistancias(
     return distancia > distanciaMinima && distancia < distanciaMaxima;
   }
 }
+
+function calcularFactorDeReduccionSegunCantidadDeFrames(cantidadDeFrames) {
+  return (cantidadDeFrames - 3) / cantidadDeFrames;
+}

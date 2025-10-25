@@ -15,6 +15,11 @@ class Amigo extends Persona {
     this.esperarAQueTengaSpriteCargado(() => {
       this.crearBarritaVida();
     });
+    this.vectorParaSeguirAlLider = { x: 0, y: 0 };
+    this.factorReduccionVectorSeguirAlLider =
+      calcularFactorDeReduccionSegunCantidadDeFrames(
+        Juego.CONFIG.frames_seguir_al_lider
+      );
   }
 
   crearFSMparaComportamientos() {
@@ -32,64 +37,76 @@ class Amigo extends Persona {
   seguirAlLider() {
     if (!this.juego.protagonista) return;
 
-    // Si está muy lejos, no hace nada
-    if (
-      laDistanciaEntreDosObjetosEsMayorQue(
-        this.posicion,
-        this.juego.protagonista.posicion,
-        this.vision
+    if (this.esMiNumeroDeFrame(Juego.CONFIG.frames_seguir_al_lider)) {
+      // Si está muy lejos, no hace nada
+      if (
+        laDistanciaEntreDosObjetosEsMayorQue(
+          this.posicion,
+          this.juego.protagonista.posicion,
+          this.vision
+        )
       )
-    )
-      return;
+        return;
 
-    const difX = this.juego.protagonista.posicion.x - this.posicion.x;
-    const difY = this.juego.protagonista.posicion.y - this.posicion.y;
+      const difX = this.juego.protagonista.posicion.x - this.posicion.x;
+      const difY = this.juego.protagonista.posicion.y - this.posicion.y;
 
-    const vectorNuevo = limitarVector({ x: difX, y: difY }, 1);
+      const vectorNuevo = limitarVector({ x: difX, y: difY }, 1);
 
-    if (
-      laDistanciaEntreDosObjetosEsMenorQue(
-        this.posicion,
-        this.juego.protagonista.posicion,
-        this.radioLlegadaAlLider
-      )
-    ) {
-      //esta muy cerca, se aleja
-      const dist = calcularDistancia(
-        this.posicion,
-        this.juego.protagonista.posicion
-      );
-      vectorNuevo.x *= -this.radioLlegadaAlLider / dist;
-      vectorNuevo.y *= -this.radioLlegadaAlLider / dist;
-    } else if (
-      laDistanciaEntreDosObjetosEstaEntreDosDistancias(
-        this.posicion,
-        this.juego.protagonista.posicion,
-        this.radioLlegadaAlLider,
-        this.radioParaBajarLaVelocidad
-      )
-    ) {
-      //si estoy a una distancia q no es al ladito y tampoco es tan lejos.
-      return;
+      if (
+        laDistanciaEntreDosObjetosEsMenorQue(
+          this.posicion,
+          this.juego.protagonista.posicion,
+          this.radioLlegadaAlLider
+        )
+      ) {
+        //esta muy cerca, se aleja
+        const dist = calcularDistancia(
+          this.posicion,
+          this.juego.protagonista.posicion
+        );
+        vectorNuevo.x *= -this.radioLlegadaAlLider / dist;
+        vectorNuevo.y *= -this.radioLlegadaAlLider / dist;
+      } else if (
+        laDistanciaEntreDosObjetosEstaEntreDosDistancias(
+          this.posicion,
+          this.juego.protagonista.posicion,
+          this.radioLlegadaAlLider,
+          this.radioParaBajarLaVelocidad
+        )
+      ) {
+        //si estoy a una distancia q no es al ladito y tampoco es tan lejos.
+        return;
 
-      // // Reducción más pronunciada cuando están muy cerca
-      // const factor = (dist / this.radioParaBajarLaVelocidad) ** 3;
+        // // Reducción más pronunciada cuando están muy cerca
+        // const factor = (dist / this.radioParaBajarLaVelocidad) ** 3;
 
-      // vectorNuevo.x *= factor;
-      // vectorNuevo.y *= factor;
-    } else if (
-      laDistanciaEntreDosObjetosEstaEntreDosDistancias(
-        this.posicion,
-        this.juego.protagonista.posicion,
-        this.radioParaBajarLaVelocidad,
-        this.vision
-      )
-    ) {
-      //esta lejos, va de una
+        // vectorNuevo.x *= factor;
+        // vectorNuevo.y *= factor;
+      } else if (
+        laDistanciaEntreDosObjetosEstaEntreDosDistancias(
+          this.posicion,
+          this.juego.protagonista.posicion,
+          this.radioParaBajarLaVelocidad,
+          this.vision
+        )
+      ) {
+        //esta lejos, va de una
+      }
+
+      this.vectorParaSeguirAlLider = {
+        x: vectorNuevo.x * this.factorSeguirAlLider,
+        y: vectorNuevo.y * this.factorSeguirAlLider,
+      };
+    } else {
+      //no es un frame donde calculamos posta
+
+      this.vectorParaSeguirAlLider.x *= this.factorReduccionVectorSeguirAlLider;
+      this.vectorParaSeguirAlLider.y *= this.factorReduccionVectorSeguirAlLider;
     }
 
-    this.aceleracion.x += vectorNuevo.x * this.factorSeguirAlLider;
-    this.aceleracion.y += vectorNuevo.y * this.factorSeguirAlLider;
+    this.aceleracion.x += this.vectorParaSeguirAlLider.x;
+    this.aceleracion.y += this.vectorParaSeguirAlLider.y;
   }
 
   tick() {

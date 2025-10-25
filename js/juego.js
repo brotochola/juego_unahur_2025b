@@ -21,7 +21,8 @@ class Juego {
     // true = usa texturas pre-renderizadas (RECOMENDADO)
     // false = usa geometría calculada cada frame (método viejo)
     usar_sombras_con_texturas: true,
-    max_sombras_por_farol: 15, // Reducir si necesitas más FPS (5-10 para low-end)
+
+    max_sombras_por_objeto: 3, // Cantidad máxima de sombras por personaje (recomendado: 2-4)
 
     // Efecto pixelado de sombras (solo con usar_sombras_con_texturas: true)
     // 1.0 = sin pixelado, 0.1 = muy pixelado, 0.05 = ultra pixelado
@@ -31,6 +32,12 @@ class Juego {
     // Actualizar tints cada N frames (1 = cada frame, 10 = cada 10 frames)
     // Valores más altos = mejor performance pero menos suave
     frames_entre_updates_tint: 10, // Recomendado: 5-15
+
+    // OPTIMIZACIÓN: Frecuencia de cálculo de comportamientos de flocking
+    frames_seguir_al_lider: 20, // Para amigos siguiendo al protagonista
+    frames_cohesion: 21, // Calcular cohesión cada N frames (recomendado: 15-30)
+    frames_alineacion: 22, // Calcular alineación cada N frames (recomendado: 15-30)
+    frames_repeler_obstaculos: 15, // Calcular repulsión de obstáculos cada N frames (recomendado: 10-20)
   };
 
   pixiApp;
@@ -72,7 +79,7 @@ class Juego {
 
     // Variables para el zoom
     this.zoom = 1;
-    this.minZoom = 0.75;
+    this.minZoom = 0.25;
     this.maxZoom = 2;
     this.zoomStep = 0.1;
     this.grilla = new Grilla(this, 150, this.anchoDelMapa, this.altoDelMapa);
@@ -491,13 +498,18 @@ class Juego {
     //borrar lo q hay en los graficos debug
     if (this.graficoDebug) this.graficoDebug.clear();
 
-    for (let unpersona of this.personas) unpersona.tick();
-    for (let unpersona of this.personas) unpersona.render();
+    for (let gameObject of this.gameObjects) {
+      gameObject.actualizarSiEstoyVisibleEnLaPantalla();
+    }
+
+    for (let unpersona of this.personas) {
+      unpersona.tick();
+      unpersona.render();
+    }
 
     for (let arbol of this.arboles) arbol.tick();
     for (let farol of this.faroles) farol.tick();
     for (let fuego of this.fuegos) fuego.tick();
-    // for (let fuego of this.fuegos) fuego.render();
 
     for (let obstaculo of this.obstaculos) obstaculo.render();
 
@@ -506,6 +518,7 @@ class Juego {
 
     if (this.particleSystem) this.particleSystem.update();
     if (this.ui) this.ui.tick();
+
     this.chequearQueNoHayaMuertosConBarraDeVida();
 
     this.hacerQLaCamaraSigaAAlguien();
@@ -513,7 +526,7 @@ class Juego {
 
     if (!this.debug) return;
     // Dibujar las celdas de la grilla
-    this.grilla.dibujarGrilla();
+    // this.grilla.dibujarGrilla();
     for (let obstaculo of this.obstaculos) obstaculo.dibujarCirculo();
     for (let unpersona of this.personas) unpersona.dibujarCirculo();
   }

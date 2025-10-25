@@ -3,11 +3,19 @@ class Fuego extends EntidadEstatica {
     super(x, y, juego);
     this.radio = 25;
     this.cantidadDeLuz = 1;
+    this.radioLuz = 1; //solo lo inicializo en 1, pero dps se calcula
     juego.fuegos.push(this);
     juego.cosasQueDanLuz.push(this);
     juego.obstaculos.push(this);
     this.container.label = "fuego" + this.id;
-    this.crearSprite();
+
+    this.crearSprite().then(() => {
+      // IMPORTANTE: Como radioLuz se calcula DESPUÉS de agregarnos a la grilla,
+      // debemos notificar manualmente a la celda que somos un emisor de luz
+
+      this.actualizarMiPosicionEnLaGrilla();
+      this.celdaActual.agregarAlSetPorClaseYTipo(this);
+    });
     // this.juego.obstaculos.push(this);
 
     // Para la animación de skew
@@ -20,8 +28,6 @@ class Fuego extends EntidadEstatica {
     this.cantidadDeSkew2 = 0.01 + Math.random() * 0.01;
 
     this.escala = Math.random() * 0.5 + 0.5;
-
-    // this.actualizarMiPosicionEnLaGrilla();
   }
 
   async crearSprite() {
@@ -39,6 +45,7 @@ class Fuego extends EntidadEstatica {
     this.radio = this.sprite.width * 0.25;
     this.calcularRadioLuz();
     this.crearSpriteDeLuz();
+    return 1;
   }
 
   tick() {

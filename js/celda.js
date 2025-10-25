@@ -7,6 +7,7 @@ class Celda {
     this.entidadesAca = new Set();
     this.entidadesPorClase = {};
     this.entidadesPorBando = {}; // Almacenamiento optimizado por bando
+    this.emisoresLuz = new Set(); // NUEVO: Set específico para faroles/fuegos (cosas con radioLuz)
     this.id = juego.grilla.obtenerHashDePosicion(x, y);
     this.x = x;
     this.y = y;
@@ -36,6 +37,11 @@ class Celda {
         this.entidadesPorBando[quien.bando] = new Set();
       this.entidadesPorBando[quien.bando].add(quien);
     }
+
+    // NUEVO: También agregar a emisoresLuz si tiene radioLuz > 0
+    if (quien.radioLuz && quien.radioLuz > 0) {
+      this.emisoresLuz.add(quien);
+    }
   }
 
   sacarDelSetPorClaseYTipo(quien) {
@@ -50,6 +56,11 @@ class Celda {
     // También sacar del set por bando si corresponde
     if (quien.bando !== undefined && this.entidadesPorBando[quien.bando]) {
       this.entidadesPorBando[quien.bando].delete(quien);
+    }
+
+    // NUEVO: También sacar de emisoresLuz si tiene radioLuz
+    if (quien.radioLuz && quien.radioLuz > 0) {
+      this.emisoresLuz.delete(quien);
     }
   }
 
@@ -179,6 +190,31 @@ class Celda {
     }
 
     return personas;
+  }
+
+  /**
+   * NUEVO: Obtener emisores de luz (faroles, fuegos) cercanos
+   * Mucho más eficiente que filtrar todas las entidades
+   * O(1) acceso directo vs O(n) filtrado
+   */
+  obtenerEmisoresLuzCercanos(cantDeCeldasParaMirar) {
+    const celdasVecinas =
+      this.obtenerCeldasVecinas(cantDeCeldasParaMirar) || [];
+    const emisores = [];
+
+    // De esta celda
+    if (this.emisoresLuz.size > 0) {
+      emisores.push(...this.emisoresLuz);
+    }
+
+    // De celdas vecinas
+    for (const celda of celdasVecinas) {
+      if (celda && celda.emisoresLuz && celda.emisoresLuz.size > 0) {
+        emisores.push(...celda.emisoresLuz);
+      }
+    }
+
+    return emisores;
   }
 
   obtenerCeldasVecinas(cantDeCeldasParaMirar) {

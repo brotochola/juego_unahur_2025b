@@ -3,15 +3,19 @@ class Farol extends EntidadEstatica {
     super(x, y, juego);
     juego.faroles.push(this);
     juego.cosasQueDanLuz.push(this);
-    this.radioLuz = 900;
+
     this.radio = 11;
     this.alphaNormal = 0.6;
     this.tipo = tipo || Math.floor(Math.random() * 2) + 1;
     this.scaleX = scaleX || 1;
     this.container.label = "arbol" + this.id;
-    this.crearSprite();
+    this.crearSprite().then(() => {
+      this.actualizarMiPosicionEnLaGrilla();
+      this.celdaActual.agregarAlSetPorClaseYTipo(this);
+    });
     this.juego.obstaculos.push(this);
     this.cantidadDeLuz = 1;
+    this.radioLuz = 900;
     this.estado = 1;
     this.fallado = Math.random() > 0.95;
     this.funcionando = 1;

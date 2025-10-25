@@ -416,7 +416,9 @@ class SistemaDeIluminacion {
     }
   }
   cambiarTintDeTodosLosObjetosParaSimularIluminacion() {
+    // OPTIMIZACIÓN: Solo actualizar tint de objetos visibles en pantalla
     for (let obj of this.juego.gameObjects) {
+      if (!obj.estoyVisibleEnLaPantallaEnEsteFrame) continue;
       obj.cambiarTintParaSimularIluminacion();
     }
   }
@@ -456,11 +458,7 @@ class SistemaDeIluminacion {
       this.limpiarSombrasActivas();
     }
 
-    // NUEVO: Resetear el alpha acumulado de sombras para cada persona
-    for (let persona of this.juego.personas) {
-      persona.alphaAcumuladoDeSombras = 0;
-    }
-
+    // Primero: Actualizar los gradientes de luz de los faroles
     for (let farol of this.juego.cosasQueDanLuz) {
       // OPTIMIZACIÓN 1: Skip faroles apagados (estado === 0)
       if (farol.estado === 0) {
@@ -481,7 +479,7 @@ class SistemaDeIluminacion {
       }
 
       // OPTIMIZACIÓN 2: No procesar faroles fuera de pantalla (con margen)
-      if (!farol.estoyVisibleEnPantalla(1.33)) {
+      if (!farol.estoyVisibleEnLaPantallaEnEsteFrame) {
         farol.spriteGradiente.visible = false;
         continue;
       }
@@ -492,16 +490,45 @@ class SistemaDeIluminacion {
       farol.spriteGradiente.x = posicionEnPantalla.x;
       farol.spriteGradiente.y = posicionEnPantalla.y;
       farol.spriteGradiente.scale.set(this.juego.zoom);
+    }
 
-      // OPTIMIZACIÓN 3: Solo calcular sombras si están activadas
-      if (!Juego.CONFIG.usar_sombras_proyectadas) continue;
+    // Segundo: NUEVO APPROACH - Calcular sombras desde los objetos
+    if (
+      Juego.CONFIG.usar_sombras_proyectadas &&
+      Juego.CONFIG.usar_sombras_con_texturas
+    ) {
+      this.actualizarSombrasDesdeObjetos();
+    } else if (Juego.CONFIG.usar_sombras_proyectadas) {
+      // Fallback al método antiguo con geometría
+      this.actualizarSombrasDesdeObjetosConGeometria();
+    }
+  }
 
-      // Elegir método de sombras según configuración
-      if (Juego.CONFIG.usar_sombras_con_texturas) {
-        this.actualizarSombrasProyectadasConTexturas(farol);
-      } else {
-        this.actualizarSombrasProyectadas(farol);
-      }
+  /**
+   * NUEVO APPROACH: Iterar objetos en lugar de faroles
+   * Cada objeto visible calcula sus propias sombras
+   */
+  actualizarSombrasDesdeObjetos() {
+    // Iterar solo personas vivas y visibles en pantalla
+    for (let persona of this.juego.personas) {
+      if (persona.muerto) continue;
+      if (!persona.estoyVisibleEnLaPantallaEnEsteFrame) continue;
+
+      // Cada persona calcula sus sombras basándose en sus faroles cercanos
+      persona.calcularYCrearSombrasProyectadas(this);
+    }
+  }
+
+  /**
+   * Versión con geometría (método antiguo) adaptada al nuevo approach
+   */
+  actualizarSombrasDesdeObjetosConGeometria() {
+    // Similar pero usando gráficos en lugar de texturas
+    // Por ahora mantenemos el método antiguo como fallback
+    for (let farol of this.juego.cosasQueDanLuz) {
+      if (farol.estado === 0) continue;
+      if (!farol.estoyVisibleEnLaPantallaEnEsteFrame) continue;
+      this.actualizarSombrasProyectadas(farol);
     }
   }
 
@@ -559,7 +586,7 @@ class SistemaDeIluminacion {
     // Procesar cada objeto cercano
     for (let objeto of objetosCercanos) {
       if (objeto === farol) continue;
-      if (!objeto.estoyVisibleEnPantalla(1)) continue;
+      if (!objeto.estoyVisibleEnLaPantallaEnEsteFrame) continue;
 
       // Verificar distancia
       if (
@@ -710,7 +737,7 @@ class SistemaDeIluminacion {
       if (objeto === farol) continue;
 
       // OPTIMIZACIÓN 3: Check rápido de visibilidad
-      if (!objeto.estoyVisibleEnPantalla(1)) continue;
+      if (!objeto.estoyVisibleEnLaPantallaEnEsteFrame) continue;
 
       // OPTIMIZACIÓN 4: Usar comparación de distancia optimizada
       if (

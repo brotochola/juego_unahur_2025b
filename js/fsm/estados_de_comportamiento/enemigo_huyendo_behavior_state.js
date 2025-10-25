@@ -16,7 +16,7 @@ class EnemigoHuyendoBehaviorState extends FSMState {
     this.owner.separacion();
     // this.owner.alineacion();
 
-    this.owner.cohesion();
+    // this.owner.cohesion();
 
     // this.owner.escapar();
     this.owner.repelerEnemigos();

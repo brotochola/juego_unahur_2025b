@@ -18,7 +18,7 @@ class AmigoHuyendoBehaviorState extends FSMState {
     this.owner.separacion();
 
     this.owner.seguirAlLider();
-    this.owner.cohesion();
+    // this.owner.cohesion();
 
     // this.owner.escapar();
     this.owner.repelerEnemigos();

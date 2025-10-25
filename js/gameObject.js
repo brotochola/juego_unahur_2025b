@@ -480,6 +480,9 @@ class GameObject {
       posicionEnPantalla.y < this.juego.height * changui
     );
   }
+  actualizarSiEstoyVisibleEnLaPantalla() {
+    this.estoyVisibleEnLaPantallaEnEsteFrame = this.estoyVisibleEnPantalla(1.3);
+  }
 
   cambiarTintParaSimularIluminacion() {
     if (!this.sprite || !this.container) return;
@@ -497,13 +500,20 @@ class GameObject {
     else this.container.tint = colorGris;
   }
 
+  /**
+   * OPTIMIZADO: Calcular luz usando grilla espacial
+   * Solo considera faroles cercanos en lugar de todos
+   */
   calcularLuz() {
     let luz = 0;
 
     luz += this.juego.sistemaDeIluminacion.cantidadDeLuzDelDia;
 
-    for (let farol of this.juego.cosasQueDanLuz) {
-      if (/*farol == this ||*/ farol.estado == 0) continue;
+    // OPTIMIZACIÓN: Usar grilla para encontrar solo faroles cercanos
+    const farolesCercanos = this.obtenerFarolesCercanos();
+
+    for (let farol of farolesCercanos) {
+      if (farol.estado == 0) continue;
       const dist = calcularDistanciaCuadrada(farol.posicion, this.posicion);
       luz +=
         (farol.cantidadDeLuz *
@@ -514,6 +524,127 @@ class GameObject {
 
     if (luz > 1) luz = 1;
     return luz;
+  }
+
+  /**
+   * Obtener faroles cercanos usando la grilla espacial
+   * OPTIMIZADO: Usa Set específico de emisores de luz en lugar de filtrar todas las entidades
+   */
+  obtenerFarolesCercanos() {
+    if (!Juego.CONFIG.usar_grilla || !this.celdaActual) {
+      // Fallback: devolver todos los faroles
+      return this.juego.cosasQueDanLuz;
+    }
+
+    // Buscar en un radio suficiente para cubrir la luz más lejana posible
+    const radioMaximoLuz = 400; // Ajustar según el radioLuz máximo de los faroles
+    const celdasABuscar = Math.ceil(
+      radioMaximoLuz / this.juego.grilla.anchoCelda
+    );
+
+    // OPTIMIZACIÓN: Acceso directo al Set de emisores de luz (O(1))
+    // En lugar de filtrar todas las entidades (O(n))
+    return this.celdaActual.obtenerEmisoresLuzCercanos(celdasABuscar);
+  }
+
+  /**
+   * NUEVO APPROACH: Calcular sombras desde la perspectiva del objeto
+   * Este método es llamado por el sistema de iluminación para cada objeto visible
+   */
+  calcularYCrearSombrasProyectadas(sistemaIluminacion) {
+    // Solo personas proyectan sombras (por ahora)
+    if (!(this instanceof Persona)) return;
+    if (this.muerto) return;
+    if (!this.estoyVisibleEnLaPantallaEnEsteFrame) return;
+
+    const MAX_SOMBRAS_POR_OBJETO = Juego.CONFIG.max_sombras_por_objeto || 3;
+    const MAX_ALPHA_TOTAL = 0.8;
+
+    // Resetear tracking de sombras para este frame
+    this.alphaAcumuladoDeSombras = 0;
+    if (!this.misSombrasProyectadas) this.misSombrasProyectadas = [];
+
+    // Obtener faroles cercanos
+    let farolesCercanos = this.obtenerFarolesCercanos().filter(
+      (farol) =>
+        farol.estado !== 0 &&
+        laDistanciaEntreDosObjetosEsMenorQue(
+          this.posicion,
+          farol.posicion,
+          farol.radioLuz
+        )
+    );
+
+    // Si no hay faroles cercanos, no hay sombras
+    if (farolesCercanos.length === 0) return;
+
+    // Ordenar por distancia (más cercano primero = sombra más intensa)
+    farolesCercanos.sort((a, b) => {
+      const distA = calcularDistanciaCuadrada(this.posicion, a.posicion);
+      const distB = calcularDistanciaCuadrada(this.posicion, b.posicion);
+      return distA - distB;
+    });
+
+    // Limitar cantidad de faroles a procesar
+    const farolesAProcesar = farolesCercanos.slice(0, MAX_SOMBRAS_POR_OBJETO);
+
+    const zoom = this.juego.zoom;
+
+    // Crear sombra para cada farol
+    for (let farol of farolesAProcesar) {
+      // Si ya alcanzamos el límite de alpha, detener
+      if (this.alphaAcumuladoDeSombras >= MAX_ALPHA_TOTAL) break;
+
+      const distancia = calcularDistancia(farol.posicion, this.posicion);
+      if (distancia <= 0 || distancia > farol.radioLuz) continue;
+
+      // Obtener sprite del pool
+      const spriteSombra = sistemaIluminacion.obtenerSpriteSombraDelPool();
+      if (!spriteSombra) continue;
+
+      this.misSombrasProyectadas.push(spriteSombra);
+
+      // Calcular ángulo de la sombra (del farol al objeto)
+      const dx = farol.posicion.x - this.posicion.x;
+      const dy = farol.posicion.y - this.posicion.y;
+      const anguloRadianes = Math.atan2(dy, dx);
+
+      // Posicionar la sombra
+      const posObjeto = this.getPosicionEnPantalla();
+      const offsetCerca = 10 * zoom;
+      spriteSombra.x = posObjeto.x + Math.cos(anguloRadianes) * offsetCerca;
+      spriteSombra.y = posObjeto.y + Math.sin(anguloRadianes) * offsetCerca;
+
+      // Rotar según dirección de la luz
+      spriteSombra.rotation = anguloRadianes + Math.PI / 2;
+
+      // Escalar según distancia
+      const longitudBase = 1.0;
+      const factorDistancia = Math.min(distancia / farol.radioLuz, 1);
+      const longitudSombra = longitudBase + factorDistancia * 1.5;
+      const anchoSombra = this.radio / 10;
+
+      const compensacionEscala = 1 / Juego.CONFIG.escala_textura_sombras;
+      spriteSombra.scale.set(
+        anchoSombra * 0.5 * zoom * compensacionEscala,
+        longitudSombra * 0.5 * zoom * compensacionEscala
+      );
+
+      // Calcular alpha según distancia
+      let cantDeSombra = (farol.radioLuz ** 1.5 / distancia ** 2) * 0.33;
+      if (cantDeSombra > 0.4) cantDeSombra = 0.4;
+      if (cantDeSombra < 0.05) cantDeSombra = 0.05;
+
+      // Ajustar para no superar el límite de alpha
+      const alphaDisponible = MAX_ALPHA_TOTAL - this.alphaAcumuladoDeSombras;
+      if (cantDeSombra > alphaDisponible) {
+        cantDeSombra = alphaDisponible;
+      }
+
+      spriteSombra.alpha = cantDeSombra;
+      this.alphaAcumuladoDeSombras += cantDeSombra;
+      spriteSombra.zIndex = 3;
+    }
   }
 
   calcularPosicionEnMundoNoIsometrico() {
@@ -542,6 +673,10 @@ class GameObject {
 
     this.celdaFrameAnterior = this.celdaActual;
     this.celdaActual = nuevaCelda;
+  }
+
+  esMiNumeroDeFrame(num = 10) {
+    return this.juego.FRAMENUM % num == this.id % num;
   }
 
   serializar() {
