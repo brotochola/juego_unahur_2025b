@@ -4,7 +4,7 @@ class PasadoDeBandoBehaviorState extends FSMState {
   //no pegan, no se mueven
 
   onEnter() {
-    this.owner.hablar("🤷");
+    // console.log("pasado de bando", this.owner);
     try {
       this.cantFrames = AnimatedCharacter.getDurationInFrames("spellcast");
     } catch (e) {
@@ -14,6 +14,10 @@ class PasadoDeBandoBehaviorState extends FSMState {
   onExit() {}
   onUpdate() {
     super.onUpdate();
+
+    // Mantener el emoji visible durante todo el estado
+    // Se llama en cada frame porque el globo de diálogo se crea asíncronamente
+    this.owner.hablar("🤷");
 
     this.owner.percibirEntorno();
 

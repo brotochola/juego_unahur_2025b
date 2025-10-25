@@ -5,6 +5,7 @@ class Persona extends GameObject {
   enemigosCerca = [];
   enemigoMasCerca = null;
   distanciaAlEnemigoMasCerca = Infinity;
+  log = [];
 
   constructor(x, y, juego) {
     super(x, y, juego);
@@ -46,6 +47,7 @@ class Persona extends GameObject {
     this.vectorCohesion = { x: 0, y: 0 };
     this.vectorAlineacion = { x: 0, y: 0 };
     this.vectorRepelerObstaculos = { x: 0, y: 0 };
+    this.vectorRepelerEnemigos = { x: 0, y: 0 };
 
     // Factores de reducción para suavizar el comportamiento entre frames de cálculo
     this.factorReduccionCohesion =
@@ -60,15 +62,19 @@ class Persona extends GameObject {
       calcularFactorDeReduccionSegunCantidadDeFrames(
         Juego.CONFIG.frames_repeler_obstaculos
       );
+    this.factorReduccionRepelerEnemigos =
+      calcularFactorDeReduccionSegunCantidadDeFrames(
+        Juego.CONFIG.frames_repeler_enemigos
+      );
 
     this.aceleracionMaxima = 0.2;
     this.velocidadMaxima = 3;
     this.amigos = [];
 
     this.crearSombra();
-    this.esperarAQueTengaSpriteCargado(() => {
-      this.crearGloboDeDialogo();
-    });
+    this.esperarAQueTengaSpriteCargado();
+
+    this.crearGloboDeDialogo();
 
     this.crearFSMparaAnimacion();
   }
@@ -99,18 +105,19 @@ class Persona extends GameObject {
   hablar(emoji) {
     if (!this.containerDialogo || !this.textoDeDialogo) return;
 
-    if (this.hablarTimeout) clearTimeout(this.hablarTimeout);
     this.containerDialogo.visible = true;
     this.textoDeDialogo.text = emoji.trim();
+    if (this.hablarTimeout) clearTimeout(this.hablarTimeout);
     this.hablarTimeout = setTimeout(() => {
       this.containerDialogo.visible = false;
     }, 120);
   }
 
   async crearGloboDeDialogo() {
+    const spriteHeight = (this.sprite || {}).height || 56;
     this.containerDialogo = new PIXI.Container();
     this.containerDialogo.visible = false;
-    this.containerDialogo.y = -this.sprite.height * 0.75;
+    this.containerDialogo.y = -spriteHeight * 0.75;
     this.containerDialogo.zIndex = 9;
     this.containerDialogo.label = "containerDialogo";
     this.container.addChild(this.containerDialogo);
@@ -486,31 +493,41 @@ class Persona extends GameObject {
   }
 
   repelerEnemigos() {
-    if (this.enemigosCerca.length == 0) return;
+    // Calcular el vector de repulsión solo cada N frames
+    if (this.esMiNumeroDeFrame(Juego.CONFIG.frames_repeler_enemigos)) {
+      if (this.enemigosCerca.length == 0) {
+        // Si no hay enemigos, resetear el vector
+        this.vectorRepelerEnemigos.x = 0;
+        this.vectorRepelerEnemigos.y = 0;
+      } else {
+        let vectorPromedioDePosiciones = { x: 0, y: 0 };
 
-    let vectorPromedioDePosiciones = { x: 0, y: 0 };
+        for (const persona of this.enemigosCerca) {
+          if (persona !== this) {
+            vectorPromedioDePosiciones.x += persona.posicion.x;
+            vectorPromedioDePosiciones.y += persona.posicion.y;
+          }
+        }
 
-    for (const persona of this.enemigosCerca) {
-      if (persona !== this) {
-        vectorPromedioDePosiciones.x += persona.posicion.x;
-        vectorPromedioDePosiciones.y += persona.posicion.y;
+        vectorPromedioDePosiciones.x /= this.enemigosCerca.length;
+        vectorPromedioDePosiciones.y /= this.enemigosCerca.length;
+
+        // Guardar el vector calculado
+        this.vectorRepelerEnemigos.x =
+          (this.posicion.x - vectorPromedioDePosiciones.x) * this.factorEscapar;
+        this.vectorRepelerEnemigos.y =
+          (this.posicion.y - vectorPromedioDePosiciones.y) * this.factorEscapar;
+        this.vectorRepelerEnemigos = limitarVector(this.vectorRepelerEnemigos);
       }
+    } else {
+      // Si no es frame de cálculo, reducir gradualmente el vector
+      this.vectorRepelerEnemigos.x *= this.factorReduccionRepelerEnemigos;
+      this.vectorRepelerEnemigos.y *= this.factorReduccionRepelerEnemigos;
     }
 
-    vectorPromedioDePosiciones.x /= this.enemigosCerca.length;
-    vectorPromedioDePosiciones.y /= this.enemigosCerca.length;
-
-    // Usar VectorPool para cálculo temporal
-    const vectorNuevo = VectorPool.get(
-      vectorPromedioDePosiciones.x - this.posicion.x,
-      vectorPromedioDePosiciones.y - this.posicion.y
-    );
-    vectorNuevo.limit(1);
-
-    this.aceleracion.x += this.factorEscapar * vectorNuevo.x;
-    this.aceleracion.y += this.factorEscapar * vectorNuevo.y;
-
-    VectorPool.release(vectorNuevo);
+    // Siempre aplicar el vector pre-calculado
+    this.aceleracion.x += this.vectorRepelerEnemigos.x;
+    this.aceleracion.y += this.vectorRepelerEnemigos.y;
   }
 
   cohesion() {

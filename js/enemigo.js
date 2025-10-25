@@ -13,10 +13,10 @@ class Enemigo extends Persona {
   crearFSMparaComportamientos() {
     this.behaviorFSM = new FSM(this, {
       states: {
-        idle: EnemigoIdleBehaviorState,
-        enCombate: EnemigoEnCombateBehaviorState,
+        idle: IdleBehaviorState,
+        enCombate: EnCombateBehaviorState,
         pasadoDeBando: PasadoDeBandoBehaviorState,
-        huyendo: EnemigoHuyendoBehaviorState,
+        huyendo: HuyendoBehaviorState,
       },
       initialState: "idle",
     });

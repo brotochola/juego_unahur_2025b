@@ -1,33 +1,37 @@
-class AmigoIdleBehaviorState extends FSMState {
+class IdleBehaviorState extends FSMState {
   onEnter() {
     this.owner.hablar("😊");
   }
+
   onUpdate() {
     super.onUpdate();
 
     this.owner.percibirEntorno();
 
+    this.owner.cohesion();
     this.owner.separacion();
 
-    this.owner.seguirAlLider();
-    this.owner.cohesion();
-
-    // this.owner.perseguir();
+    // Solo los amigos siguen al líder
+    if (this.owner instanceof Amigo) {
+      this.owner.seguirAlLider();
+    }
 
     this.owner.noChocarConObstaculos();
     this.owner.repelerSuavementeObstaculos();
-
-    // this.owner.pegarSiEstaEnMiRango();
 
     //moverse
     this.owner.aplicarFisica();
 
     this.owner.calcularAnguloYVelocidadLineal();
+
+    if (this.owner.enemigoMasCerca) {
+      this.owner.asignarTarget(this.owner.enemigoMasCerca);
+    }
   }
 
   doChecks() {
     if (this.owner.enemigoMasCerca) {
-      if (this.owner.vida < 0.5) {
+      if (this.owner.vida < this.owner.vidaMaxima - this.owner.coraje) {
         this.fsm.setState("huyendo");
       } else {
         this.fsm.setState("enCombate");

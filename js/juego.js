@@ -38,6 +38,7 @@ class Juego {
     frames_cohesion: 21, // Calcular cohesión cada N frames (recomendado: 15-30)
     frames_alineacion: 22, // Calcular alineación cada N frames (recomendado: 15-30)
     frames_repeler_obstaculos: 15, // Calcular repulsión de obstáculos cada N frames (recomendado: 10-20)
+    frames_repeler_enemigos: 18, // Calcular repulsión de enemigos cada N frames (recomendado: 10-25)
   };
 
   pixiApp;

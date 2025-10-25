@@ -25,10 +25,10 @@ class Amigo extends Persona {
   crearFSMparaComportamientos() {
     this.behaviorFSM = new FSM(this, {
       states: {
-        idle: AmigoIdleBehaviorState,
-        enCombate: AmigoEnCombateBehaviorState,
+        idle: IdleBehaviorState,
+        enCombate: EnCombateBehaviorState,
         pasadoDeBando: PasadoDeBandoBehaviorState,
-        huyendo: AmigoHuyendoBehaviorState,
+        huyendo: HuyendoBehaviorState,
       },
       initialState: "idle",
     });
