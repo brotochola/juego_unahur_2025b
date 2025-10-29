@@ -39,7 +39,7 @@ class UI {
   crearIndicadorDeFPS() {
     this.indicadorDeFPS = new PIXI.Text({
       text: "FPS: 60",
-      style: this.estiloDeTexto,
+      style: { ...this.estiloDeTexto, fontFamily: "arial" },
     });
     this.indicadorDeFPS.anchor.set(0, 0);
     this.indicadorDeFPS.label = "indicadorDeFPS";

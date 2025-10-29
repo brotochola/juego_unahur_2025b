@@ -3,7 +3,7 @@ function radianesAGrados(radianes) {
 }
 
 function calcularDistancia(obj1, obj2) {
-  return Math.hypot(obj2.x - obj1.x, obj2.y - obj1.y);
+  return Math.sqrt((obj2.x - obj1.x) ** 2 + (obj2.y - obj1.y) ** 2);
 }
 
 function calcularDistanciaCuadrada(obj1, obj2) {

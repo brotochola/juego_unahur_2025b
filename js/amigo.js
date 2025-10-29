@@ -100,7 +100,6 @@ class Amigo extends Persona {
       };
     } else {
       //no es un frame donde calculamos posta
-
       this.vectorParaSeguirAlLider.x *= this.factorReduccionVectorSeguirAlLider;
       this.vectorParaSeguirAlLider.y *= this.factorReduccionVectorSeguirAlLider;
     }

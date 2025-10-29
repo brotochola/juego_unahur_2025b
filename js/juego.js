@@ -9,37 +9,61 @@ class Juego {
     cables: 999999999999,
   };
   // Configuración estática - accesible globalmente como Juego.CONFIG
-  static CONFIG = {
-    usar_grilla: true,
-    percibir_cada_10_frames: true,
-    no_renderizar_lo_q_no_se_ve: true,
-    comparar_distancias_cuadradas: true,
-    usar_pool_vectores: true,
-    usar_sombras_proyectadas: true, // Activar/desactivar sombras para comparar performance
+  static getDefaultConfig() {
+    return {
+      usar_grilla: true,
+      percibir_cada_10_frames: true,
+      no_renderizar_lo_q_no_se_ve: true,
+      comparar_distancias_cuadradas: true,
+      usar_pool_vectores: true,
+      usar_sombras_proyectadas: true, // Activar/desactivar sombras para comparar performance
 
-    // NUEVO: Sistema optimizado de sombras con texturas (10-20x más rápido)
-    // true = usa texturas pre-renderizadas (RECOMENDADO)
-    // false = usa geometría calculada cada frame (método viejo)
-    usar_sombras_con_texturas: true,
+      // NUEVO: Sistema optimizado de sombras con texturas (10-20x más rápido)
+      // true = usa texturas pre-renderizadas (RECOMENDADO)
+      // false = usa geometría calculada cada frame (método viejo)
+      usar_sombras_con_texturas: true,
 
-    max_sombras_por_objeto: 3, // Cantidad máxima de sombras por personaje (recomendado: 2-4)
+      max_sombras_por_objeto: 3, // Cantidad máxima de sombras por personaje (recomendado: 2-4)
 
-    // Efecto pixelado de sombras (solo con usar_sombras_con_texturas: true)
-    // 1.0 = sin pixelado, 0.1 = muy pixelado, 0.05 = ultra pixelado
-    escala_textura_sombras: 0.1, // Valor por defecto (recomendado: 0.05-0.2)
+      // Efecto pixelado de sombras (solo con usar_sombras_con_texturas: true)
+      // 1.0 = sin pixelado, 0.1 = muy pixelado, 0.05 = ultra pixelado
+      escala_textura_sombras: 0.1, // Valor por defecto (recomendado: 0.05-0.2)
 
-    // OPTIMIZACIÓN: Frecuencia de actualización de tints (cambios de color por iluminación)
-    // Actualizar tints cada N frames (1 = cada frame, 10 = cada 10 frames)
-    // Valores más altos = mejor performance pero menos suave
-    frames_entre_updates_tint: 10, // Recomendado: 5-15
+      // OPTIMIZACIÓN: Frecuencia de actualización de tints (cambios de color por iluminación)
+      // Actualizar tints cada N frames (1 = cada frame, 10 = cada 10 frames)
+      // Valores más altos = mejor performance pero menos suave
+      frames_entre_updates_tint: 10, // Recomendado: 5-15
 
-    // OPTIMIZACIÓN: Frecuencia de cálculo de comportamientos de flocking
-    frames_seguir_al_lider: 20, // Para amigos siguiendo al protagonista
-    frames_cohesion: 21, // Calcular cohesión cada N frames (recomendado: 15-30)
-    frames_alineacion: 22, // Calcular alineación cada N frames (recomendado: 15-30)
-    frames_repeler_obstaculos: 15, // Calcular repulsión de obstáculos cada N frames (recomendado: 10-20)
-    frames_repeler_enemigos: 18, // Calcular repulsión de enemigos cada N frames (recomendado: 10-25)
-  };
+      // OPTIMIZACIÓN: Frecuencia de cálculo de comportamientos de flocking
+      frames_seguir_al_lider: 20, // Para amigos siguiendo al protagonista
+      frames_cohesion: 21, // Calcular cohesión cada N frames (recomendado: 15-30)
+      frames_alineacion: 22, // Calcular alineación cada N frames (recomendado: 15-30)
+      frames_repeler_obstaculos: 15, // Calcular repulsión de obstáculos cada N frames (recomendado: 10-20)
+      frames_repeler_enemigos: 18, // Calcular repulsión de enemigos cada N frames (recomendado: 10-25)
+    };
+  }
+  static CONFIG = Juego.getDefaultConfig();
+
+  static ponerLaPeorConfiguracion() {
+    Juego.CONFIG = {
+      usar_grilla: false,
+      percibir_cada_10_frames: false,
+      no_renderizar_lo_q_no_se_ve: false,
+      comparar_distancias_cuadradas: false,
+      usar_pool_vectores: false,
+      usar_sombras_proyectadas: false,
+      usar_sombras_con_texturas: false,
+      max_sombras_por_objeto: 100,
+      escala_textura_sombras: 1,
+      frames_entre_updates_tint: 1,
+      frames_seguir_al_lider: 1,
+      frames_cohesion: 1,
+      frames_alineacion: 1,
+      frames_repeler_obstaculos: 1,
+      frames_repeler_enemigos: 1,
+      escala_textura_sombras: 1,
+    };
+  }
 
   pixiApp;
   gameObjects = [];
@@ -504,7 +528,7 @@ class Juego {
 
   gameLoop(time) {
     this.FRAMENUM++;
-    // console.log("gameLoop", time, this.ahora);
+
     //borrar lo q hay en los graficos debug
     if (this.graficoDebug) this.graficoDebug.clear();
 

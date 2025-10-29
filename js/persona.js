@@ -110,7 +110,7 @@ class Persona extends GameObject {
     if (this.hablarTimeout) clearTimeout(this.hablarTimeout);
     this.hablarTimeout = setTimeout(() => {
       this.containerDialogo.visible = false;
-    }, 120);
+    }, this.juego.deltaTime);
   }
 
   async crearGloboDeDialogo() {
@@ -145,9 +145,9 @@ class Persona extends GameObject {
   }
 
   pasarseDeBando(cualBando) {
+    console.log(this.nombre, " se esta pasando de bando a ", cualBando);
     const pos = this.posicion;
 
-    this.borrar();
     let amigo;
     const dataParaCrearALaPErsona = {
       id: this.id,
@@ -156,6 +156,7 @@ class Persona extends GameObject {
       coraje: this.coraje,
       vision: this.vision,
     };
+    this.borrar();
     if (cualBando == 1) {
       amigo = this.juego.crearUnAmigo(
         pos.x,
@@ -619,8 +620,14 @@ class Persona extends GameObject {
     this.vectorSeparacion.x = 0;
     this.vectorSeparacion.y = 0;
 
-    const personasEnMiCeldaYAlrededores =
-      this.celdaActual.obtenerEntidadesAcaYEnCEldasVecinas(1); //this.juego.personas;
+    // Si no hay grilla, usar todas las personas
+    let personasEnMiCeldaYAlrededores;
+    if (!Juego.CONFIG.usar_grilla || !this.celdaActual) {
+      personasEnMiCeldaYAlrededores = this.juego.personas;
+    } else {
+      personasEnMiCeldaYAlrededores =
+        this.celdaActual.obtenerEntidadesAcaYEnCEldasVecinas(1);
+    }
 
     for (const persona of personasEnMiCeldaYAlrededores) {
       if (persona == this || !(persona instanceof Persona) || persona.muerto)
@@ -715,7 +722,7 @@ class Persona extends GameObject {
     this.quitarBarritaVida();
     this.quitarGloboDeDialogo();
     this.sprite.changeAnimation("hurt");
-    this.celdaActual.sacame(this);
+    if (Juego.CONFIG.usar_grilla) this.celdaActual.sacame(this);
     this.sprite.loop = false;
     // Marcar como muerto PRIMERO para evitar que se actualice la barra durante el proceso
     this.muerto = true;
@@ -970,7 +977,7 @@ class Persona extends GameObject {
   }
 
   borrar() {
-    this.celdaActual.sacame(this);
+    if (Juego.CONFIG.usar_grilla) this.celdaActual.sacame(this);
     this.juego.containerPrincipal.removeChild(this.container);
     this.quitarBarritaVida();
     this.quitarGloboDeDialogo();

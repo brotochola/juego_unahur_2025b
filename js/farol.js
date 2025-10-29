@@ -10,6 +10,7 @@ class Farol extends EntidadEstatica {
     this.scaleX = scaleX || 1;
     this.container.label = "arbol" + this.id;
     this.crearSprite().then(() => {
+      if (!Juego.CONFIG.usar_grilla) return;
       this.actualizarMiPosicionEnLaGrilla();
       this.celdaActual.agregarAlSetPorClaseYTipo(this);
     });

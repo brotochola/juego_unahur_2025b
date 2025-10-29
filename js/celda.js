@@ -233,13 +233,14 @@ class Celda {
           newGridX,
           newGridY
         );
+        if (!celda) continue;
 
         if (this != celda) arr.push(celda);
       }
     }
 
     // Guardar en caché antes de retornar
-    this.celdasVecinasCache[cantDeCeldasParaMirar] = arr.filter((k) => !!k);
+    this.celdasVecinasCache[cantDeCeldasParaMirar] = arr;
     return arr;
   }
 
