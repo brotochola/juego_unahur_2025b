@@ -26,7 +26,7 @@ class Nivel {
 
     const data = await response.json();
     await this.parsearDatos(data);
-    // this.ponerCablesEntrePostes();
+    this.ponerCablesEntrePostes();
     this.loaded = true;
 
     if (this.callback) this.callback();

@@ -32,7 +32,7 @@ class Juego {
       // OPTIMIZACIÓN: Frecuencia de actualización de tints (cambios de color por iluminación)
       // Actualizar tints cada N frames (1 = cada frame, 10 = cada 10 frames)
       // Valores más altos = mejor performance pero menos suave
-      frames_entre_updates_tint: 10, // Recomendado: 5-15
+      frames_entre_updates_tint: 5, // Recomendado: 5-15
 
       // OPTIMIZACIÓN: Frecuencia de cálculo de comportamientos de flocking
       frames_seguir_al_lider: 20, // Para amigos siguiendo al protagonista
@@ -78,6 +78,7 @@ class Juego {
   policias = [];
   postes = [];
   cables = [];
+  flashes = [];
   monumentos = [];
   obstaculos = [];
   arboles = [];
@@ -101,7 +102,12 @@ class Juego {
     this.FRAMENUM = 0;
     this.updateDimensions();
 
-    this.mouse = { posicion: { x: 0, y: 0 } };
+    this.mouse = {
+      posicion: { x: 0, y: 0 },
+      apretado: { 0: false, 1: false, 2: false },
+      down: { 0: { x: 0, y: 0 }, 1: { x: 0, y: 0 }, 2: { x: 0, y: 0 } },
+      up: { 0: { x: 0, y: 0 }, 1: { x: 0, y: 0 }, 2: { x: 0, y: 0 } },
+    };
 
     // Variables para el zoom
     this.zoom = 1;
@@ -313,6 +319,7 @@ class Juego {
 
   async cargarTexturas() {
     await PIXI.Assets.load([
+      "assets/pixelart/bala.png",
       "assets/bg.jpg",
       "assets/pixelart/target.png",
       "assets/pixelart/globo_de_dialogo.png",
@@ -442,6 +449,7 @@ class Juego {
       this.crearUnPolicia(this.mouse.posicion.x, this.mouse.posicion.y);
     }
   }
+  onMouseMove() {}
 
   agregarInteractividadDelMouse() {
     this.pixiApp.canvas.oncontextmenu = (event) => {
@@ -451,20 +459,33 @@ class Juego {
     this.pixiApp.canvas.onmousemove = (event) => {
       this.segunQueTeclaEstaApretadaHacerCosas();
       this.mouse.posicion = this.convertirCoordenadaDelMouse(event.x, event.y);
+      this.onMouseMove();
     };
 
     this.pixiApp.canvas.onmousedown = (event) => {
       if (event.button == 1) {
         this.quePasaCuandoTocamosElBotonDeLaRuedita(event.x, event.y);
       }
-      this.mouse.down = this.convertirCoordenadaDelMouse(event.x, event.y);
-      this.mouse.apretado = true;
+      this.mouse.down[event.button] = this.convertirCoordenadaDelMouse(
+        event.x,
+        event.y
+      );
+      this.mouse.apretado[event.button] = true;
     };
     this.pixiApp.canvas.onmouseup = (event) => {
-      if (event.button != 0) return;
-      this.mouse.up = this.convertirCoordenadaDelMouse(event.x, event.y);
-      this.mouse.apretado = false;
-      this.ponerCruzTargetDondeElMouseHizoClick(this.mouse.up);
+      this.mouse.apretado[event.button] = false;
+      this.mouse.up[event.button] = this.convertirCoordenadaDelMouse(
+        event.x,
+        event.y
+      );
+
+      if (event.button == 2) {
+        this.protagonista.target = this.convertirCoordenadaDelMouse(
+          event.x,
+          event.y
+        );
+        this.ponerCruzTargetDondeElMouseHizoClick(this.mouse.up[event.button]);
+      }
     };
 
     // Event listener para la rueda del mouse (zoom)
@@ -546,6 +567,12 @@ class Juego {
     for (let fuego of this.fuegos) fuego.tick();
 
     for (let obstaculo of this.obstaculos) obstaculo.render();
+
+    // Actualizar balas
+    if (typeof BalasPool !== "undefined") {
+      BalasPool.tickAll();
+      BalasPool.renderAll();
+    }
 
     // Actualizar el sistema de iluminación
     if (this.sistemaDeIluminacion) this.sistemaDeIluminacion.tick();

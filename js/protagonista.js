@@ -23,6 +23,11 @@ class Protagonista extends Persona {
     this.esperarAQueTengaSpriteCargado(() => {
       this.crearBarritaVida();
     });
+    this.target = null;
+
+    // Sistema de disparo
+    this.cooldownDisparo = 100; // Milisegundos entre disparos
+    this.ultimoTiempoDisparo = 0; // Último tiempo (performance.now()) en el que disparó
   }
 
   morir() {
@@ -52,7 +57,10 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
     this.noChocarConObstaculos();
 
     //si no estoy cerca del target, repelo obstaculos de forma piola
-    if (this.distanciaAlTarget > this.distanciaParaEmpezarABajarLaVelocidad) {
+    if (
+      this.target &&
+      this.distanciaAlTarget > this.distanciaParaEmpezarABajarLaVelocidad
+    ) {
       this.repelerSuavementeObstaculos();
     }
 
@@ -60,25 +68,37 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
 
     // Datos para animación
     this.calcularAnguloYVelocidadLineal();
+
+    this.dispararSiSePresionoElBotonIzquierdoDelMouse();
+  }
+
+  calcularAnguloYVelocidadLineal() {
+    const dx = this.juego.mouse.posicion.x - this.posicion.x;
+    const dy = this.juego.mouse.posicion.y - this.posicion.y;
+
+    this.angulo = radianesAGrados(Math.atan2(dy, dx)) + 180;
+    this.velocidadLineal = calcularDistancia(this.velocidad, { x: 0, y: 0 });
+  }
+
+  dispararSiSePresionoElBotonIzquierdoDelMouse() {
+    if (this.juego.mouse.apretado[0]) {
+      this.disparar(this.juego.mouse.posicion);
+    }
   }
 
   moverConLasTeclas() {
     if (this.juego.teclado.a) {
       this.aceleracion.x -= this.velocidadMaxima;
-      this.juego.mouse.up = null;
     }
     if (this.juego.teclado.d) {
       this.aceleracion.x += this.velocidadMaxima;
-      this.juego.mouse.up = null;
     }
 
     if (this.juego.teclado.w) {
       this.aceleracion.y -= this.velocidadMaxima;
-      this.juego.mouse.up = null;
     }
     if (this.juego.teclado.s) {
       this.aceleracion.y += this.velocidadMaxima;
-      this.juego.mouse.up = null;
     }
   }
 
@@ -107,15 +127,12 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
      *
      * Resultado: Control responsivo con parada suave
      */
-    if (!this.juego.mouse.up) return;
+    if (!this.target) return;
 
     // Calcular vector hacia el objetivo
-    const difX = this.juego.mouse.up.x - this.posicion.x;
-    const difY = this.juego.mouse.up.y - this.posicion.y;
-    this.distanciaAlTarget = calcularDistancia(
-      this.posicion,
-      this.juego.mouse.up
-    );
+    const difX = this.target.x - this.posicion.x;
+    const difY = this.target.y - this.posicion.y;
+    this.distanciaAlTarget = calcularDistancia(this.posicion, this.target);
 
     // Normalizar dirección
     const vectorNuevo = limitarVector({ x: difX, y: difY }, 1);
@@ -135,5 +152,55 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
     // Aplicar fuerza de movimiento
     this.aceleracion.x += vectorNuevo.x * this.factorIrAlTarget;
     this.aceleracion.y += vectorNuevo.y * this.factorIrAlTarget;
+  }
+
+  disparar(posicion) {
+    // Sistema de cooldown: solo disparar si pasaron suficientes milisegundos
+    const tiempoActual = performance.now();
+    const tiempoDesdeUltimoDisparo = tiempoActual - this.ultimoTiempoDisparo;
+
+    if (tiempoDesdeUltimoDisparo < this.cooldownDisparo) {
+      return; // No disparar si el cooldown no terminó
+    }
+
+    // Actualizar el último tiempo de disparo
+    this.ultimoTiempoDisparo = tiempoActual;
+
+    // Obtener una bala del pool
+    const bala = BalasPool.get(this.juego);
+
+    // Calcular dirección del disparo (desde el protagonista hacia la posición)
+    const dx = posicion.x - this.posicion.x;
+    const dy = posicion.y - this.posicion.y;
+    const anguloRadianes = Math.atan2(dy, dx) + Math.random() * 0.1 - 0.05;
+
+    // Activar la bala en la posición del protagonista
+    // Pasar 'this' como el que disparó para que no se golpee a sí mismo
+    const posicionInicial = this.getPosicionCentral();
+    posicionInicial.y -= this.sprite.height * 0.4;
+
+    // Calcular la distancia de separación para que la bala empiece fuera del protagonista
+    const distanciaSeparacion = (this.radio + bala.radio) * 2;
+
+    // Desplazar la posición inicial en la dirección del disparo
+    const posX =
+      posicionInicial.x + Math.cos(anguloRadianes) * distanciaSeparacion;
+    const posY =
+      posicionInicial.y + Math.sin(anguloRadianes) * distanciaSeparacion;
+
+    bala.activar(posX, posY, anguloRadianes, this);
+
+    // Crear flash de disparo en el sistema de iluminación
+    if (
+      this.juego.sistemaDeIluminacion &&
+      this.juego.sistemaDeIluminacion.activo
+    ) {
+      this.juego.sistemaDeIluminacion.crearFlashDeDisparoEn(
+        { x: posX, y: posY }, // Posición del disparo en el mundo
+        900, // Radio de la luz
+        0.8, // Intensidad (0-1)
+        100 // Duración en milisegundos
+      );
+    }
   }
 }

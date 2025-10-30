@@ -25,6 +25,7 @@ class GameObject {
   altoBarraVida = 4;
   vida = 1;
   vidaMaxima = 1;
+  friccionPorFrame = 0.93;
 
   constructor(x, y, juego) {
     juego.gameObjects.push(this);
@@ -244,8 +245,8 @@ class GameObject {
      *
      * Esto garantiza que la fricción sea consistente sin importar el FPS
      */
-    const friccionPorFrame = 0.93;
-    const friccionPorSegundo = Math.pow(friccionPorFrame, 60);
+
+    const friccionPorSegundo = Math.pow(this.friccionPorFrame, 60);
     const deltaTime = Math.min(this.juego.ratioDeltaTime, 3);
     const friccionAplicada = Math.pow(friccionPorSegundo, deltaTime / 60);
 
@@ -537,7 +538,7 @@ class GameObject {
     }
 
     // Buscar en un radio suficiente para cubrir la luz más lejana posible
-    const radioMaximoLuz = 400; // Ajustar según el radioLuz máximo de los faroles
+    const radioMaximoLuz = 900; // Ajustar según el radioLuz máximo de los faroles
     const celdasABuscar = Math.ceil(
       radioMaximoLuz / this.juego.grilla.anchoCelda
     );
@@ -677,6 +678,35 @@ class GameObject {
 
   esMiNumeroDeFrame(num = 10) {
     return this.juego.FRAMENUM % num == this.id % num;
+  }
+
+  /**
+   * RECIBIR UN TIRO
+   *
+   * Método llamado cuando una bala impacta este objeto
+   * Puede ser sobrescrito por clases hijas para comportamiento específico
+   *
+   * @param {Bala} bala - La bala que impactó
+   */
+  recibirUnTiro(bala) {
+    // Comportamiento por defecto: reducir vida
+    // Las clases hijas pueden sobrescribir este método
+    // console.log(`${this.constructor.name} ${this.tipo} recibió un tiro!`);
+
+    // Si el objeto tiene vida, reducirla
+    if (this.vida !== undefined) {
+      const danio = 0.4 + Math.random() * 0.2; // Daño por defecto de una bala
+
+      // Si el objeto tiene el método recibirDanio, usarlo (usado por Persona y subclases)
+      if (this.recibirDanio instanceof Function) {
+        // Nota: bala en lugar de "quien" para el segundo parámetro
+        // El sistema de partículas usa esto para calcular dirección del efecto
+        this.recibirDanio(danio, bala);
+      } else {
+        // Fallback simple si no tiene recibirDanio
+        this.vida -= danio;
+      }
+    }
   }
 
   serializar() {

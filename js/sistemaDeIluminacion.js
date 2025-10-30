@@ -394,6 +394,9 @@ class SistemaDeIluminacion {
     }
 
     if (this.activo) {
+      for (let flash of this.juego.flashes) {
+        flash.tick();
+      }
       this.actualizarGradientsDeLosFaroles();
       this.actualizarSpriteDeIluminacion();
 
@@ -468,11 +471,13 @@ class SistemaDeIluminacion {
         continue;
       }
 
-      // Si el farol/fuego no tiene spriteGradiente, crearlo
+      // Si el farol/fuego/flash no tiene spriteGradiente, crearlo
       if (!farol.spriteGradiente) {
+        // Usar el color del objeto si está disponible (para flashes), sino usar amarillo-cálido por defecto
+        const colorLuz = farol.color !== undefined ? farol.color : 0xffffcc;
         farol.spriteGradiente = crearSpriteConGradiente(
           farol.radioLuz,
-          0xffffcc
+          colorLuz
         );
         farol.spriteGradiente.zIndex = 2;
         this.containerParaRenderizar.addChild(farol.spriteGradiente);
@@ -685,6 +690,39 @@ class SistemaDeIluminacion {
     ]) {
       obj.cambiarTintParaSimularIluminacion();
     }
+  }
+
+  /**
+   * Crea un flash temporal de luz (para disparos, explosiones, etc.)
+   *
+   * @param {Object} posicionEnElMundo - {x, y} posición en coordenadas del mundo
+   * @param {Number} radio - Radio de la luz en unidades del mundo
+   * @param {Number} intensidad - Intensidad de la luz (0-1)
+   * @param {Number} duracion - Duración del flash en milisegundos
+   * @param {Number} color - Color de la luz (opcional, por defecto amarillo-blanco)
+   * @returns {Flash} La instancia de Flash creada
+   */
+  crearFlashDeDisparoEn(
+    posicionEnElMundo,
+    radio,
+    intensidad = 1,
+    duracion = 100,
+    color = 0xffffaa
+  ) {
+    // Simplemente crear una instancia de Flash
+    // Se encargará automáticamente de todo: grilla, iluminación, tick, destrucción
+
+    const flash = new Flash(
+      posicionEnElMundo.x,
+      posicionEnElMundo.y,
+      this.juego,
+      radio,
+      intensidad,
+      duracion,
+      color
+    );
+
+    return flash;
   }
 
   // Método para obtener el estado actual de la iluminación
