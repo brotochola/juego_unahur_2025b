@@ -87,6 +87,7 @@ class Persona extends GameObject {
         run: RunAnimationState,
         pegar: PegarAnimationState,
         convertirse: ConvertirseAnimationState,
+        shoot: ShootAnimationState,
       },
       initialState: "idle",
     });

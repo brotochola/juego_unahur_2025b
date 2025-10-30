@@ -77,6 +77,8 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
     const dy = this.juego.mouse.posicion.y - this.posicion.y;
 
     this.angulo = radianesAGrados(Math.atan2(dy, dx)) + 180;
+
+    // Calcular la magnitud de la velocidad
     this.velocidadLineal = calcularDistancia(this.velocidad, { x: 0, y: 0 });
   }
 
@@ -154,6 +156,10 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
     this.aceleracion.y += vectorNuevo.y * this.factorIrAlTarget;
   }
 
+  render() {
+    super.render();
+  }
+
   disparar(posicion) {
     // Sistema de cooldown: solo disparar si pasaron suficientes milisegundos
     const tiempoActual = performance.now();
@@ -189,6 +195,8 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
       posicionInicial.y + Math.sin(anguloRadianes) * distanciaSeparacion;
 
     bala.activar(posX, posY, anguloRadianes, this);
+
+    this.animationFSM.setState("shoot");
 
     // Crear flash de disparo en el sistema de iluminación
     if (
