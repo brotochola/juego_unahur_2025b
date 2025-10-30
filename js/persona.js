@@ -270,9 +270,11 @@ class Persona extends GameObject {
   buscarObstaculosBienCerquitaMio() {
     this.obstaculosCercaMio = [];
     this.obstaculosConLosQueMeEstoyChocando = [];
+    // Filtrar solo EntidadEstatica con radio > 0 (obstáculos físicos reales)
+    // Excluye efectos visuales u objetos sin colisión
     const obstaculosCercasegunLaGrilla = this.celdaActual
       .obtenerEntidadesAcaYEnCEldasVecinas(1)
-      .filter((k) => k instanceof EntidadEstatica);
+      .filter((k) => k instanceof EntidadEstatica && k.radio > 0);
 
     for (let obstaculo of obstaculosCercasegunLaGrilla) {
       const dist = calcularDistancia(
@@ -889,44 +891,6 @@ class Persona extends GameObject {
     if (this.angulo == undefined) {
       return;
     }
-
-    // if (this.muerto) {
-    //   this.sprite.changeAnimation("hurt");
-    //   // this.sprite.anchor.set(0.5, 0);
-    //   // this.sprite.y = -this.sprite.height;
-    //   this.sprite.loop = false;
-    //   return;
-    // }
-
-    // if (this.recienConvertido) {
-    //   this.sprite.changeAnimation("spellcast");
-    //   this.sprite.loop = false;
-    //   return;
-    // }
-
-    // if (this.pegando) {
-    //   this.sprite.changeAnimation("slash");
-    //   this.velocidad.x *= 0.5;
-    //   this.velocidad.y *= 0.5;
-    //   return;
-    // } else if (this.noPuedoPegarPeroEstoyEnCombate) {
-    //   this.sprite.changeAnimation("combat");
-    //   this.velocidad.x *= 0.7;
-    //   this.velocidad.y *= 0.7;
-    //   return;
-    // }
-
-    // if (this.velocidadLineal > this.velocidadMaxima * 0.7) {
-    //   this.sprite.changeAnimation("run");
-    //   this.sprite.animationSpeed =
-    //     (0.25 * this.velocidadLineal) / this.velocidadMaxima;
-    // } else if (this.velocidadLineal > 0.1) {
-    //   this.sprite.changeAnimation("walk");
-    //   this.sprite.animationSpeed =
-    //     0.05 + (0.3 * this.velocidadLineal) / this.velocidadMaxima;
-    // } else {
-    //   this.sprite.changeAnimation("idle");
-    // }
 
     /**
      * MAPEO DE DIRECCIÓN CARDINAL

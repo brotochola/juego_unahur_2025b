@@ -1,9 +1,17 @@
 class ParticleSystem {
   static texturas = {};
   static cantTexturas = 10;
+  static cantTexturasChispas = 8;
+
   static getRandomSangre() {
     return ParticleSystem.texturas[
       "sangre" + Math.floor(Math.random() * ParticleSystem.cantTexturas)
+    ];
+  }
+
+  static getRandomChispa() {
+    return ParticleSystem.texturas[
+      "chispa" + Math.floor(Math.random() * ParticleSystem.cantTexturasChispas)
     ];
   }
   constructor(juego) {
@@ -43,6 +51,25 @@ class ParticleSystem {
     }
 
     ParticleSystem.texturas["saliva"] = crearCirculo(1.5, "white");
+
+    // Crear texturas de chispas con diferentes tonos de amarillo/naranja
+    const coloresChispas = [
+      0xffff00, // Amarillo brillante
+      0xffdd00, // Amarillo-dorado
+      0xffcc00, // Amarillo-naranja
+      0xffbb00, // Naranja claro
+      0xffaa00, // Naranja
+      0xff9900, // Naranja medio
+      0xff8800, // Naranja oscuro
+      0xff6600, // Naranja rojizo
+    ];
+
+    for (let i = 0; i < ParticleSystem.cantTexturasChispas; i++) {
+      ParticleSystem.texturas["chispa" + i] = crearSpriteConGradiente(
+        3,
+        coloresChispas[i]
+      ).texture;
+    }
   }
 
   hacerQueLeSalgaSangreAAlguien(quien, quienLePega) {
@@ -80,21 +107,45 @@ class ParticleSystem {
       this.crearUnaParticula(
         pos,
         velocidadInicial,
-        ParticleSystem.getRandomSangre()
+        ParticleSystem.getRandomSangre(),
+        "sangre"
       );
     }
   }
 
-  crearUnaParticula(pos, velocidadInicial, textura) {
+  ponerChispasEnPosicion(posicion, velocidad = { x: 0, y: 0, z: 0 }) {
+    if (!posicion) return;
+
+    const cant = 3 + Math.floor(Math.random() * 8); // Entre 3 y 10 chispas
+
+    for (let i = 0; i < cant; i++) {
+      const velocidadInicial = {
+        x: velocidad.x + Math.random() * 4 - 2,
+        y: velocidad.y + Math.random() * 4 - 2,
+        z:
+          velocidad.z !== undefined
+            ? velocidad.z + Math.random() * 2 - 1
+            : -Math.random() * 4 - 1,
+      };
+      this.crearUnaParticula(
+        { x: posicion.x, y: posicion.y, z: posicion.z || 0 },
+        velocidadInicial,
+        ParticleSystem.getRandomChispa(),
+        "chispa"
+      );
+    }
+  }
+
+  crearUnaParticula(pos, velocidadInicial, textura, tipo) {
     let particula;
 
     // Intentar obtener una partícula del pool
     if (this.pool.length > 0) {
       particula = this.pool.pop();
-      particula.reinicializar(pos, velocidadInicial, textura);
+      particula.reinicializar(pos, velocidadInicial, textura, tipo);
     } else {
       // Si el pool está vacío, crear una nueva (fallback)
-      particula = new Particula(pos, velocidadInicial, textura, this);
+      particula = new Particula(pos, velocidadInicial, textura, this, tipo);
       this.juego.containerPrincipal.addChild(particula.sprite);
     }
 
@@ -147,9 +198,10 @@ class ParticleSystem {
 }
 
 class Particula {
-  constructor(pos, velocidadInicial, textura, particleSystem) {
+  constructor(pos, velocidadInicial, textura, particleSystem, tipo) {
     this.particleSystem = particleSystem;
     this.posicion = { x: pos.x, y: pos.y, z: pos.z };
+    this.tipo = tipo;
     this.velocidad = {
       x: velocidadInicial.x,
       y: velocidadInicial.y,
@@ -168,7 +220,7 @@ class Particula {
    * Reinicializa una partícula del pool con nuevos valores
    * Esto es mucho más rápido que crear una nueva partícula
    */
-  reinicializar(pos, velocidadInicial, textura) {
+  reinicializar(pos, velocidadInicial, textura, tipo) {
     this.posicion.x = pos.x;
     this.posicion.y = pos.y;
     this.posicion.z = pos.z;
@@ -181,6 +233,7 @@ class Particula {
     this.sprite.x = this.posicion.x;
     this.sprite.y = this.posicion.y + this.posicion.z;
     this.sprite.alpha = 1;
+    this.tipo = tipo;
   }
 
   /**
@@ -201,7 +254,18 @@ class Particula {
   }
 
   update(gravedad) {
+    if (this.tipo === "chispa" && Math.random() > 0.9) {
+      this.quitar();
+      return;
+    }
     if (this.posicion.z > 0) {
+      // Las chispas desaparecen inmediatamente al tocar el suelo
+      if (this.tipo === "chispa") {
+        this.quitar();
+        return;
+      }
+
+      // La sangre hace fade out gradual
       this.sprite.alpha *= 0.95;
 
       if (this.sprite.alpha < 0.05) {

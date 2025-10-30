@@ -221,6 +221,51 @@ class Juego {
     this.graficoDebug.label = "graficoDebug";
     this.containerPrincipal.addChild(this.graficoDebug);
   }
+  cameraShake(duration, intensity) {
+    // Guardar la posición original
+    const originalX = this.containerPrincipal.x;
+    const originalY = this.containerPrincipal.y;
+
+    // Parámetros del shake
+
+    const initialAmplitude = intensity; // Amplitud inicial del shake
+    const frequencyX = 20; // Frecuencia de oscilación en X
+    const frequencyY = 25; // Frecuencia diferente en Y para más variedad
+
+    // Objeto temporal para animar
+    const shakeProgress = { value: 0 };
+
+    gsap.to(shakeProgress, {
+      value: 1,
+      duration: duration,
+      ease: "linear",
+      onUpdate: () => {
+        const t = shakeProgress.value;
+
+        // Decay exponencial: la intensidad disminuye con el tiempo
+        const decay = Math.pow(1 - t, 2);
+
+        // Calcular offsets usando funciones senoidales
+        const offsetX =
+          initialAmplitude * Math.sin(frequencyX * t * Math.PI * 2) * decay;
+        const offsetY =
+          initialAmplitude * Math.sin(frequencyY * t * Math.PI * 2) * decay;
+
+        // Aplicar el shake a ambos containers
+        this.containerPrincipal.x = originalX + offsetX;
+        this.containerPrincipal.y = originalY + offsetY;
+        this.containerBG.x = originalX + offsetX;
+        this.containerBG.y = originalY + offsetY;
+      },
+      onComplete: () => {
+        // Asegurar que vuelvan exactamente a la posición original
+        this.containerPrincipal.x = originalX;
+        this.containerPrincipal.y = originalY;
+        this.containerBG.x = originalX;
+        this.containerBG.y = originalY;
+      },
+    });
+  }
 
   async crearNivel() {
     this.containerPrincipal = new PIXI.Container();
@@ -235,7 +280,7 @@ class Juego {
     this.crearGraficoParaCables();
 
     this.nivel = new Nivel(
-      "assets/pixelart/plaza_de_mayo_21.json",
+      "assets/pixelart/plaza_de_mayo_22.json",
       this,
       () => {
         console.log("nivel cargado");

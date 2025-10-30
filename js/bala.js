@@ -146,17 +146,17 @@ class Bala extends GameObject {
     if (!this.celdaActual) return;
 
     // Obtener objetos cercanos (en esta celda y vecinas)
-    const objetosCercanos = Array.from(this.celdaActual.entidadesAca);
+    const objetosCercanos =
+      this.celdaActual.obtenerEntidadesAcaYEnCEldasVecinas(1);
 
     const posicionBala = this.getPosicionCentral();
 
     for (let objeto of objetosCercanos) {
       // No chocar con uno mismo, ni con balas, ni con objetos inactivos
       if (objeto === this) continue;
-      if (objeto === this.disparadoPor) {
-        continue;
-      }
+      if (objeto instanceof Flash) continue;
       if (objeto instanceof Bala) continue;
+      if (objeto instanceof Fuego) continue;
       if (objeto.muerto) continue;
       if (!objeto.activa && objeto.activa !== undefined) continue;
 
@@ -169,6 +169,8 @@ class Bala extends GameObject {
       // Suma de radios = distancia mínima para colisión
       const sumaRadios = this.radio + objeto.radio;
 
+      // if (objeto instanceof Auto) debugger;
+
       // ¿HAY COLISIÓN?
       if (
         laDistanciaEntreDosObjetosEsMenorQue(
@@ -177,6 +179,10 @@ class Bala extends GameObject {
           sumaRadios
         )
       ) {
+        if (this.juego.debug) {
+          this.crearPuntoDebug(this.posicion.x, this.posicion.y);
+        }
+
         this.colisionar(objeto);
         return; // Una bala solo golpea un objetivo
       }
@@ -189,7 +195,6 @@ class Bala extends GameObject {
    * @param {GameObject} objeto - Objeto que fue impactado
    */
   colisionar(objeto) {
-    console.log("colisiono");
     // Llamar al método recibirUnTiro del objeto impactado (si existe)
     if (objeto.recibirUnTiro instanceof Function) {
       objeto.recibirUnTiro(this);
@@ -217,6 +222,32 @@ class Bala extends GameObject {
     }
 
     // TODO: Agregar partículas de impacto aquí si lo deseas
+  }
+
+  /**
+   * CREAR PUNTO DEBUG - Mostrar visualmente dónde colisionó
+   * (Para debuguear el cálculo de posición de colisión)
+   */
+  crearPuntoDebug(x, y) {
+    const puntoDebug = new PIXI.Graphics();
+    puntoDebug.beginFill(0xff0000); // Rojo
+    puntoDebug.drawCircle(0, 0, 5); // Círculo de 5 píxeles de radio
+    puntoDebug.endFill();
+    puntoDebug.x = x;
+    puntoDebug.y = y;
+    puntoDebug.zIndex = 999999999; // Por encima de todo
+
+    this.juego.containerPrincipal.addChild(puntoDebug);
+
+    // Hacer que desaparezca después de 2 segundos
+    gsap.to(puntoDebug, {
+      alpha: 0,
+      duration: 1,
+      delay: 1,
+      onComplete: () => {
+        puntoDebug.destroy();
+      },
+    });
   }
 
   /**

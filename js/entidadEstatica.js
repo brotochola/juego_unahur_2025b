@@ -24,6 +24,29 @@ class EntidadEstatica extends GameObject {
     this.spriteDeLuz.tint = 0xffff99;
     this.spriteDeLuz.y = -this.sprite.height * 0.9;
   }
+  recibirUnTiro(bala) {
+    super.recibirUnTiro(bala);
+
+    const velocidadInvertida = limitarVector(
+      {
+        x: -bala.velocidad.x,
+        y: -bala.velocidad.y,
+      },
+      1
+    );
+    velocidadInvertida.z = -5 - Math.random() * 2;
+
+    this.juego.sistemaDeIluminacion.crearFlashDeDisparoEn(
+      bala.getPosicionCentral(),
+      30,
+      0.5,
+      20
+    );
+    this.juego.particleSystem.ponerChispasEnPosicion(
+      bala.getPosicionCentral(),
+      velocidadInvertida
+    );
+  }
 
   tick() {}
 }

@@ -11,7 +11,6 @@ class ShootAnimationState extends FSMState {
     super.onUpdate();
 
     this.counter++;
-    console.log(this.counter);
   }
 
   doChecks() {

@@ -26,7 +26,7 @@ class Protagonista extends Persona {
     this.target = null;
 
     // Sistema de disparo
-    this.cooldownDisparo = 100; // Milisegundos entre disparos
+    this.cooldownDisparo = 50; // Milisegundos entre disparos
     this.ultimoTiempoDisparo = 0; // Último tiempo (performance.now()) en el que disparó
   }
 
@@ -73,10 +73,15 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
   }
 
   calcularAnguloYVelocidadLineal() {
-    const dx = this.juego.mouse.posicion.x - this.posicion.x;
-    const dy = this.juego.mouse.posicion.y - this.posicion.y;
+    if (this.animationFSM.currentStateName === "shoot") {
+      const dx = this.juego.mouse.posicion.x - this.posicion.x;
+      const dy = this.juego.mouse.posicion.y - this.posicion.y;
 
-    this.angulo = radianesAGrados(Math.atan2(dy, dx)) + 180;
+      this.angulo = radianesAGrados(Math.atan2(dy, dx)) + 180;
+    } else {
+      this.angulo =
+        radianesAGrados(Math.atan2(this.velocidad.y, this.velocidad.x)) + 180;
+    }
 
     // Calcular la magnitud de la velocidad
     this.velocidadLineal = calcularDistancia(this.velocidad, { x: 0, y: 0 });
@@ -205,10 +210,12 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
     ) {
       this.juego.sistemaDeIluminacion.crearFlashDeDisparoEn(
         { x: posX, y: posY }, // Posición del disparo en el mundo
-        900, // Radio de la luz
+        400, // Radio de la luz
         0.8, // Intensidad (0-1)
-        100 // Duración en milisegundos
+        66 // Duración en milisegundos
       );
     }
+
+    this.juego.cameraShake(0.2, 5);
   }
 }

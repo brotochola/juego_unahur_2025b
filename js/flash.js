@@ -5,13 +5,13 @@
  * que se integra automáticamente con el sistema de iluminación.
  *
  * Características:
- * - Hereda de EntidadEstatica
+ * - Hereda de GameObject (no es un obstáculo físico)
  * - Se registra en la grilla espacial
  * - Se agrega automáticamente a cosasQueDanLuz
  * - Maneja su propia vida y fade out
  * - Se autodestruye cuando termina
  */
-class Flash extends EntidadEstatica {
+class Flash extends GameObject {
   constructor(
     x,
     y,
@@ -53,6 +53,9 @@ class Flash extends EntidadEstatica {
 
     // El spriteGradiente será creado automáticamente por el sistema de iluminación
     // en actualizarGradientsDeLosFaroles()
+
+    // Hacer invisible el container (no necesita representación visual)
+    this.container.visible = false;
   }
 
   tick() {
@@ -82,7 +85,6 @@ class Flash extends EntidadEstatica {
   }
 
   destruir() {
-    console.log("destruyendo flash");
     // Remover de cosasQueDanLuz
     const indexLuz = this.juego.cosasQueDanLuz.indexOf(this);
     if (indexLuz !== -1) {
@@ -114,12 +116,5 @@ class Flash extends EntidadEstatica {
       this.container.parent.removeChild(this.container);
       this.container.destroy(true);
     }
-  }
-
-  // Override: No crear sprite visual
-  async crearSprite() {
-    // Intencionalmente vacío - el flash no tiene sprite visible
-    // Solo emite luz a través del spriteGradiente que crea el sistema de iluminación
-    return 1;
   }
 }

@@ -47,4 +47,5 @@ class Arbol extends EntidadEstatica {
           0.3;
     }
   }
+  recibirUnTiro(bala) {}
 }

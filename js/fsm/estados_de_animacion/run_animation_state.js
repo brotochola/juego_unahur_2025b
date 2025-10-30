@@ -8,7 +8,7 @@ class RunAnimationState extends FSMState {
     super.onUpdate();
 
     this.owner.sprite.animationSpeed =
-      -(0.25 * this.owner.velocidadLineal) / this.owner.velocidadMaxima;
+      (0.25 * this.owner.velocidadLineal) / this.owner.velocidadMaxima;
   }
 
   doChecks() {
