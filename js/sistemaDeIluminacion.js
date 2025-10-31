@@ -250,13 +250,11 @@ class SistemaDeIluminacion {
 
   crearSistemaDeIluminacionConRenderTexture() {
     // Crear RenderTexture del tamaño de la pantalla
-    this.renderTexture = PIXI.RenderTexture.create({
-      width: this.juego.width,
-      height: this.juego.height,
-    });
-
+    this.crearRenderTexture();
     // Crear sprite que mostrará la RenderTexture
     this.spriteDeIluminacion = new PIXI.Sprite(this.renderTexture);
+    this.spriteDeIluminacion.width = this.juego.width;
+    this.spriteDeIluminacion.height = this.juego.height;
     this.spriteDeIluminacion.label = "spriteDeIluminacion";
     this.spriteDeIluminacion.zIndex = Juego.Z_INDEX.containerIluminacion;
     this.spriteDeIluminacion.blendMode = "multiply";
@@ -268,10 +266,7 @@ class SistemaDeIluminacion {
     this.containerParaRenderizar.sortableChildren = true;
 
     // Crear el sprite negro de fondo
-    this.spriteNegro = crearSpriteNegro(this.juego.width, this.juego.height);
-    this.spriteNegro.label = "spriteNegro";
-    this.spriteNegro.zIndex = 1;
-    this.containerParaRenderizar.addChild(this.spriteNegro);
+    this.recrearSpriteNegro();
 
     // Crear sprites de gradiente para cada farol
     for (let farol of this.juego.cosasQueDanLuz) {
@@ -305,6 +300,34 @@ class SistemaDeIluminacion {
     this.spriteAmarilloParaElAtardecer.blendMode = "multiply";
     this.juego.pixiApp.stage.addChild(this.spriteAmarilloParaElAtardecer);
   }
+  crearRenderTexture() {
+    this.renderTexture = PIXI.RenderTexture.create({
+      width: Math.ceil(
+        this.juego.width * Juego.CONFIG.escala_sprite_de_iluminacion
+      ),
+      height: Math.ceil(
+        this.juego.height * Juego.CONFIG.escala_sprite_de_iluminacion
+      ),
+    });
+  }
+
+  /**
+   * Crea o recrea el sprite negro de fondo
+   * Destruye el sprite anterior si existe
+   */
+  recrearSpriteNegro() {
+    // Destruir sprite anterior si existe
+    if (this.spriteNegro) {
+      this.containerParaRenderizar.removeChild(this.spriteNegro);
+      this.spriteNegro.destroy();
+    }
+
+    // Crear nuevo sprite negro
+    this.spriteNegro = crearSpriteNegro(this.juego.width, this.juego.height);
+    this.spriteNegro.label = "spriteNegro";
+    this.spriteNegro.zIndex = 1;
+    this.containerParaRenderizar.addChild(this.spriteNegro);
+  }
 
   redimensionarRenderTexture() {
     if (!this.renderTexture || !this.spriteDeIluminacion) return;
@@ -313,23 +336,12 @@ class SistemaDeIluminacion {
     this.renderTexture.destroy(true);
 
     // Crear nueva RenderTexture con el nuevo tamaño
-    this.renderTexture = PIXI.RenderTexture.create({
-      width: this.juego.width,
-      height: this.juego.height,
-    });
-
+    this.crearRenderTexture();
     // Actualizar la textura del sprite
     this.spriteDeIluminacion.texture = this.renderTexture;
 
     // Recrear el sprite negro con el nuevo tamaño
-    if (this.spriteNegro) {
-      this.containerParaRenderizar.removeChild(this.spriteNegro);
-      this.spriteNegro.destroy();
-    }
-    this.spriteNegro = crearSpriteNegro(this.juego.width, this.juego.height);
-    this.spriteNegro.label = "spriteNegro";
-    this.spriteNegro.zIndex = 1;
-    this.containerParaRenderizar.addChild(this.spriteNegro);
+    this.recrearSpriteNegro();
 
     this.spriteAmarilloParaElAtardecer.width = this.juego.width;
     this.spriteAmarilloParaElAtardecer.height = this.juego.height;
@@ -454,6 +466,7 @@ class SistemaDeIluminacion {
       container: this.containerParaRenderizar,
       target: this.renderTexture,
       clear: true,
+      scaleMode: PIXI.SCALE_MODES.NEAREST,
     });
   }
 
@@ -491,9 +504,13 @@ class SistemaDeIluminacion {
       // El farol está prendido y visible
       farol.spriteGradiente.visible = true;
       const posicionEnPantalla = farol.getPosicionEnPantalla();
-      farol.spriteGradiente.x = posicionEnPantalla.x;
-      farol.spriteGradiente.y = posicionEnPantalla.y;
-      farol.spriteGradiente.scale.set(this.juego.zoom);
+      farol.spriteGradiente.x =
+        posicionEnPantalla.x * Juego.CONFIG.escala_sprite_de_iluminacion;
+      farol.spriteGradiente.y =
+        posicionEnPantalla.y * Juego.CONFIG.escala_sprite_de_iluminacion;
+      farol.spriteGradiente.scale.set(
+        this.juego.zoom * Juego.CONFIG.escala_sprite_de_iluminacion
+      );
     }
   }
 

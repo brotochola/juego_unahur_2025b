@@ -556,8 +556,12 @@ class GameObject {
       // Posicionar la sombra
       const posObjeto = this.getPosicionEnPantalla();
       const offsetCerca = 10 * zoom;
-      spriteSombra.x = posObjeto.x + Math.cos(anguloRadianes) * offsetCerca;
-      spriteSombra.y = posObjeto.y + Math.sin(anguloRadianes) * offsetCerca;
+      spriteSombra.x =
+        (posObjeto.x + Math.cos(anguloRadianes) * offsetCerca) *
+        Juego.CONFIG.escala_sprite_de_iluminacion;
+      spriteSombra.y =
+        (posObjeto.y + Math.sin(anguloRadianes) * offsetCerca) *
+        Juego.CONFIG.escala_sprite_de_iluminacion;
 
       // Rotar según dirección de la luz
       spriteSombra.rotation = anguloRadianes + Math.PI / 2;
@@ -571,8 +575,16 @@ class GameObject {
 
       const compensacionEscala = 1 / Juego.CONFIG.escala_textura_sombras;
       spriteSombra.scale.set(
-        anchoSombra * 0.5 * zoom * compensacionEscala,
-        longitudSombra * 0.5 * zoom * compensacionEscala
+        anchoSombra *
+          0.5 *
+          zoom *
+          compensacionEscala *
+          Juego.CONFIG.escala_sprite_de_iluminacion,
+        longitudSombra *
+          0.5 *
+          zoom *
+          compensacionEscala *
+          Juego.CONFIG.escala_sprite_de_iluminacion
       );
 
       // Calcular alpha según distancia

@@ -16,7 +16,6 @@ class Fuego extends EntidadEstatica {
       this.actualizarMiPosicionEnLaGrilla();
       this.celdaActual.agregarAlSetPorClaseYTipo(this);
     });
-    // this.juego.obstaculos.push(this);
 
     // Para la animación de skew
     this.offsetSkew = Math.random() * Math.PI * 2; // Offset aleatorio para que no todos se muevan igual
@@ -28,6 +27,7 @@ class Fuego extends EntidadEstatica {
     this.cantidadDeSkew2 = 0.01 + Math.random() * 0.01;
 
     this.escala = Math.random() * 0.5 + 0.5;
+    this.juego.invalidarCacheDeFarolesCercanos();
   }
 
   async crearSprite() {

@@ -23,7 +23,8 @@ class Juego {
       // Efecto pixelado de sombras (solo con usar_sombras_con_texturas: true)
       // 1.0 = sin pixelado, 0.1 = muy pixelado, 0.05 = ultra pixelado
       escala_textura_sombras: 0.1, // Valor por defecto (recomendado: 0.05-0.2)
-
+      //escala del sprite de iluminacion, se usa para reducir el tamaño de la textura de iluminacion
+      escala_sprite_de_iluminacion: 0.1,
       // OPTIMIZACIÓN: Frecuencia de actualización de tints (cambios de color por iluminación)
       // Actualizar tints cada N frames (1 = cada frame, 10 = cada 10 frames)
       // Valores más altos = mejor performance pero menos suave
@@ -762,8 +763,6 @@ class Juego {
   }
   crearFuego(x, y) {
     const fuego = new Fuego(x, y, this);
-    // Invalidar caché de faroles cercanos en todos los objetos
-    this.invalidarCacheDeFarolesCercanos();
   }
 
   getPersonaRandom() {
