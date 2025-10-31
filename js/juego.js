@@ -18,12 +18,7 @@ class Juego {
       usar_pool_vectores: true,
       usar_sombras_proyectadas: true, // Activar/desactivar sombras para comparar performance
 
-      // NUEVO: Sistema optimizado de sombras con texturas (10-20x más rápido)
-      // true = usa texturas pre-renderizadas (RECOMENDADO)
-      // false = usa geometría calculada cada frame (método viejo)
-      usar_sombras_con_texturas: true,
-
-      max_sombras_por_objeto: 3, // Cantidad máxima de sombras por personaje (recomendado: 2-4)
+      max_sombras_por_objeto: 5, // Cantidad máxima de sombras por personaje (recomendado: 2-4)
 
       // Efecto pixelado de sombras (solo con usar_sombras_con_texturas: true)
       // 1.0 = sin pixelado, 0.1 = muy pixelado, 0.05 = ultra pixelado

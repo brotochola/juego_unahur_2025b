@@ -22,26 +22,6 @@ class SistemaDeIluminacion {
     this.minutosPorDia = 1440;
     this.cantidadDeLuzDelDia = 0.5;
   }
-  crearGraficoSombrasProyectadas() {
-    // Crear el gráfico de sombras proyectadas
-    this.graficoSombrasProyectadas = new PIXI.Graphics();
-    this.graficoSombrasProyectadas.zIndex = 3; // Encima del fondo negro y los gradientes
-    this.graficoSombrasProyectadas.label = "graficoSombrasProyectadas";
-    // No necesita blendMode porque está dentro del containerParaRenderizar
-
-    // Crear el filtro de blur para las sombras
-    this.blurParaElGraficoDeSombrasProyectadas = new PIXI.BlurFilter({
-      strength: 8,
-      quality: 2,
-      kernelSize: 5,
-    });
-    this.graficoSombrasProyectadas.filters = [
-      this.blurParaElGraficoDeSombrasProyectadas,
-    ];
-
-    // Agregar al containerParaRenderizar en lugar del stage
-    this.containerParaRenderizar.addChild(this.graficoSombrasProyectadas);
-  }
 
   inicializar() {
     // Crear el sistema de iluminación después de un pequeño delay
@@ -52,12 +32,7 @@ class SistemaDeIluminacion {
       // NUEVO: Crear textura de sombra pre-renderizada
       this.crearTexturaDeSombra();
 
-      // Dependiendo de la configuración, usar método nuevo o viejo
-      if (Juego.CONFIG.usar_sombras_con_texturas) {
-        this.pregenerarPoolDeSombras();
-      } else {
-        this.crearGraficoSombrasProyectadas(); // Método viejo con geometría
-      }
+      this.pregenerarPoolDeSombras();
 
       this.inicializado = true;
       this.toggle();
@@ -377,8 +352,6 @@ class SistemaDeIluminacion {
 
   tick() {
     this.avanzarDia();
-    this.actualizarSpriteAmarilloParaElAtardecer();
-    this.prenderOApagarTodosLosFarolesSegunLaHoraDelDia();
 
     // OPTIMIZACIÓN: Si es de día completo, no hacer nada de iluminación
     if (this.cantidadDeLuzDelDia >= 0.99999) {
@@ -397,6 +370,13 @@ class SistemaDeIluminacion {
       for (let flash of this.juego.flashes) {
         flash.tick();
       }
+
+      this.actualizarSpriteAmarilloParaElAtardecer();
+      this.prenderOApagarTodosLosFarolesSegunLaHoraDelDia();
+
+      this.limpiarSombrasActivas();
+      this.actualizarSombrasDesdeObjetos();
+
       this.actualizarGradientsDeLosFaroles();
       this.actualizarSpriteDeIluminacion();
 
@@ -457,9 +437,6 @@ class SistemaDeIluminacion {
 
   actualizarGradientsDeLosFaroles() {
     // Limpiar sombras del frame anterior (si usamos texturas)
-    if (Juego.CONFIG.usar_sombras_con_texturas) {
-      this.limpiarSombrasActivas();
-    }
 
     // Primero: Actualizar los gradientes de luz de los faroles
     for (let farol of this.juego.cosasQueDanLuz) {
@@ -496,17 +473,6 @@ class SistemaDeIluminacion {
       farol.spriteGradiente.y = posicionEnPantalla.y;
       farol.spriteGradiente.scale.set(this.juego.zoom);
     }
-
-    // Segundo: NUEVO APPROACH - Calcular sombras desde los objetos
-    if (
-      Juego.CONFIG.usar_sombras_proyectadas &&
-      Juego.CONFIG.usar_sombras_con_texturas
-    ) {
-      this.actualizarSombrasDesdeObjetos();
-    } else if (Juego.CONFIG.usar_sombras_proyectadas) {
-      // Fallback al método antiguo con geometría
-      this.actualizarSombrasDesdeObjetosConGeometria();
-    }
   }
 
   /**
@@ -521,19 +487,6 @@ class SistemaDeIluminacion {
 
       // Cada persona calcula sus sombras basándose en sus faroles cercanos
       persona.calcularYCrearSombrasProyectadas(this);
-    }
-  }
-
-  /**
-   * Versión con geometría (método antiguo) adaptada al nuevo approach
-   */
-  actualizarSombrasDesdeObjetosConGeometria() {
-    // Similar pero usando gráficos en lugar de texturas
-    // Por ahora mantenemos el método antiguo como fallback
-    for (let farol of this.juego.cosasQueDanLuz) {
-      if (farol.estado === 0) continue;
-      if (!farol.estoyVisibleEnLaPantallaEnEsteFrame) continue;
-      this.actualizarSombrasProyectadas(farol);
     }
   }
 
@@ -734,180 +687,6 @@ class SistemaDeIluminacion {
   setActivo(valor) {
     if (this.activo !== valor) {
       this.toggle();
-    }
-  }
-
-  actualizarSombrasProyectadas(farol) {
-    // Si las sombras están desactivadas, salir
-    if (!Juego.CONFIG.usar_sombras_proyectadas) return;
-
-    const posDelFarol = farol.getPosicionEnPantalla();
-    const zoom = this.juego.zoom;
-
-    // OPTIMIZACIÓN 1: Usar grilla espacial para obtener solo objetos cercanos
-    let objetosCercanos;
-
-    if (Juego.CONFIG.usar_grilla && farol.celdaActual) {
-      // Calcular cuántas celdas necesitamos buscar según el radioLuz
-      const celdasABuscar = Math.ceil(
-        farol.radioLuz / this.juego.grilla.anchoCelda
-      );
-
-      // Obtener entidades en celdas cercanas y filtrar solo personas vivas
-      const entidadesCerca =
-        farol.celdaActual.obtenerEntidadesAcaYEnCEldasVecinas(celdasABuscar);
-
-      // Filtrar solo personas (no arboles, autos, etc) y que estén vivas
-      objetosCercanos = entidadesCerca.filter(
-        (entidad) => entidad instanceof Persona && !entidad.muerto
-      );
-    } else {
-      // Fallback: usar todas las personas (modo anterior)
-      objetosCercanos = this.juego.personas.filter(
-        (persona) => !persona.muerto
-      );
-    }
-
-    // OPTIMIZACIÓN 2: Filtrar por distancia usando la función optimizada
-    // Solo procesar objetos que están dentro del radioLuz
-    for (let objeto of objetosCercanos) {
-      // Evitar dibujarse líneas a sí mismo
-      if (objeto === farol) continue;
-
-      // OPTIMIZACIÓN 3: Check rápido de visibilidad
-      if (!objeto.estoyVisibleEnLaPantallaEnEsteFrame) continue;
-
-      // OPTIMIZACIÓN 4: Usar comparación de distancia optimizada
-      if (
-        !laDistanciaEntreDosObjetosEsMenorQue(
-          farol.posicion,
-          objeto.posicion,
-          farol.radioLuz
-        )
-      )
-        continue;
-
-      // Si llegamos aquí, el objeto está dentro del radioLuz
-      // Calcular distancia real solo cuando es necesario
-      const distancia = calcularDistancia(farol.posicion, objeto.posicion);
-
-      // Prevenir división por cero
-      if (distancia <= farol.radioLuz && distancia > 0) {
-        // Calcular puntos tangentes al círculo del objeto
-        const dx = objeto.posicion.x - farol.posicion.x;
-        const dy = objeto.posicion.y - farol.posicion.y;
-        const anguloAlCentro = Math.atan2(dy, dx);
-
-        // Ángulo de las tangentes usando trigonometría: sin(θ) = radio_opuesto / hipotenusa
-        const anguloTangente = Math.asin((objeto.radio * 0.66) / distancia);
-
-        // Calcular los dos puntos tangentes
-        const angulo1 = anguloAlCentro + anguloTangente;
-        const angulo2 = anguloAlCentro - anguloTangente;
-
-        // Distancia desde el farol hasta los puntos tangentes en el círculo
-        const distanciaHastaTangente = Math.sqrt(
-          distancia * distancia - objeto.radio * objeto.radio
-        );
-        // const posDelObjetoEnPantalla = objeto.getPosicionEnPantalla();
-        // Puntos tangentes en el círculo del objeto (desde el farol)
-        // Multiplicar distancias por zoom para convertir a coordenadas de pantalla
-        const puntoTangente1x =
-          posDelFarol.x + Math.cos(angulo1) * distanciaHastaTangente * zoom;
-        const puntoTangente1y =
-          posDelFarol.y + Math.sin(angulo1) * distanciaHastaTangente * zoom;
-        const puntoTangente2x =
-          posDelFarol.x + Math.cos(angulo2) * distanciaHastaTangente * zoom;
-        const puntoTangente2y =
-          posDelFarol.y + Math.sin(angulo2) * distanciaHastaTangente * zoom;
-
-        // Extender las líneas tangentes hacia el lado opuesto al farol por la misma distancia
-        const factorExtensionDeLaSombra =
-          objeto.container.height * 0.66 + distancia * 0.1;
-        const puntoFinal1x =
-          puntoTangente1x +
-          Math.cos(angulo1) * factorExtensionDeLaSombra * zoom;
-        const puntoFinal1y =
-          puntoTangente1y +
-          Math.sin(angulo1) * factorExtensionDeLaSombra * zoom;
-        const puntoFinal2x =
-          puntoTangente2x +
-          Math.cos(angulo2) * factorExtensionDeLaSombra * zoom;
-        const puntoFinal2y =
-          puntoTangente2y +
-          Math.sin(angulo2) * factorExtensionDeLaSombra * zoom;
-
-        // Dibujar el trapecio de sombra proyectada
-
-        // Calcular punto de control para la curva (más alejado del farol)
-        const centroX = (puntoFinal1x + puntoFinal2x) / 2;
-        const centroY = (puntoFinal1y + puntoFinal2y) / 2;
-        const extensionCurva = objeto.radio + distancia * 0.15; // Factor para que la curva sea sutil
-        const puntoControlX =
-          centroX + Math.cos(anguloAlCentro) * extensionCurva * zoom;
-        const puntoControlY =
-          centroY + Math.sin(anguloAlCentro) * extensionCurva * zoom;
-
-        this.graficoSombrasProyectadas.moveTo(puntoTangente1x, puntoTangente1y);
-        this.graficoSombrasProyectadas.lineTo(puntoFinal1x, puntoFinal1y);
-
-        // Dibujar curva en lugar de línea recta para el lado alejado
-        this.graficoSombrasProyectadas.quadraticCurveTo(
-          puntoControlX,
-          puntoControlY, // Punto de control de la curva
-          puntoFinal2x,
-          puntoFinal2y // Punto final de la curva
-        );
-
-        this.graficoSombrasProyectadas.lineTo(puntoTangente2x, puntoTangente2y);
-
-        // Calcular punto de control para la curva del lado cercano al farol
-        const centroTangenteX = (puntoTangente1x + puntoTangente2x) / 2;
-        const centroTangenteY = (puntoTangente1y + puntoTangente2y) / 2;
-        const extensionCurvaCercana = objeto.radio; // Curva más sutil en el lado cercano
-        const puntoControlCercanoX =
-          centroTangenteX -
-          Math.cos(anguloAlCentro) * extensionCurvaCercana * zoom;
-        const puntoControlCercanoY =
-          centroTangenteY -
-          Math.sin(anguloAlCentro) * extensionCurvaCercana * zoom;
-
-        // Dibujar curva para conectar de vuelta al punto inicial
-        this.graficoSombrasProyectadas.quadraticCurveTo(
-          puntoControlCercanoX,
-          puntoControlCercanoY, // Punto de control de la curva cercana
-          puntoTangente1x,
-          puntoTangente1y // Punto inicial
-        );
-
-        let cantDeSombra = (farol.radioLuz ** 1.5 / distancia ** 2) * 0.33;
-        if (cantDeSombra > 0.33) cantDeSombra = 0.33;
-        if (cantDeSombra < 0) cantDeSombra = 0;
-
-        // LIMITADOR: Asegurar que el alpha total de todas las sombras no supere 0.8
-        const MAX_ALPHA_TOTAL = 0.8;
-        const alphaDisponible =
-          MAX_ALPHA_TOTAL - objeto.alphaAcumuladoDeSombras;
-
-        if (alphaDisponible <= 0) {
-          // Ya llegamos al límite, no dibujar más sombras para este objeto
-          continue;
-        }
-
-        // Ajustar el alpha si excede el disponible
-        if (cantDeSombra > alphaDisponible) {
-          cantDeSombra = alphaDisponible;
-        }
-
-        objeto.alphaAcumuladoDeSombras += cantDeSombra;
-
-        this.graficoSombrasProyectadas.fill({
-          color: 0x000000,
-          alpha: cantDeSombra,
-        });
-
-        // if (this.juego.stroke) this.graficoSombrasProyectadas.stroke();
-      }
     }
   }
 }

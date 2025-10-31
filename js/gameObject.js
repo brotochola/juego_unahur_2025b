@@ -558,12 +558,22 @@ class GameObject {
     if (this.muerto) return;
     if (!this.estoyVisibleEnLaPantallaEnEsteFrame) return;
 
-    const MAX_SOMBRAS_POR_OBJETO = Juego.CONFIG.max_sombras_por_objeto || 3;
+    const MAX_SOMBRAS_POR_OBJETO = Juego.CONFIG.max_sombras_por_objeto || 4;
     const MAX_ALPHA_TOTAL = 0.8;
 
     // Resetear tracking de sombras para este frame
     this.alphaAcumuladoDeSombras = 0;
-    if (!this.misSombrasProyectadas) this.misSombrasProyectadas = [];
+
+    // Limpiar sombras del frame anterior
+    if (!this.misSombrasProyectadas) {
+      this.misSombrasProyectadas = [];
+    } else {
+      // Devolver sprites al pool y limpiar el array
+      for (const spriteSombra of this.misSombrasProyectadas) {
+        sistemaIluminacion.devolverSpriteSombraAlPool(spriteSombra);
+      }
+      this.misSombrasProyectadas.length = 0;
+    }
 
     // Obtener faroles cercanos
     let farolesCercanos = this.obtenerFarolesCercanos().filter(
