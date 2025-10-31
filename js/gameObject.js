@@ -101,6 +101,13 @@ class GameObject {
 
     this.containerBarraVida.x = -this.anchoBarraVida * 0.5;
   }
+  quitarSombrasProyectadas() {
+    if (!this.misSombrasProyectadas) return;
+    this.misSombrasProyectadas.forEach((sombra) => {
+      this.juego.sistemaDeIluminacion.devolverSpriteSombraAlPool(sombra);
+    });
+    this.misSombrasProyectadas = [];
+  }
 
   quitarBarritaVida() {
     // Verificar que el contenedor principal exista antes de proceder

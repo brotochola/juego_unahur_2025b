@@ -722,6 +722,7 @@ class Persona extends GameObject {
     if (this.animationFSM) this.animationFSM.destroy();
     this.container.label = "persona muerta - " + this.id;
     this.quitarSombra();
+    this.quitarSombrasProyectadas();
     this.quitarBarritaVida();
     this.quitarGloboDeDialogo();
     this.sprite.changeAnimation("hurt");
