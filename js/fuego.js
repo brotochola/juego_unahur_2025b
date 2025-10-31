@@ -48,6 +48,8 @@ class Fuego extends EntidadEstatica {
     return 1;
   }
 
+  cambiarTintParaSimularIluminacion() {}
+
   tick() {
     if (this.sprite) {
       // Incrementar el tiempo lentamente

@@ -172,11 +172,17 @@ class SistemaDeIluminacion {
 
   /**
    * Obtener un sprite de sombra del pool
+   * VALIDACIÓN: Asegura que los sprites no se dupliquen en sombrasActivas
    */
   obtenerSpriteSombraDelPool() {
     if (this.poolSombras.length > 0) {
       const sprite = this.poolSombras.pop();
-      this.sombrasActivas.push(sprite);
+
+      // Validar que no esté ya en el array de activas (doble seguridad)
+      if (!this.sombrasActivas.includes(sprite)) {
+        this.sombrasActivas.push(sprite);
+      }
+
       sprite.visible = true;
       return sprite;
     }
@@ -206,23 +212,38 @@ class SistemaDeIluminacion {
 
   /**
    * Devolver un sprite al pool
+   * VALIDACIÓN: Evita devolver sprites duplicados (bug fix)
    */
   devolverSpriteSombraAlPool(sprite) {
-    sprite.visible = false;
+    // Validar que el sprite esté en el array de activas
     const index = this.sombrasActivas.indexOf(sprite);
-    if (index > -1) {
-      this.sombrasActivas.splice(index, 1);
+    if (index === -1) {
+      // El sprite ya fue devuelto al pool, no hacer nada
+      return;
     }
-    this.poolSombras.push(sprite);
+
+    sprite.visible = false;
+    this.sombrasActivas.splice(index, 1);
+
+    // Validar que no esté ya en el pool antes de agregarlo
+    if (!this.poolSombras.includes(sprite)) {
+      this.poolSombras.push(sprite);
+    }
   }
 
   /**
-   * Limpiar todas las sombras activas
+   * Limpiar todas las sombras activas (método de utilidad)
+   * NOTA: Ya NO se usa en el flujo normal de renderizado
+   * Las personas limpian sus propias sombras individualmente para evitar conflictos
+   * Este método puede ser útil para casos especiales (cambio de nivel, reset, etc.)
    */
   limpiarSombrasActivas() {
     for (const sprite of this.sombrasActivas) {
       sprite.visible = false;
-      this.poolSombras.push(sprite);
+      // Validar que no esté ya en el pool antes de agregarlo
+      if (!this.poolSombras.includes(sprite)) {
+        this.poolSombras.push(sprite);
+      }
     }
     this.sombrasActivas.length = 0;
   }
@@ -374,7 +395,8 @@ class SistemaDeIluminacion {
       this.actualizarSpriteAmarilloParaElAtardecer();
       this.prenderOApagarTodosLosFarolesSegunLaHoraDelDia();
 
-      this.limpiarSombrasActivas();
+      // Las personas limpian sus propias sombras individualmente
+      // NO llamar a limpiarSombrasActivas() aquí para evitar doble limpieza
       this.actualizarSombrasDesdeObjetos();
 
       this.actualizarGradientsDeLosFaroles();

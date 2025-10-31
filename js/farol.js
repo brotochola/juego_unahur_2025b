@@ -50,6 +50,8 @@ class Farol extends EntidadEstatica {
     this.crearSpriteDeLuz();
   }
 
+  cambiarTintParaSimularIluminacion() {}
+
   tick() {
     if (!this.spriteDeLuz) return;
     if (this.fallado && this.estado == 1) {

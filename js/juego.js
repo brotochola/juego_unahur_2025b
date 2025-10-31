@@ -39,26 +39,26 @@ class Juego {
   }
   static CONFIG = Juego.getDefaultConfig();
 
-  static ponerLaPeorConfiguracion() {
-    Juego.CONFIG = {
-      usar_grilla: false,
-      percibir_cada_10_frames: false,
-      no_renderizar_lo_q_no_se_ve: false,
-      comparar_distancias_cuadradas: false,
-      usar_pool_vectores: false,
-      usar_sombras_proyectadas: false,
-      usar_sombras_con_texturas: false,
-      max_sombras_por_objeto: 100,
-      escala_textura_sombras: 1,
-      frames_entre_updates_tint: 1,
-      frames_seguir_al_lider: 1,
-      frames_cohesion: 1,
-      frames_alineacion: 1,
-      frames_repeler_obstaculos: 1,
-      frames_repeler_enemigos: 1,
-      escala_textura_sombras: 1,
-    };
-  }
+  // static ponerLaPeorConfiguracion() {
+  //   Juego.CONFIG = {
+  //     usar_grilla: false,
+  //     percibir_cada_10_frames: false,
+  //     no_renderizar_lo_q_no_se_ve: false,
+  //     comparar_distancias_cuadradas: false,
+  //     usar_pool_vectores: false,
+  //     usar_sombras_proyectadas: false,
+  //     usar_sombras_con_texturas: false,
+  //     max_sombras_por_objeto: 100,
+  //     escala_textura_sombras: 1,
+  //     frames_entre_updates_tint: 1,
+  //     frames_seguir_al_lider: 1,
+  //     frames_cohesion: 1,
+  //     frames_alineacion: 1,
+  //     frames_repeler_obstaculos: 1,
+  //     frames_repeler_enemigos: 1,
+  //     escala_textura_sombras: 1,
+  //   };
+  // }
 
   pixiApp;
   gameObjects = [];
@@ -606,7 +606,7 @@ class Juego {
     for (let farol of this.faroles) farol.tick();
     for (let fuego of this.fuegos) fuego.tick();
 
-    for (let obstaculo of this.obstaculos) obstaculo.render();
+    // for (let obstaculo of this.obstaculos) obstaculo.render();
 
     // Actualizar balas
     if (typeof BalasPool !== "undefined") {
@@ -762,10 +762,22 @@ class Juego {
   }
   crearFuego(x, y) {
     const fuego = new Fuego(x, y, this);
+    // Invalidar caché de faroles cercanos en todos los objetos
+    this.invalidarCacheDeFarolesCercanos();
   }
 
   getPersonaRandom() {
     return this.personas[Math.floor(this.personas.length * Math.random())];
+  }
+
+  /**
+   * Invalida el caché de faroles cercanos en todos los gameObjects
+   * Se debe llamar cuando se agrega/elimina un emisor de luz dinámicamente
+   */
+  invalidarCacheDeFarolesCercanos() {
+    for (let gameObject of this.gameObjects) {
+      gameObject.farolesCercanos = null;
+    }
   }
 
   borrarATodasLasPersonas() {
