@@ -24,9 +24,8 @@ class EntidadEstatica extends GameObject {
     this.spriteDeLuz.tint = 0xffff99;
     this.spriteDeLuz.y = -this.sprite.height * 0.9;
   }
-  recibirUnTiro(bala) {
-    super.recibirUnTiro(bala);
 
+  sacarChispasDeDondeREcibioUnDisparo(bala) {
     const velocidadInvertida = limitarVector(
       {
         x: -bala.velocidad.x,
@@ -46,6 +45,10 @@ class EntidadEstatica extends GameObject {
       bala.getPosicionCentral(),
       velocidadInvertida
     );
+  }
+  recibirUnTiro(bala) {
+    super.recibirUnTiro(bala);
+    this.sacarChispasDeDondeREcibioUnDisparo(bala);
   }
 
   tick() {}

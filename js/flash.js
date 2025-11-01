@@ -52,7 +52,7 @@ class Flash extends GameObject {
     this.juego.flashes.push(this);
 
     // Invalidar caché de faroles cercanos para que los objetos detecten esta nueva luz
-    juego.invalidarCacheDeFarolesCercanos();
+    this.invalidarCacheDeFarolesCercanosDeLosObjetosCercanos();
 
     // El spriteGradiente será creado automáticamente por el sistema de iluminación
     // en actualizarGradientsDeLosFaroles()
@@ -121,6 +121,6 @@ class Flash extends GameObject {
     }
 
     // Invalidar caché de faroles cercanos para que los objetos actualicen sus luces
-    this.juego.invalidarCacheDeFarolesCercanos();
+    this.invalidarCacheDeFarolesCercanosDeLosObjetosCercanos();
   }
 }

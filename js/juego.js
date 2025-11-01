@@ -36,6 +36,8 @@ class Juego {
       frames_alineacion: 22, // Calcular alineación cada N frames (recomendado: 15-30)
       frames_repeler_obstaculos: 15, // Calcular repulsión de obstáculos cada N frames (recomendado: 10-20)
       frames_repeler_enemigos: 18, // Calcular repulsión de enemigos cada N frames (recomendado: 10-25)
+      //
+      fade_out_sangre: 0.975,
     };
   }
   static CONFIG = Juego.getDefaultConfig();
@@ -182,7 +184,7 @@ class Juego {
           this.mouse.posicion.y
         );
       } else if (event.key == "f") {
-        this.crearFuego(this.mouse.posicion.x, this.mouse.posicion.y);
+        this.crearFuego(this.mouse.posicion.x, this.mouse.posicion.y, 25);
       }
     };
     window.onkeyup = (event) => {
@@ -761,22 +763,12 @@ class Juego {
   finDelJuego() {
     alert("Te moriste! fin del juego");
   }
-  crearFuego(x, y) {
-    const fuego = new Fuego(x, y, this);
+  crearFuego(x, y, radio) {
+    const fuego = new Fuego(x, y, radio, this);
   }
 
   getPersonaRandom() {
     return this.personas[Math.floor(this.personas.length * Math.random())];
-  }
-
-  /**
-   * Invalida el caché de faroles cercanos en todos los gameObjects
-   * Se debe llamar cuando se agrega/elimina un emisor de luz dinámicamente
-   */
-  invalidarCacheDeFarolesCercanos() {
-    for (let gameObject of this.gameObjects) {
-      gameObject.farolesCercanos = null;
-    }
   }
 
   borrarATodasLasPersonas() {

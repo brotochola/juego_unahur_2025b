@@ -215,7 +215,6 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
         66 // Duración en milisegundos
       );
     }
-
-    this.juego.cameraShake(0.2, 5);
+    this.juego.cameraShake(0.1, 4);
   }
 }

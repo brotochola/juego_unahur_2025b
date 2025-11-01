@@ -45,7 +45,7 @@ class ParticleSystem {
     for (let i = 0; i < ParticleSystem.cantTexturas; i++) {
       //en este objeto propiedad estatica, creo 10 circulos de sangre
       ParticleSystem.texturas["sangre" + i] = crearCirculo(
-        2,
+        2 + Math.random(),
         colorToHexString(mapColors(0xff0000, 0xaa0000, Math.random()))
       );
     }
@@ -66,7 +66,7 @@ class ParticleSystem {
 
     for (let i = 0; i < ParticleSystem.cantTexturasChispas; i++) {
       ParticleSystem.texturas["chispa" + i] = crearSpriteConGradiente(
-        3,
+        3 + Math.random() * 3,
         coloresChispas[i]
       ).texture;
     }
@@ -113,10 +113,10 @@ class ParticleSystem {
     }
   }
 
-  ponerChispasEnPosicion(posicion, velocidad = { x: 0, y: 0, z: 0 }) {
+  ponerChispasEnPosicion(posicion, velocidad = { x: 0, y: 0, z: 0 }, cantidad) {
     if (!posicion) return;
 
-    const cant = 3 + Math.floor(Math.random() * 8); // Entre 3 y 10 chispas
+    const cant = cantidad || 3 + Math.floor(Math.random() * 8); // Entre 3 y 10 chispas
 
     for (let i = 0; i < cant; i++) {
       const velocidadInicial = {
@@ -266,7 +266,7 @@ class Particula {
       }
 
       // La sangre hace fade out gradual
-      this.sprite.alpha *= 0.95;
+      this.sprite.alpha *= Juego.CONFIG.fade_out_sangre;
 
       if (this.sprite.alpha < 0.05) {
         this.quitar();

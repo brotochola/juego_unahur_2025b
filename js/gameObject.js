@@ -547,10 +547,17 @@ class GameObject {
       spriteSombra.perteneceAFarol = farol;
 
       this.misSombrasProyectadas.push(spriteSombra);
+      //si es un fuego la sombra se mueve aleatoriamente
+      let factorRandomParaFuego = {
+        x: 0.25 * farol.radio * Math.random() - farol.radio * 0.125,
+        y: 0.25 * farol.radio * Math.random() - farol.radio * 0.125,
+      };
+
+      if (!(farol instanceof Fuego)) factorRandomParaFuego = { x: 0, y: 0 };
 
       // Calcular ángulo de la sombra (del farol al objeto)
-      const dx = farol.posicion.x - this.posicion.x;
-      const dy = farol.posicion.y - this.posicion.y;
+      const dx = farol.posicion.x + factorRandomParaFuego.x - this.posicion.x;
+      const dy = farol.posicion.y + factorRandomParaFuego.y - this.posicion.y;
       const anguloRadianes = Math.atan2(dy, dx);
 
       // Posicionar la sombra
@@ -755,6 +762,13 @@ class GameObject {
         this.vida -= danio;
       }
     }
+  }
+  invalidarCacheDeFarolesCercanosDeLosObjetosCercanos() {
+    this.celdaActual
+      .obtenerEntidadesAcaYEnCEldasVecinas(4)
+      .forEach((entidad) => {
+        entidad.farolesCercanos = null;
+      });
   }
 
   serializar() {

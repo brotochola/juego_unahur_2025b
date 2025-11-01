@@ -337,8 +337,11 @@ class SistemaDeIluminacion {
 
     // Crear nueva RenderTexture con el nuevo tamaño
     this.crearRenderTexture();
+
     // Actualizar la textura del sprite
     this.spriteDeIluminacion.texture = this.renderTexture;
+    this.spriteDeIluminacion.width = this.juego.width;
+    this.spriteDeIluminacion.height = this.juego.height;
 
     // Recrear el sprite negro con el nuevo tamaño
     this.recrearSpriteNegro();
@@ -491,6 +494,7 @@ class SistemaDeIluminacion {
           farol.radioLuz,
           colorLuz
         );
+
         farol.spriteGradiente.zIndex = 2;
         this.containerParaRenderizar.addChild(farol.spriteGradiente);
       }
@@ -501,15 +505,30 @@ class SistemaDeIluminacion {
         continue;
       }
 
+      const factorRandomParaFuego =
+        farol instanceof Fuego ? Math.random() * 0.2 + 0.9 : 1;
+
+      const factorRandomParaFuego2 =
+        farol instanceof Fuego ? Math.random() * 0.02 + 0.99 : 1;
+
+      const factorRandomParaFuego3 =
+        farol instanceof Fuego ? Math.random() * 0.02 + 0.99 : 1;
+
       // El farol está prendido y visible
       farol.spriteGradiente.visible = true;
       const posicionEnPantalla = farol.getPosicionEnPantalla();
       farol.spriteGradiente.x =
-        posicionEnPantalla.x * Juego.CONFIG.escala_sprite_de_iluminacion;
+        posicionEnPantalla.x *
+        Juego.CONFIG.escala_sprite_de_iluminacion *
+        factorRandomParaFuego2;
       farol.spriteGradiente.y =
-        posicionEnPantalla.y * Juego.CONFIG.escala_sprite_de_iluminacion;
+        posicionEnPantalla.y *
+        Juego.CONFIG.escala_sprite_de_iluminacion *
+        factorRandomParaFuego3;
       farol.spriteGradiente.scale.set(
-        this.juego.zoom * Juego.CONFIG.escala_sprite_de_iluminacion
+        this.juego.zoom *
+          Juego.CONFIG.escala_sprite_de_iluminacion *
+          factorRandomParaFuego
       );
     }
   }

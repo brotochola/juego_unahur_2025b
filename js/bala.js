@@ -200,28 +200,8 @@ class Bala extends GameObject {
       objeto.recibirUnTiro(this);
     }
 
-    // Efecto visual opcional: pequeña animación de impacto
-    this.crearEfectoImpacto();
-
     // Desactivar la bala
     this.desactivar();
-  }
-
-  /**
-   * CREAR EFECTO DE IMPACTO
-   *
-   * Pequeña animación visual cuando la bala impacta
-   */
-  crearEfectoImpacto() {
-    // Fade out rápido antes de desactivar
-    if (this.container) {
-      gsap.to(this.container, {
-        alpha: 0,
-        duration: 0.1,
-      });
-    }
-
-    // TODO: Agregar partículas de impacto aquí si lo deseas
   }
 
   /**

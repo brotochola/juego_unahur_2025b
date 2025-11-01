@@ -9,7 +9,83 @@ class Auto extends EntidadEstatica {
     this.isometric = true;
     this.crearSprite();
     this.juego.obstaculos.push(this);
+    this.explotado = false;
     // this.actualizarMiPosicionEnLaGrilla();
+  }
+  recibirUnTiro(bala) {
+    this.sacarChispasDeDondeREcibioUnDisparo(bala);
+    if (this.explotado) return;
+    this.vida -= 0.03;
+    console.log("auto recibió un tiro", this.vida);
+    if (this.vida <= 0) {
+      this.explotar();
+    }
+  }
+  cambiarTintParaSimularIluminacion() {
+    if (this.explotado) this.container.tint = 0x666666;
+    else super.cambiarTintParaSimularIluminacion();
+  }
+
+  explotar() {
+    this.explotado = true;
+
+    this.tirarChispasRandom();
+    let cant = 20;
+
+    for (let i = 0; i < cant; i++) {
+      setTimeout(() => {
+        this.tirarChispasRandom();
+      }, i * 10);
+    }
+
+    setTimeout(() => {
+      this.prenderseFuego();
+    }, 10);
+
+    this.juego.cameraShake(0.2, 7);
+  }
+
+  tirarChispasRandom() {
+    this.juego.particleSystem.ponerChispasEnPosicion(
+      this.getPosicionCentral(),
+      {
+        x: Math.random() * 10 - 5,
+        y: Math.random() * 10 - 5,
+        z: -8 - Math.random() * 5,
+      },
+      Math.random() * 100 + 100
+    );
+  }
+
+  prenderseFuego() {
+    if (this.prendidoEnFuego) return;
+    this.prendidoEnFuego = true;
+    let pos = this.getPosicionCentral();
+
+    this.juego.crearFuego(
+      pos.x + this.radio * 0.66 + (Math.random() - 0.5) * this.radio * 0.4,
+      pos.y - this.radio * 0.25 + (Math.random() - 0.5) * this.radio * 0.3,
+      this.sprite.width * (0.25 + Math.random() * 0.1)
+    );
+    this.tirarChispasRandom();
+
+    setTimeout(() => {
+      this.juego.crearFuego(
+        pos.x - this.radio + (Math.random() - 0.5) * this.radio * 0.5,
+        pos.y + this.radio * 0.66 + (Math.random() - 0.5) * this.radio * 0.3,
+        this.sprite.width * (0.2 + Math.random() * 0.1)
+      );
+      this.tirarChispasRandom();
+    }, Math.random() * 50 + 20);
+
+    setTimeout(() => {
+      this.juego.crearFuego(
+        pos.x + this.radio * 0.33 + (Math.random() - 0.5) * this.radio * 0.4,
+        pos.y + this.radio * 1.25 + (Math.random() - 0.5) * this.radio * 0.3,
+        this.sprite.width * (0.25 + Math.random() * 0.15)
+      );
+      this.tirarChispasRandom();
+    }, Math.random() * 150 + 50);
   }
 
   async crearSprite() {

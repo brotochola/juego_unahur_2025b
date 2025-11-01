@@ -112,6 +112,7 @@ function crearSpriteNegro(anchoDelMapa, altoDelMapa) {
 const texturaGradienteCache = new Map();
 
 function crearSpriteConGradiente(radio = 300, color = 0xffffff) {
+  console.log("crearSpriteConGradiente", radio, color);
   // Verificar si ya tenemos esta textura en cache
   const cacheKey = `gradiente_${radio}_${color}`;
   let textura = texturaGradienteCache.get(cacheKey);
