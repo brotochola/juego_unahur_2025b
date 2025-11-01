@@ -451,8 +451,12 @@ class GameObject {
     let posicionCentral = this.getPosicionCentral();
 
     return {
-      x: posicionCentral.x * this.juego.zoom + this.juego.containerPrincipal.x,
-      y: posicionCentral.y * this.juego.zoom + this.juego.containerPrincipal.y,
+      x:
+        posicionCentral.x * this.juego.camara.zoom +
+        this.juego.containerPrincipal.x,
+      y:
+        posicionCentral.y * this.juego.camara.zoom +
+        this.juego.containerPrincipal.y,
     };
   }
 
@@ -523,7 +527,7 @@ class GameObject {
       return distA - distB;
     });
 
-    const zoom = this.juego.zoom;
+    const zoom = this.juego.camara.zoom;
 
     // Crear sombra para cada farol
     for (let farol of farolesCercanos) {

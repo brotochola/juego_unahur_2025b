@@ -526,7 +526,7 @@ class SistemaDeIluminacion {
         Juego.CONFIG.escala_sprite_de_iluminacion *
         factorRandomParaFuego3;
       farol.spriteGradiente.scale.set(
-        this.juego.zoom *
+        this.juego.camara.zoom *
           Juego.CONFIG.escala_sprite_de_iluminacion *
           factorRandomParaFuego
       );
@@ -557,7 +557,7 @@ class SistemaDeIluminacion {
     if (!this.texturaSombra) return;
 
     const posDelFarol = farol.getPosicionEnPantalla();
-    const zoom = this.juego.zoom;
+    const zoom = this.juego.camara.zoom;
 
     // OPTIMIZACIÓN: Limitar cantidad de sombras
     const MAX_SOMBRAS = Juego.CONFIG.max_sombras_por_farol || 15;

@@ -42,7 +42,7 @@ class Auto extends EntidadEstatica {
       this.prenderseFuego();
     }, 10);
 
-    this.juego.cameraShake(0.2, 7);
+    this.juego.camara.shake(0.2, 7);
   }
 
   tirarChispasRandom() {

@@ -107,12 +107,10 @@ class Juego {
       up: { 0: { x: 0, y: 0 }, 1: { x: 0, y: 0 }, 2: { x: 0, y: 0 } },
     };
 
-    // Variables para el zoom
-    this.zoom = 1;
-    this.minZoom = 0.25;
-    this.maxZoom = 2;
-    this.zoomStep = 0.1;
     this.grilla = new Grilla(this, 150, this.anchoDelMapa, this.altoDelMapa);
+
+    // Crear la cámara
+    this.camara = new Camara(this);
 
     this.initPIXI();
     this.setupResizeHandler();
@@ -190,7 +188,7 @@ class Juego {
     window.onkeyup = (event) => {
       this.teclado[event.key.toLowerCase()] = false;
       if (event.key.toLowerCase() == "u") {
-        this.hacerQueLaCamaraSigaAalguienRandom();
+        this.camara.setTargetRandom();
       }
     };
   }
@@ -219,52 +217,6 @@ class Juego {
     this.graficoDebug.label = "graficoDebug";
     this.containerPrincipal.addChild(this.graficoDebug);
   }
-  cameraShake(duration, intensity) {
-    // Guardar la posición original
-    const originalX = this.containerPrincipal.x;
-    const originalY = this.containerPrincipal.y;
-
-    // Parámetros del shake
-
-    const initialAmplitude = intensity; // Amplitud inicial del shake
-    const frequencyX = 20; // Frecuencia de oscilación en X
-    const frequencyY = 25; // Frecuencia diferente en Y para más variedad
-
-    // Objeto temporal para animar
-    const shakeProgress = { value: 0 };
-
-    gsap.to(shakeProgress, {
-      value: 1,
-      duration: duration,
-      ease: "linear",
-      onUpdate: () => {
-        const t = shakeProgress.value;
-
-        // Decay exponencial: la intensidad disminuye con el tiempo
-        const decay = Math.pow(1 - t, 2);
-
-        // Calcular offsets usando funciones senoidales
-        const offsetX =
-          initialAmplitude * Math.sin(frequencyX * t * Math.PI * 2) * decay;
-        const offsetY =
-          initialAmplitude * Math.sin(frequencyY * t * Math.PI * 2) * decay;
-
-        // Aplicar el shake a ambos containers
-        this.containerPrincipal.x = originalX + offsetX;
-        this.containerPrincipal.y = originalY + offsetY;
-        this.containerBG.x = originalX + offsetX;
-        this.containerBG.y = originalY + offsetY;
-      },
-      onComplete: () => {
-        // Asegurar que vuelvan exactamente a la posición original
-        this.containerPrincipal.x = originalX;
-        this.containerPrincipal.y = originalY;
-        this.containerBG.x = originalX;
-        this.containerBG.y = originalY;
-      },
-    });
-  }
-
   async crearNivel() {
     this.containerPrincipal = new PIXI.Container();
     this.containerPrincipal.label = "containerPrincipal";
@@ -286,7 +238,7 @@ class Juego {
         this.altoDelMapa = this.nivel.maxY - this.nivel.minY;
         this.crearFondo();
         this.crearProtagonista(this.nivel.getCenterOfTheLimits());
-        this.targetCamara = this.protagonista;
+        this.camara.target = this.protagonista;
       }
     );
 
@@ -354,10 +306,6 @@ class Juego {
       );
       this.obstaculos.push(monumento);
     }
-  }
-
-  hacerQueLaCamaraSigaAalguienRandom() {
-    this.targetCamara = this.getPersonaRandom();
   }
 
   async cargarTexturas() {
@@ -501,7 +449,10 @@ class Juego {
     // Escuchar el evento mousemove
     this.pixiApp.canvas.onmousemove = (event) => {
       this.segunQueTeclaEstaApretadaHacerCosas();
-      this.mouse.posicion = this.convertirCoordenadaDelMouse(event.x, event.y);
+      this.mouse.posicion = this.camara.convertirCoordenadaDelMouse(
+        event.x,
+        event.y
+      );
       this.onMouseMove();
     };
 
@@ -509,7 +460,7 @@ class Juego {
       if (event.button == 1) {
         this.quePasaCuandoTocamosElBotonDeLaRuedita(event.x, event.y);
       }
-      this.mouse.down[event.button] = this.convertirCoordenadaDelMouse(
+      this.mouse.down[event.button] = this.camara.convertirCoordenadaDelMouse(
         event.x,
         event.y
       );
@@ -517,13 +468,13 @@ class Juego {
     };
     this.pixiApp.canvas.onmouseup = (event) => {
       this.mouse.apretado[event.button] = false;
-      this.mouse.up[event.button] = this.convertirCoordenadaDelMouse(
+      this.mouse.up[event.button] = this.camara.convertirCoordenadaDelMouse(
         event.x,
         event.y
       );
 
       if (event.button == 2) {
-        this.protagonista.target = this.convertirCoordenadaDelMouse(
+        this.protagonista.target = this.camara.convertirCoordenadaDelMouse(
           event.x,
           event.y
         );
@@ -537,22 +488,19 @@ class Juego {
       (event) => {
         event.preventDefault(); // Prevenir el scroll de la página
 
-        const zoomDelta = event.deltaY > 0 ? -this.zoomStep : this.zoomStep;
+        const zoomDelta =
+          event.deltaY > 0 ? -this.camara.zoomStep : this.camara.zoomStep;
         const nuevoZoom = Math.max(
-          this.minZoom,
-          Math.min(this.maxZoom, this.zoom + zoomDelta)
+          this.camara.minZoom,
+          Math.min(this.camara.maxZoom, this.camara.zoom + zoomDelta)
         );
 
-        if (nuevoZoom !== this.zoom) {
+        if (nuevoZoom !== this.camara.zoom) {
           // Aplicar el nuevo zoom
-          this.cambiarZoom(nuevoZoom);
+          this.camara.cambiarZoom(nuevoZoom);
 
-          // Recentrar la cámara en el targetCamara
-          // this.moverContainerPrincipalA(
-          //   -this.targetCamara.posicion.x * this.zoom + this.width / 2,
-          //   -this.targetCamara.posicion.y * this.zoom + this.height / 2
-          // );
-          this.hacerQLaCamaraSigaAAlguien(1);
+          // Recentrar la cámara en el target
+          this.camara.seguirAlTarget(1);
         }
       },
       { passive: false }
@@ -560,7 +508,7 @@ class Juego {
   }
 
   quePasaCuandoTocamosElBotonDeLaRuedita(x, y) {
-    const posicion = this.convertirCoordenadaDelMouse(x, y);
+    const posicion = this.camara.convertirCoordenadaDelMouse(x, y);
     let distanciaMinima = Infinity;
     let personaMasCerca = null;
     for (let i = 0; i < this.personas.length; i++) {
@@ -572,22 +520,13 @@ class Juego {
       }
     }
     if (personaMasCerca) {
-      this.targetCamara = personaMasCerca;
+      this.camara.target = personaMasCerca;
     }
   }
   ponerCruzTargetDondeElMouseHizoClick(posicion) {
     this.cruzTarget.x = posicion.x;
     this.cruzTarget.y = posicion.y;
     this.hacerQueCruzTargetAparezca();
-  }
-
-  convertirCoordenadaDelMouse(mouseX, mouseY) {
-    // Convertir coordenadas del mouse del viewport a coordenadas del mundo
-    // teniendo en cuenta la posición y escala del containerPrincipal
-    return {
-      x: (mouseX - this.containerPrincipal.x) / this.zoom,
-      y: (mouseY - this.containerPrincipal.y) / this.zoom,
-    };
   }
 
   gameLoop(time) {
@@ -625,7 +564,7 @@ class Juego {
 
     this.chequearQueNoHayaMuertosConBarraDeVida();
 
-    this.hacerQLaCamaraSigaAAlguien();
+    this.camara.tick();
     this.calcularFPS();
 
     if (!this.debug) return;
@@ -704,62 +643,6 @@ class Juego {
     this.debug = !this.debug;
   }
 
-  hacerQLaCamaraSigaAAlguien(factorLerp = 0.1) {
-    if (!this.targetCamara) return;
-
-    const centerOfTheLimits = this.nivel.getCenterOfTheLimits();
-
-    const halfWidth = this.width / 2;
-    const halfHeight = this.height / 2;
-    const limits = this.nivel.getLimits();
-    let offsetX = 0;
-    let offsetY = 0;
-    //estos ratios son entre -1 y 1
-    if (limits) {
-      const xOffsetRatio =
-        (this.targetCamara.posicion.x - centerOfTheLimits.x) /
-        (centerOfTheLimits.x - limits.left.x);
-
-      const yOffsetRatio =
-        (this.targetCamara.posicion.y - centerOfTheLimits.y) /
-        (centerOfTheLimits.y - limits.top.y);
-
-      //ya se q lo maximo q quiero mover la camara cuando estamos llegando al limite
-      //es la mitad del ancho o del alto de la pantalla
-      // es decir, no quiero mostrar lo q no esta hecho del nivel
-
-      offsetX = xOffsetRatio * halfWidth * 0.9; //0.9 porq sino es mucho y no se llega a ver el ultimo rincon del mapa
-      offsetY = yOffsetRatio * halfHeight * 0.9;
-    }
-    // Ajustar la posición considerando el zoom actual
-    //y agregamos los offsetX e Y
-    let targetX =
-      -this.targetCamara.posicion.x * this.zoom + this.width / 2 + offsetX;
-    let targetY =
-      -this.targetCamara.posicion.y * this.zoom + this.height / 2 + offsetY;
-
-    const x = (targetX - this.containerPrincipal.x) * factorLerp;
-    const y = (targetY - this.containerPrincipal.y) * factorLerp;
-
-    this.moverContainerPrincipalA(
-      this.containerPrincipal.x + x,
-      this.containerPrincipal.y + y
-    );
-  }
-
-  moverContainerPrincipalA(x, y) {
-    this.containerPrincipal.x = x;
-    this.containerPrincipal.y = y;
-    this.containerBG.x = x;
-    this.containerBG.y = y;
-  }
-
-  cambiarZoom(zoom) {
-    this.zoom = zoom;
-    this.containerPrincipal.scale.set(this.zoom);
-    this.containerBG.scale.set(this.zoom);
-  }
-
   finDelJuego() {
     alert("Te moriste! fin del juego");
   }
@@ -834,6 +717,6 @@ class Juego {
     this.sistemaDeIluminacion.minutoDelDia = objetoCargado.minutoDelDia;
     this.sistemaDeIluminacion.numeroDeDia = objetoCargado.numeroDeDia;
 
-    this.targetCamara = this.protagonista;
+    this.camara.target = this.protagonista;
   }
 }
