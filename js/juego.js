@@ -82,6 +82,7 @@ class Juego {
   arboles = [];
   autos = [];
   objetosInanimados = [];
+  molotovs = [];
   protagonista;
   width;
   height;
@@ -173,6 +174,11 @@ class Juego {
   agregarListenersDeTeclado() {
     window.onkeydown = (event) => {
       this.teclado[event.key.toLowerCase()] = true;
+      // Detectar teclas modificadoras
+      this.teclado.ctrl = event.ctrlKey;
+      this.teclado.shift = event.shiftKey;
+      this.teclado.alt = event.altKey;
+
       if (event.key == "1") {
         this.crearUnAmigo(this.mouse.posicion.x, this.mouse.posicion.y);
       } else if (parseInt(event.key)) {
@@ -187,6 +193,11 @@ class Juego {
     };
     window.onkeyup = (event) => {
       this.teclado[event.key.toLowerCase()] = false;
+      // Actualizar teclas modificadoras en keyup también
+      this.teclado.ctrl = event.ctrlKey;
+      this.teclado.shift = event.shiftKey;
+      this.teclado.alt = event.altKey;
+
       if (event.key.toLowerCase() == "u") {
         this.camara.setTargetRandom();
       }
@@ -230,14 +241,14 @@ class Juego {
     this.crearGraficoParaCables();
 
     this.nivel = new Nivel(
-      "assets/pixelart/plaza_de_mayo_22.json",
+      "assets/pixelart/plaza_de_mayo_23.json",
       this,
       () => {
         console.log("nivel cargado");
         this.anchoDelMapa = this.nivel.maxX - this.nivel.minX;
         this.altoDelMapa = this.nivel.maxY - this.nivel.minY;
         this.crearFondo();
-        this.crearProtagonista(this.nivel.getCenterOfTheLimits());
+
         this.camara.target = this.protagonista;
       }
     );
@@ -554,6 +565,14 @@ class Juego {
     if (typeof BalasPool !== "undefined") {
       BalasPool.tickAll();
       BalasPool.renderAll();
+    }
+
+    // Actualizar molotovs
+    for (let molotov of this.molotovs) {
+      if (molotov.activa) {
+        molotov.tick();
+        molotov.render();
+      }
     }
 
     // Actualizar el sistema de iluminación

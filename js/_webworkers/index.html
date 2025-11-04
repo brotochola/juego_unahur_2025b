@@ -1,0 +1,96 @@
+<html>
+
+<head>
+    <!-- <script src="workerHack.js"></script> -->
+
+<body>
+    holi
+</body>
+<script>
+
+    // class Test {
+    //     constructor() {
+    //         this.bla = 1
+    //     }
+    //     sumar() {
+    //         this.bla++
+    //     }
+
+    // }
+    // let bla = new Test()
+
+    let workers = []
+    for (let i = 0; i < navigator.hardwareConcurrency; i++) {
+        let w = new Worker("worker.js")
+        w.i = i
+        w.onmessage = e => {
+            //EXECUTE CALLBACK
+            let myWorker = workers[w.i]
+            // console.log(myWorker)
+            if (myWorker.cb instanceof Function) myWorker.cb(e.data)
+            else {
+                debugger
+            }
+            //AND EMPTY IT
+            myWorker.status = "idle"
+            myWorker.id = null
+            myWorker.cb = null
+        }
+        w.onerror = e => {
+            console.warn(e)
+        }
+        workers.push({ i: i, cb: null, worker: w, status: 'idle', id: null })
+    }
+
+
+
+
+    const testFunc = (howMany) => {
+
+
+        let arr = [];
+
+        for (let i = 0; i < howMany; i++) {
+            arr[i] = Math.random();
+        }
+        return arr.length
+
+    }
+
+
+    // let lastWorkerUsed = 0
+
+    const mandarAProcesarEnSegundoPlano = (func, dataToPass, cb) => {
+        let w = workers.filter(k => k.status == "idle")[0]
+        if (!w) return console.warn("no workers available")
+        // debugger
+
+        w.cb = cb
+
+        w.status = "working"
+        w.worker.postMessage({ func: func.toString(), dataToPass })
+        // lastWorkerUsed++
+
+    }
+    let framenum = 0
+    let lastTime = performance.now()
+
+    function gameLoop() {
+        let currentTime = performance.now()
+        let deltaTime = currentTime - lastTime
+        lastTime = currentTime
+        console.log("gameLoop", framenum, deltaTime)
+        framenum++
+        requestAnimationFrame(gameLoop)
+    }
+
+    gameLoop()
+
+
+    //ASI SE USA:
+    mandarAProcesarEnSegundoPlano(testFunc, 9959499, e => console.log("voliooo"));
+
+</script>
+</head>
+
+</html>

@@ -41,7 +41,7 @@ class Fuego extends EntidadEstatica {
     this.container.addChild(this.sprite);
     this.sprite.animationSpeed = 0.5 + Math.random() * 0.1;
     this.sprite.play();
-    this.sprite.alpha = 1 - Math.random() * 0.2;
+    this.sprite.alpha = 0.9 - Math.random() * 0.3;
     this.sprite.scale.y = this.escala;
     this.sprite.scale.x = Math.random() > 0.5 ? this.escala : -this.escala;
     this.render();

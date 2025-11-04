@@ -11,7 +11,6 @@ class Poste extends EntidadEstatica {
     this.cables = [];
   }
   agregarCable(otroPoste) {
-    console.log("agregando cable", this.id, otroPoste.id);
     const cable = Cable.crearCable(this, otroPoste, this.juego);
     this.cables.push(cable);
     otroPoste.cables.push(cable);

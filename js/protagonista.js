@@ -26,7 +26,9 @@ class Protagonista extends Persona {
     this.target = null;
 
     // Sistema de disparo
+    this.cooldownMolotov = 1000; // Milisegundos entre lanzamientos de molotov
     this.cooldownDisparo = 50; // Milisegundos entre disparos
+    this.ultimoTiempoLanzamientoMolotov = 0; // Último tiempo (performance.now()) en el que lanzó molotov
     this.ultimoTiempoDisparo = 0; // Último tiempo (performance.now()) en el que disparó
   }
 
@@ -89,7 +91,13 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
 
   dispararSiSePresionoElBotonIzquierdoDelMouse() {
     if (this.juego.mouse.apretado[0]) {
-      this.disparar(this.juego.mouse.posicion);
+      // Si Ctrl está presionado, lanzar molotov
+      if (this.juego.teclado.ctrl) {
+        this.lanzarMolotov(this.juego.mouse.posicion);
+      } else {
+        // Disparo normal
+        this.disparar(this.juego.mouse.posicion);
+      }
     }
   }
 
@@ -216,5 +224,40 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
       );
     }
     this.juego.camara.shake(0.1, 4);
+  }
+
+  lanzarMolotov(posicion) {
+    if (
+      this.ultimoTiempoLanzamientoMolotov + this.cooldownMolotov >
+      performance.now()
+    ) {
+      return;
+    }
+    this.ultimoTiempoLanzamientoMolotov = performance.now();
+    // Crear una nueva molotov (no usa pooling)
+    const molotov = new Molotov(0, 0, this.juego);
+
+    // Calcular dirección del lanzamiento (desde el protagonista hacia la posición)
+    const dx = posicion.x - this.posicion.x;
+    const dy = posicion.y - this.posicion.y;
+    const anguloRadianes = Math.atan2(dy, dx);
+
+    // Posición inicial (desde el centro del protagonista)
+    const posicionInicial = this.getPosicionCentral();
+    posicionInicial.y -= this.sprite.height * 0.4;
+
+    // Calcular la distancia de separación para que la molotov empiece fuera del protagonista
+    const distanciaSeparacion = (this.radio + molotov.radio) * 2;
+
+    // Desplazar la posición inicial en la dirección del lanzamiento
+    const posX =
+      posicionInicial.x + Math.cos(anguloRadianes) * distanciaSeparacion;
+    const posY =
+      posicionInicial.y + Math.sin(anguloRadianes) * distanciaSeparacion;
+
+    molotov.activar(posX, posY, anguloRadianes, this);
+
+    this.animationFSM.setState("shoot");
+    this.juego.camara.shake(0.05, 3);
   }
 }

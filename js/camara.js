@@ -94,22 +94,22 @@ class Camara {
     let offsetX = 0;
     let offsetY = 0;
     //estos ratios son entre -1 y 1
-    if (limits) {
-      const xOffsetRatio =
-        (this.target.posicion.x - centerOfTheLimits.x) /
-        (centerOfTheLimits.x - limits.left.x);
+    // if (limits) {
+    //   const xOffsetRatio =
+    //     (this.target.posicion.x - centerOfTheLimits.x) /
+    //     (centerOfTheLimits.x - limits.left.x);
 
-      const yOffsetRatio =
-        (this.target.posicion.y - centerOfTheLimits.y) /
-        (centerOfTheLimits.y - limits.top.y);
+    //   const yOffsetRatio =
+    //     (this.target.posicion.y - centerOfTheLimits.y) /
+    //     (centerOfTheLimits.y - limits.top.y);
 
-      //ya se q lo maximo q quiero mover la camara cuando estamos llegando al limite
-      //es la mitad del ancho o del alto de la pantalla
-      // es decir, no quiero mostrar lo q no esta hecho del nivel
+    //   //ya se q lo maximo q quiero mover la camara cuando estamos llegando al limite
+    //   //es la mitad del ancho o del alto de la pantalla
+    //   // es decir, no quiero mostrar lo q no esta hecho del nivel
 
-      offsetX = xOffsetRatio * halfWidth * 0.9; //0.9 porq sino es mucho y no se llega a ver el ultimo rincon del mapa
-      offsetY = yOffsetRatio * halfHeight * 0.9;
-    }
+    //   offsetX = xOffsetRatio * halfWidth * 0.9; //0.9 porq sino es mucho y no se llega a ver el ultimo rincon del mapa
+    //   offsetY = yOffsetRatio * halfHeight * 0.9;
+    // }
     // Ajustar la posición considerando el zoom actual
     //y agregamos los offsetX e Y
     let targetX =
