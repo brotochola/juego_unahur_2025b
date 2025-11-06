@@ -548,7 +548,9 @@ class GameObject {
       // Obtener sprite del pool
       const spriteSombra = sistemaIluminacion.obtenerSpriteSombraDelPool();
       if (!spriteSombra) continue;
-      spriteSombra.perteneceAFarol = farol;
+
+      // NOTA: Ya no necesitamos esta referencia cruzada
+      // spriteSombra.perteneceAFarol = farol;  // ❌ Crea ciclo de referencia → memory leak
 
       this.misSombrasProyectadas.push(spriteSombra);
       //si es un fuego la sombra se mueve aleatoriamente

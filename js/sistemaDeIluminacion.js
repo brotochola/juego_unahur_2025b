@@ -173,6 +173,7 @@ class SistemaDeIluminacion {
   /**
    * Obtener un sprite de sombra del pool
    * VALIDACIÓN: Asegura que los sprites no se dupliquen en sombrasActivas
+   * CRÍTICO: Re-agrega sprites al container después de ser sacados (estaban fuera del container)
    */
   obtenerSpriteSombraDelPool() {
     if (this.poolSombras.length > 0) {
@@ -181,6 +182,11 @@ class SistemaDeIluminacion {
       // Validar que no esté ya en el array de activas (doble seguridad)
       if (!this.sombrasActivas.includes(sprite)) {
         this.sombrasActivas.push(sprite);
+      }
+
+      // 🔴 CRITICAL: Re-agregar sprite al container si no está en uno
+      if (!sprite.parent) {
+        this.containerParaRenderizar.addChild(sprite);
       }
 
       sprite.visible = true;
@@ -213,6 +219,7 @@ class SistemaDeIluminacion {
   /**
    * Devolver un sprite al pool
    * VALIDACIÓN: Evita devolver sprites duplicados (bug fix)
+   * CRÍTICO: Limpia completamente el sprite para evitar memory leaks
    */
   devolverSpriteSombraAlPool(sprite) {
     // Validar que el sprite esté en el array de activas
@@ -222,7 +229,24 @@ class SistemaDeIluminacion {
       return;
     }
 
+    // 🔴 CRITICAL: Remover sprite del container para romper ciclos de referencia
+    if (sprite.parent) {
+      sprite.parent.removeChild(sprite);
+    }
+
+    // 🔴 CRITICAL: Limpiar propiedades para romper referencias cruzadas
     sprite.visible = false;
+    sprite.alpha = 1; // Resetear alpha a valor por defecto
+    sprite.rotation = 0; // Resetear rotación
+    sprite.scale.set(1, 1); // Resetear escala
+    sprite.x = 0; // Resetear posición
+    sprite.y = 0;
+
+    // 🔴 CRITICAL: Limpiar referencias personalizadas
+    if (sprite.perteneceAFarol !== undefined) {
+      sprite.perteneceAFarol = null;
+    }
+
     this.sombrasActivas.splice(index, 1);
 
     // Validar que no esté ya en el pool antes de agregarlo
@@ -236,15 +260,16 @@ class SistemaDeIluminacion {
    * NOTA: Ya NO se usa en el flujo normal de renderizado
    * Las personas limpian sus propias sombras individualmente para evitar conflictos
    * Este método puede ser útil para casos especiales (cambio de nivel, reset, etc.)
+   *
+   * CRÍTICO: Usa devolverSpriteSombraAlPool para asegurar limpieza completa
    */
   limpiarSombrasActivas() {
-    for (const sprite of this.sombrasActivas) {
-      sprite.visible = false;
-      // Validar que no esté ya en el pool antes de agregarlo
-      if (!this.poolSombras.includes(sprite)) {
-        this.poolSombras.push(sprite);
-      }
+    // Usar slice() para copiar el array antes de iterar, ya que se modifica durante la iteración
+    const spritesALimpiar = this.sombrasActivas.slice();
+    for (const sprite of spritesALimpiar) {
+      this.devolverSpriteSombraAlPool(sprite);
     }
+    // Asegurar que el array esté completamente vacío
     this.sombrasActivas.length = 0;
   }
 

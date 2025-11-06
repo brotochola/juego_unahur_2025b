@@ -800,8 +800,12 @@ class Persona extends GameObject {
     if (!this.targetRandom) {
       this.targetRandom = {
         posicion: {
-          x: this.juego.anchoDelMapa * Math.random(),
-          y: this.juego.altoDelMapa * Math.random(),
+          x:
+            (this.juego.nivel.maxX - this.juego.nivel.minX) * Math.random() +
+            this.juego.nivel.minX,
+          y:
+            (this.juego.nivel.maxY - this.juego.nivel.minY) * Math.random() +
+            this.juego.nivel.minY,
         },
       };
     }
