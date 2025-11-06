@@ -557,3 +557,7 @@ function laDistanciaEntreDosObjetosEstaEntreDosDistancias(
 function calcularFactorDeReduccionSegunCantidadDeFrames(cantidadDeFrames) {
   return (cantidadDeFrames - 3) / cantidadDeFrames;
 }
+
+function obtenerHashDePosicion(x, y) {
+  return "x_" + x + "_y_" + y;
+}

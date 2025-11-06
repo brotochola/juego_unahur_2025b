@@ -588,7 +588,7 @@ class Juego {
 
     if (!this.debug) return;
     // Dibujar las celdas de la grilla
-    // this.grilla.dibujarGrilla();
+    this.grilla.dibujarGrilla();
     for (let obstaculo of this.obstaculos) obstaculo.dibujarCirculo();
     for (let unpersona of this.personas) unpersona.dibujarCirculo();
   }

@@ -9,7 +9,7 @@ class Celda {
     this.entidadesPorClase = {};
     this.entidadesPorBando = {}; // Almacenamiento optimizado por bando
     this.emisoresLuz = new Set(); // NUEVO: Set específico para faroles/fuegos (cosas con radioLuz)
-    this.id = juego.grilla.obtenerHashDePosicion(x, y);
+    this.id = obtenerHashDePosicion(x, y);
     this.x = x;
     this.y = y;
     this.celdasVecinasCache = {}; // Caché indexado por cantDeCeldasParaMirar
@@ -247,7 +247,7 @@ class Celda {
 
   dibujar() {
     const graficoDebug = this.juego.graficoDebug;
-    if (!graficoDebug) return;
+    if (!graficoDebug) return console.warn("no hay grafico debug");
 
     // Calcular la posición en el mundo
     const posX = this.x * this.anchoCelda;

@@ -111,7 +111,7 @@ class Persona extends GameObject {
     if (this.hablarTimeout) clearTimeout(this.hablarTimeout);
     this.hablarTimeout = setTimeout(() => {
       this.containerDialogo.visible = false;
-    }, this.juego.deltaTime);
+    }, 150);
   }
 
   async crearGloboDeDialogo() {
