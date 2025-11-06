@@ -142,6 +142,12 @@ class ParticleSystem {
     // Intentar obtener una partícula del pool
     if (this.pool.length > 0) {
       particula = this.pool.pop();
+
+      // 🔴 CRÍTICO: Re-agregar al container cuando se reutiliza del pool
+      if (!particula.sprite.parent) {
+        this.juego.containerPrincipal.addChild(particula.sprite);
+      }
+
       particula.reinicializar(pos, velocidadInicial, textura, tipo);
     } else {
       // Si el pool está vacío, crear una nueva (fallback)
@@ -164,12 +170,22 @@ class ParticleSystem {
 
     // Devolver al pool en lugar de destruir
     if (this.pool.length < this.maxPoolSize) {
+      // 🔴 CRÍTICO: Remover del container ANTES de devolver al pool
+      // Si no se remueve, PIXI mantiene referencias que previenen GC
+      if (particula.sprite && particula.sprite.parent) {
+        particula.sprite.parent.removeChild(particula.sprite);
+      }
+
       particula.reset();
       particula.sprite.visible = false;
+
+      // 🔴 CRÍTICO: Re-agregar al container cuando se reutilice (en crearUnaParticula)
       this.pool.push(particula);
     } else {
       // Si el pool está lleno, destruir (esto casi nunca debería pasar)
-      this.juego.containerPrincipal.removeChild(particula.sprite);
+      if (particula.sprite && particula.sprite.parent) {
+        particula.sprite.parent.removeChild(particula.sprite);
+      }
       particula.sprite.destroy();
     }
   }
@@ -238,6 +254,7 @@ class Particula {
 
   /**
    * Resetea la partícula a un estado por defecto antes de devolverla al pool
+   * 🔴 CRÍTICO: Limpiar todas las propiedades visuales para evitar memory leaks
    */
   reset() {
     this.posicion.x = 0;
@@ -246,7 +263,16 @@ class Particula {
     this.velocidad.x = 0;
     this.velocidad.y = 0;
     this.velocidad.z = 0;
+
+    // 🔴 CRÍTICO: Resetear propiedades visuales del sprite
+    // Esto rompe referencias en el cache de PIXI
     this.sprite.alpha = 1;
+    this.sprite.scale.set(1, 1);
+    this.sprite.rotation = 0;
+    this.sprite.tint = 0xffffff;
+    this.sprite.x = 0;
+    this.sprite.y = 0;
+    this.sprite.zIndex = 0;
   }
 
   quitar() {

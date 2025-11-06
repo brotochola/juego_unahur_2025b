@@ -35,12 +35,13 @@ class EntidadEstatica extends GameObject {
     );
     velocidadInvertida.z = -5 - Math.random() * 2;
 
-    this.juego.sistemaDeIluminacion.crearFlashDeDisparoEn(
-      bala.getPosicionCentral(),
-      30,
-      0.5,
-      20
-    );
+    if (this.juego.sistemaDeIluminacion)
+      this.juego.sistemaDeIluminacion.crearFlashDeDisparoEn(
+        bala.getPosicionCentral(),
+        30,
+        0.5,
+        20
+      );
     this.juego.particleSystem.ponerChispasEnPosicion(
       bala.getPosicionCentral(),
       velocidadInvertida

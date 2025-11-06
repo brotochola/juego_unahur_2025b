@@ -113,6 +113,7 @@ const texturaGradienteCache = new Map();
 
 function crearSpriteConGradiente(radio = 300, color = 0xffffff) {
   // Verificar si ya tenemos esta textura en cache
+  radio = Math.round(radio);
   const cacheKey = `gradiente_${radio}_${color}`;
   let textura = texturaGradienteCache.get(cacheKey);
 

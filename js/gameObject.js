@@ -619,7 +619,10 @@ class GameObject {
 
   cambiarTintParaSimularIluminacion() {
     if (!this.sprite || !this.container) return;
-    if (!this.juego.sistemaDeIluminacion?.isActivo()) {
+    if (
+      !this.juego.sistemaDeIluminacion ||
+      !this.juego.sistemaDeIluminacion?.isActivo()
+    ) {
       this.container.tint = 0xffffff;
       return;
     }

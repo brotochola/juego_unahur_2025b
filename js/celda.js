@@ -1,5 +1,6 @@
 class Celda {
   constructor(juego, anchoCelda, x, y) {
+    // console.log("celda creada", x, y);
     this.anchoCelda = anchoCelda;
     this.juego = juego;
     // Usar Set en vez de Array para operaciones O(1) en agregar/sacar
@@ -12,15 +13,15 @@ class Celda {
     this.x = x;
     this.y = y;
     this.celdasVecinasCache = {}; // Caché indexado por cantDeCeldasParaMirar
-    this.precargarCeldasVecinas();
+    // this.precargarCeldasVecinas();
   }
-  precargarCeldasVecinas() {
-    setTimeout(() => {
-      for (let i = 1; i <= 7; i++) {
-        this.obtenerCeldasVecinas(i);
-      }
-    }, Math.random() * 100 + 100);
-  }
+  // precargarCeldasVecinas() {
+  //   setTimeout(() => {
+  //     for (let i = 1; i <= 7; i++) {
+  //       this.obtenerCeldasVecinas(i);
+  //     }
+  //   }, Math.random() * 100 + 100);
+  // }
 
   agregarAlSetPorClaseYTipo(quien) {
     let aCualSetVa = quien.constructor.name.toLowerCase();
