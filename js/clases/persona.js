@@ -805,7 +805,7 @@ class Persona extends GameObject {
       SoundManager.playSound(
         "dolor",
         Math.min(danio * 0.5, 0.5),
-        this.coraje + 0.5
+        this.coraje * 1.2 + 0.5
       );
     }
     this.vida -= danio;

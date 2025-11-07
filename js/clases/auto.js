@@ -43,6 +43,24 @@ class Auto extends EntidadEstatica {
     }, 10);
 
     this.juego.camara.shake(0.2, 7);
+    this.empujarYHerirPersonasCerca();
+  }
+  empujarYHerirPersonasCerca() {
+    this.celdaActual
+      .obtenerEntidadesAcaYEnCEldasVecinas(2)
+      .filter((entidad) => entidad instanceof Persona)
+      .forEach((persona) => {
+        const dist2 = calcularDistanciaCuadrada(
+          this.getPosicionCentral(),
+          persona.getPosicionCentral()
+        );
+        persona.recibirDanio(
+          (this.sprite.width * this.sprite.height) / dist2,
+          this
+        );
+        persona.aceleracion.x += this.posicion.x - persona.posicion.x;
+        persona.aceleracion.y += this.posicion.y - persona.posicion.y;
+      });
   }
 
   tirarChispasRandom() {
