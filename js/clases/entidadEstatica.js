@@ -47,9 +47,21 @@ class EntidadEstatica extends GameObject {
       velocidadInvertida
     );
   }
+
+  reproduceSonidoDeGolpeDeBala() {
+    if (!this.estoyVisibleEnLaPantallaEnEsteFrame) return;
+    SoundManager.playSound(
+      "bala_golpea_metal",
+      0.1,
+      0.95 + Math.random() * 0.1
+    );
+  }
+
   recibirUnTiro(bala) {
     super.recibirUnTiro(bala);
     this.sacarChispasDeDondeREcibioUnDisparo(bala);
+    this.reproduceSonidoDeGolpeDeBala();
+    this.vida -= bala.fuerzaDeAtaque;
   }
 
   tick() {}

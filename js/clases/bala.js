@@ -26,6 +26,7 @@ class Bala extends GameObject {
     this.anguloRadianes = 0;
     this.tiempoActivacion = 0; // Timestamp cuando se activó la bala
     this.vidaMaximaMs = 4000;
+    this.fuerzaDeAtaque = 0.45;
     // Crear sprite visual
     this.crearSprite();
     this.container.label = "bala - " + this.id;

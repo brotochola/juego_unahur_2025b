@@ -216,13 +216,12 @@ class Nivel {
         );
         this.juego.monumentos.push(monumento);
       } else if (item.type.toLowerCase().startsWith("civil")) {
-        console.log("crear un civil", item);
         this.juego.crearUnCivil(item.x + this.offsetX, item.y + this.offsetY);
       } else if (item.type.toLowerCase().startsWith("poli")) {
         this.juego.crearUnPolicia(item.x + this.offsetX, item.y + this.offsetY);
       } else if (item.type.toLowerCase().startsWith("bando")) {
         const numBando = parseInt(item.type.replace("bando", ""));
-        console.log("crear un amigo o enemigo", item, numBando);
+
         if (numBando == 1) {
           if (!this.juego.protagonista) {
             // debugger;

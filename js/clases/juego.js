@@ -38,6 +38,7 @@ class Juego {
       frames_repeler_enemigos: 18, // Calcular repulsión de enemigos cada N frames (recomendado: 10-25)
       //
       fade_out_sangre: 0.975,
+      RENDER_EN_WORKER: true,
     };
   }
   static CONFIG = Juego.getDefaultConfig();
@@ -115,6 +116,52 @@ class Juego {
 
     this.initPIXI();
     this.setupResizeHandler();
+    this.cargarSonidos();
+  }
+
+  cargarSonidos() {
+    SoundManager.loadSounds({
+      pistola_disparo: {
+        src: "assets/sonidos/pistola_disparo.mp3",
+        numOfCopies: 5,
+      },
+      ametralladora_disparo: {
+        src: "assets/sonidos/ametralladora_disparo.mp3",
+        numOfCopies: 5,
+      },
+      bala_golpea_metal: {
+        srcs: [
+          "assets/sonidos/bala_golpea_metal_2.mp3",
+          "assets/sonidos/bala_golpea_metal.mp3",
+        ],
+        numOfCopies: 3,
+      },
+      explosion_larga: {
+        src: "assets/sonidos/explosion_larga.mp3",
+        numOfCopies: 3,
+      },
+      explosion_corta: {
+        src: "assets/sonidos/explosion_corta.mp3",
+        numOfCopies: 3,
+      },
+      explosion_de_fuego: {
+        src: "assets/sonidos/explosion_de_fuego.mp3",
+        numOfCopies: 3,
+      },
+      golpe: {
+        src: "assets/sonidos/golpe.mp3",
+        numOfCopies: 10,
+      },
+      dolor: {
+        srcs: [
+          "assets/sonidos/dolor1.mp3",
+          "assets/sonidos/dolor2.mp3",
+          "assets/sonidos/dolor3.mp3",
+          "assets/sonidos/dolor4.mp3",
+        ],
+        numOfCopies: 4,
+      },
+    });
   }
 
   updateDimensions() {
@@ -157,10 +204,12 @@ class Juego {
 
     // //agregamos el elementos canvas creado por pixi en el documento html
     document.body.appendChild(this.pixiApp.canvas);
+    setTimeout(() => {
+      this.pixiApp.canvas.autofocus = true;
+    }, 100);
 
-    //agregamos el metodo this.gameLoop al ticker.
-    //es decir: en cada frame vamos a ejecutar el metodo this.gameLoop
-    this.pixiApp.ticker.add(this.gameLoop.bind(this));
+    this.agregarGameLoopConOSinWorker();
+
     this.pixiApp.ticker.maxFPS = 60;
 
     this.agregarListenersDeTeclado();
@@ -169,6 +218,19 @@ class Juego {
     this.pixiApp.stage.sortableChildren = true;
     this.crearNivel();
     this.ui = new UI(this);
+  }
+  agregarGameLoopConOSinWorker() {
+    if (Juego.CONFIG.RENDER_EN_WORKER) {
+      this.gameLoopWorker = new Worker("js/sistemas/gameloop_worker.js");
+      this.gameLoopWorker.onerror = (event) => {
+        console.error("Error en el worker", event);
+      };
+      this.gameLoopWorker.onmessage = (event) => {
+        this.gameLoop(event.data);
+      };
+    } else {
+      this.pixiApp.ticker.add(this.gameLoop.bind(this));
+    }
   }
 
   agregarListenersDeTeclado() {
@@ -200,6 +262,8 @@ class Juego {
 
       if (event.key.toLowerCase() == "u") {
         this.camara.setTargetRandom();
+      } else if (event.key.toLowerCase() == "e") {
+        this.protagonista.rotarItemActivo();
       }
     };
   }

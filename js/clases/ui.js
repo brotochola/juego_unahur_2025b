@@ -77,7 +77,11 @@ class UI {
     );
 
     // Actualizar FPS
-    if (this.indicadorDeFPS && this.juego.fps) {
+    if (
+      this.indicadorDeFPS &&
+      this.juego.fps &&
+      this.juego.FRAMENUM % 30 == 0
+    ) {
       this.indicadorDeFPS.text = `FPS: ${Math.round(this.juego.fps)}`;
     }
   }

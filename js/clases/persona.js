@@ -26,6 +26,7 @@ class Persona extends GameObject {
 
     this.coraje = Math.random();
     this.vision = Math.random() * 400 + 400;
+    this.punteria = 0.75 + Math.random() * 0.25;
 
     this.fuerzaDeAtaque = 0.05 + Math.random() * 0.05;
     this.radio = 7 + Math.random() * 3;
@@ -48,6 +49,9 @@ class Persona extends GameObject {
     this.vectorAlineacion = { x: 0, y: 0 };
     this.vectorRepelerObstaculos = { x: 0, y: 0 };
     this.vectorRepelerEnemigos = { x: 0, y: 0 };
+
+    this.ultimoTiempoDisparo = 0; // Último tiempo (performance.now()) en el que disparó
+    this.cooldownDisparo = 500; // Milisegundos entre disparos
 
     // Factores de reducción para suavizar el comportamiento entre frames de cálculo
     this.factorReduccionCohesion =
@@ -783,6 +787,13 @@ class Persona extends GameObject {
   }
 
   pegar(enemigo) {
+    if (this.estoyVisibleEnLaPantallaEnEsteFrame) {
+      SoundManager.playSound(
+        "golpe",
+        this.fuerzaDeAtaque + Math.random() * 0.05,
+        this.fuerzaDeAtaque * (7 + Math.random())
+      );
+    }
     enemigo.recibirDanio(this.fuerzaDeAtaque, this);
     this.ultimoGolpe = performance.now();
 
@@ -790,6 +801,13 @@ class Persona extends GameObject {
   }
 
   recibirDanio(danio, deQuien) {
+    if (this.estoyVisibleEnLaPantallaEnEsteFrame) {
+      SoundManager.playSound(
+        "dolor",
+        Math.min(danio * 0.5, 0.5),
+        this.coraje + 0.5
+      );
+    }
     this.vida -= danio;
     this.juego.particleSystem.hacerQueLeSalgaSangreAAlguien(this, deQuien);
   }
@@ -944,6 +962,13 @@ class Persona extends GameObject {
     this.mostrarOEsconderBarraVida();
     this.cambiarDeAnimacionSegunLaVelocidadYAngulo();
     if (this.animationFSM) this.animationFSM.update();
+  }
+
+  disparar(posicion) {
+    if (!this.sprite) return;
+    if (!this.itemActivo) return;
+    if (this.itemActivo.disparar instanceof Function)
+      this.itemActivo.disparar(posicion);
   }
 
   borrar() {

@@ -9,10 +9,8 @@ class Fuego extends EntidadEstatica {
     juego.cosasQueDanLuz.push(this);
     juego.obstaculos.push(this);
     this.container.label = "fuego" + this.id;
-    console.log("creando fuego en", x, y);
 
     this.crearSprite().then(() => {
-      console.log("sprite creado", this.id, this.sprite.width);
       // IMPORTANTE: Como radioLuz se calcula DESPUÉS de agregarnos a la grilla,
       // debemos notificar manualmente a la celda que somos un emisor de luz
 
@@ -31,6 +29,11 @@ class Fuego extends EntidadEstatica {
 
     this.escala = Math.random() * 0.5 + 0.5;
     this.invalidarCacheDeFarolesCercanosDeLosObjetosCercanos(); //para que los objetos sepan que hay un nuevo fuego
+    SoundManager.playSound(
+      "explosion_de_fuego",
+      0.25,
+      Math.random() * 0.1 + 0.9
+    );
   }
 
   async crearSprite() {

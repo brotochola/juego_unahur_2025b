@@ -28,6 +28,7 @@ class EnCombateBehaviorState extends FSMState {
 
     if (this.owner.enemigoMasCerca) {
       this.owner.asignarTarget(this.owner.enemigoMasCerca);
+      // this.owner.disparar(this.owner.enemigoMasCerca.getPosicionCentral());
     }
   }
 

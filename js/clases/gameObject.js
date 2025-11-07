@@ -27,6 +27,8 @@ class GameObject {
   vidaMaxima = 1;
   friccionPorFrame = 0.93;
   farolesCercanos = null;
+  inventario = [];
+  itemActivo = null;
   constructor(x, y, juego) {
     juego.gameObjects.push(this);
     // Rango de visión aleatorio entre 400-700 píxeles
@@ -759,7 +761,7 @@ class GameObject {
 
     // Si el objeto tiene vida, reducirla
     if (this.vida !== undefined) {
-      const danio = 0.4 + Math.random() * 0.2; // Daño por defecto de una bala
+      const danio = bala.fuerzaDeAtaque; // Daño por defecto de una bala
 
       // Si el objeto tiene el método recibirDanio, usarlo (usado por Persona y subclases)
       if (this.recibirDanio instanceof Function) {
@@ -798,5 +800,21 @@ class GameObject {
       aceleracionMaxima: this.aceleracionMaxima,
       velocidadMaxima: this.velocidadMaxima,
     };
+  }
+
+  guardarEnInventario(item) {
+    this.inventario.push(item);
+  }
+  cambiarItemActivo(index) {
+    if (index < 0 || index >= this.inventario.length) return;
+    this.itemActivo = this.inventario[index];
+  }
+  rotarItemActivo() {
+    let itemActivoIdx = this.inventario.indexOf(this.itemActivo) + 1;
+
+    if (itemActivoIdx >= this.inventario.length) {
+      itemActivoIdx = 0;
+    }
+    this.itemActivo = this.inventario[itemActivoIdx];
   }
 }

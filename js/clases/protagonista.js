@@ -30,6 +30,11 @@ class Protagonista extends Persona {
     this.cooldownDisparo = 50; // Milisegundos entre disparos
     this.ultimoTiempoLanzamientoMolotov = 0; // Último tiempo (performance.now()) en el que lanzó molotov
     this.ultimoTiempoDisparo = 0; // Último tiempo (performance.now()) en el que disparó
+    this.punteria = 0.9;
+
+    this.guardarEnInventario(new Ametralladora(this));
+    this.guardarEnInventario(new Pistola(this));
+    this.cambiarItemActivo(0);
   }
 
   morir() {
@@ -171,59 +176,6 @@ y le seguimos aplicando la fuerza que repele obstaculos, no va a llegar
 
   render() {
     super.render();
-  }
-
-  disparar(posicion) {
-    // Sistema de cooldown: solo disparar si pasaron suficientes milisegundos
-    const tiempoActual = performance.now();
-    const tiempoDesdeUltimoDisparo = tiempoActual - this.ultimoTiempoDisparo;
-
-    if (tiempoDesdeUltimoDisparo < this.cooldownDisparo) {
-      return; // No disparar si el cooldown no terminó
-    }
-
-    // Actualizar el último tiempo de disparo
-    this.ultimoTiempoDisparo = tiempoActual;
-
-    // Obtener una bala del pool
-    const bala = BalasPool.get(this.juego);
-
-    // Calcular dirección del disparo (desde el protagonista hacia la posición)
-    const dx = posicion.x - this.posicion.x;
-    const dy = posicion.y - this.posicion.y;
-    const anguloRadianes = Math.atan2(dy, dx) + Math.random() * 0.1 - 0.05;
-
-    // Activar la bala en la posición del protagonista
-    // Pasar 'this' como el que disparó para que no se golpee a sí mismo
-    const posicionInicial = this.getPosicionCentral();
-    posicionInicial.y -= this.sprite.height * 0.4;
-
-    // Calcular la distancia de separación para que la bala empiece fuera del protagonista
-    const distanciaSeparacion = (this.radio + bala.radio) * 2;
-
-    // Desplazar la posición inicial en la dirección del disparo
-    const posX =
-      posicionInicial.x + Math.cos(anguloRadianes) * distanciaSeparacion;
-    const posY =
-      posicionInicial.y + Math.sin(anguloRadianes) * distanciaSeparacion;
-
-    bala.activar(posX, posY, anguloRadianes, this);
-
-    this.animationFSM.setState("shoot");
-
-    // Crear flash de disparo en el sistema de iluminación
-    if (
-      this.juego.sistemaDeIluminacion &&
-      this.juego.sistemaDeIluminacion.activo
-    ) {
-      this.juego.sistemaDeIluminacion.crearFlashDeDisparoEn(
-        { x: posX, y: posY }, // Posición del disparo en el mundo
-        400, // Radio de la luz
-        0.8, // Intensidad (0-1)
-        66 // Duración en milisegundos
-      );
-    }
-    this.juego.camara.shake(0.1, 4);
   }
 
   lanzarMolotov(posicion) {

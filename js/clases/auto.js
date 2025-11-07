@@ -1,7 +1,7 @@
 class Auto extends EntidadEstatica {
   constructor(x, y, juego, tipo, scaleX) {
     super(x, y, juego);
-
+    this.vida = this.vidaMaxima = 10;
     this.radio = 10;
     this.scaleX = scaleX || 1;
     this.tipo = tipo || Math.floor(Math.random() * 4) + 1;
@@ -12,11 +12,11 @@ class Auto extends EntidadEstatica {
     this.explotado = false;
     // this.actualizarMiPosicionEnLaGrilla();
   }
+
   recibirUnTiro(bala) {
-    this.sacarChispasDeDondeREcibioUnDisparo(bala);
+    super.recibirUnTiro(bala);
     if (this.explotado) return;
-    this.vida -= 0.03;
-    console.log("auto recibió un tiro", this.vida);
+
     if (this.vida <= 0) {
       this.explotar();
     }
@@ -46,6 +46,7 @@ class Auto extends EntidadEstatica {
   }
 
   tirarChispasRandom() {
+    SoundManager.playSound("explosion_corta", 0.5, Math.random() * 0.5 + 1);
     this.juego.particleSystem.ponerChispasEnPosicion(
       this.getPosicionCentral(),
       {
@@ -91,7 +92,10 @@ class Auto extends EntidadEstatica {
   async crearSprite() {
     // Load the full spritesheet
     const texture = await PIXI.Assets.load(
-      "assets/pixelart/auto" + this.tipo + ".png"
+      "assets/pixelart/" +
+        this.constructor.name.toLowerCase() +
+        +this.tipo +
+        ".png"
     );
 
     // Create sprite with the specific car texture
