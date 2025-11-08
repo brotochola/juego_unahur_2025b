@@ -9,11 +9,13 @@
  */
 
 class Molotov extends GameObject {
-  constructor(x, y, juego) {
+  constructor(x, y, z, juego, vectorVelocidadInicial, disparadoPor) {
     super(x, y, juego);
 
+    this.vectorVelocidadInicial = vectorVelocidadInicial;
     this.cantidadDeLuz = 1;
     this.radioLuz = 300;
+    this.disparadoPor = disparadoPor;
 
     juego.cosasQueDanLuz.push(this);
     this.color = 0xffaa00;
@@ -24,21 +26,23 @@ class Molotov extends GameObject {
     this.activa = false; // Si está en uso o no
     this.velocidadMaxima = 100;
     this.aceleracionMaxima = 5;
-    this.disparadoPor = null;
+
     this.friccionPorFrame = 1; // Sin fricción durante el vuelo
-    this.anguloRadianes = 0;
 
     // Sistema de altura 3D
-    this.z = 0; // Altura actual
-    this.posicionInicial = { x: 0, y: 0 }; // Punto de lanzamiento
+    this.z = z; // Altura actual
+
     this.distanciaRecorrida = 0; // Distancia desde el lanzamiento
     this.distanciaMaxima = 400; // Distancia máxima antes de caer (ajustar según necesites)
     this.alturaMaxima = 100; // Altura máxima de la parábola
+
+    this.posicionInicial = { x, y, z };
 
     // Crear sprite visual
     this.crearSprite();
     this.crearSombra();
     this.container.label = "molotov - " + this.id;
+    this.activar();
   }
 
   async crearSprite() {
@@ -61,32 +65,23 @@ class Molotov extends GameObject {
    * @param {GameObject} disparadoPor - Objeto que lanzó la molotov (opcional)
    * @param {number} velocidad - Velocidad del proyectil (opcional)
    */
-  activar(
-    x,
-    y,
-    anguloRadianes,
-    disparadoPor = null,
-    velocidad = this.velocidadMolotov
-  ) {
-    this.anguloRadianes = anguloRadianes;
+  activar() {
     this.activa = true;
-    this.posicion.x = x;
-    this.posicion.y = y;
 
     // Guardar posición inicial para calcular distancia recorrida
-    this.posicionInicial.x = x;
-    this.posicionInicial.y = y;
     this.distanciaRecorrida = 0;
 
-    // Guardar quien lanzó
-    this.disparadoPor = disparadoPor;
+    this.velocidad.x = this.vectorVelocidadInicial.x;
+    this.velocidad.y = this.vectorVelocidadInicial.y;
+    this.velocidad.z = this.vectorVelocidadInicial.z;
+    this.z = this.posicionInicial.z;
 
-    // Establecer velocidad en la dirección del lanzamiento
-    this.velocidad.x = Math.cos(anguloRadianes) * velocidad;
-    this.velocidad.y = Math.sin(anguloRadianes) * velocidad;
+    // // Establecer velocidad en la dirección del lanzamiento
+    // this.velocidad.x = Math.cos(anguloRadianes) * velocidad;
+    // this.velocidad.y = Math.sin(anguloRadianes) * velocidad;
 
-    // Iniciar en el aire
-    this.z = 0;
+    // // Iniciar en el aire
+    // this.z = 0;
 
     // Hacer visible
     this.container.visible = true;
@@ -132,70 +127,61 @@ class Molotov extends GameObject {
     }
   }
 
-  /**
-   * CALCULAR ALTURA CON FUNCIÓN CUADRÁTICA
-   *
-   * La función cuadrática es: z(d) = -a*d² + b*d
-   * Donde:
-   * - d = distancia recorrida / distancia máxima (normalizado 0-1)
-   * - La parábola alcanza su máximo en d=0.5
-   * - z=0 cuando d=0 y cuando d=1
-   *
-   * Usando la forma: z = 4*h*d*(1-d)
-   * Donde h = altura máxima
-   */
-  calcularAltura() {
-    // Distancia normalizada (0 a 1)
-    const d = this.distanciaRecorrida / this.distanciaMaxima;
-
-    // Función cuadrática: z = 4*h*d*(1-d)
-    // Esto crea una parábola perfecta que:
-    // - Empieza en 0 cuando d=0
-    // - Alcanza alturaMaxima cuando d=0.5
-    // - Vuelve a 0 cuando d=1
-    this.z = 4 * this.alturaMaxima * d * (1 - d);
-
-    // Si pasamos la distancia máxima, z es negativo (ya cayó)
-    if (d > 1) {
-      this.z = 0;
-    }
-  }
-
-  /**
-   * TICK - Actualización por frame
-   *
-   * 1. Actualizar física (movimiento en x,y)
-   * 2. Calcular distancia recorrida
-   * 3. Calcular altura z con función cuadrática
-   * 4. Verificar si tocó el piso
-   * 5. Actualizar posición en la grilla
-   */
   tick() {
     if (!this.activa) return;
 
-    // Aplicar física 2D normal (x, y)
+    this.velocidad.z -= Juego.CONFIG.gravedad.z * this.juego.ratioDeltaTime;
+    this.z += this.velocidad.z * this.juego.ratioDeltaTime;
+
     this.aplicarFisica();
 
-    // Calcular distancia recorrida desde el inicio
-    this.distanciaRecorrida = calcularDistancia(
-      this.posicion,
-      this.posicionInicial
-    );
-
-    // Calcular altura z según la distancia recorrida
-    this.calcularAltura();
+    // Actualizar en grilla espacial
+    this.actualizarMiPosicionEnLaGrilla();
 
     this.irDejandoChispasAMedidaQAvanza();
 
     // Si llegó al piso, explotar
-    if (this.z <= 0 && this.distanciaRecorrida > 10) {
+    if (this.z <= 0) {
       // El check de distancia evita explosión instantánea
       this.explotar();
       return;
     }
 
-    // Actualizar en grilla espacial
-    this.actualizarMiPosicionEnLaGrilla();
+    if (this.z > -this.juego.grilla.anchoCelda) {
+      this.verSiChocaContraAlgoEn3d();
+    }
+  }
+
+  verSiChocaContraAlgoEn3d() {
+    this.celdaActual.entidadesAca.forEach((entidad) => {
+      if (entidad instanceof Flash) return;
+      if (entidad instanceof Molotov) return;
+      if (entidad instanceof Bala) return;
+      if (entidad instanceof Fuego) return;
+
+      if (entidad === this) return;
+      if (entidad == this.disparadoPor) return;
+      if (entidad.muerto) return;
+
+      // Obtener posiciones en 3D (incluyendo Z)
+
+      const dist2 = calcularDistanciaCuadrada(
+        this.getPosicionCentral(),
+        entidad.getPosicionCentral()
+      );
+
+      if (dist2 < (this.radio + entidad.radio) ** 2) {
+        //si la distancia en el piso esta ok
+
+        if (this.z > -entidad.sprite.height) {
+          //y esta a una altura menor a la altura del sprite
+          //estoy calculando colision con cilindros 3d
+          entidad.recibioUnBombazo(this);
+          this.explotar();
+          return;
+        }
+      }
+    });
   }
 
   irDejandoChispasAMedidaQAvanza() {
@@ -215,8 +201,6 @@ class Molotov extends GameObject {
    * Similar a como explotan los autos
    */
   explotar() {
-    console.log("Molotov explotó en", this.posicion);
-
     // Crear chispas
     this.tirarChispasRandom(150);
 

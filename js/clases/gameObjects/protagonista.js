@@ -12,7 +12,7 @@ class Protagonista extends Persona {
     super(x, y, juego);
 
     // Configuración especial del protagonista
-    this.vida = 1;
+    this.vida = this.vidaMaxima = 9999999;
     this.vision = 1000; // Visión ilimitada
     this.bando = 1; // Bando del jugador
     this.crearSpritesheetAnimado(this.bando);

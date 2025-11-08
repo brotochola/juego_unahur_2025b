@@ -23,7 +23,6 @@ class SoundManager {
   }
 
   static playSound(name, volume = 1, pitch = 1) {
-    console.log(name, volume, pitch);
     const sounds = this.sounds.get(name);
     if (!sounds) {
       return console.warn("Sound not found: " + name);

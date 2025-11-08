@@ -758,7 +758,6 @@ class GameObject {
    * @param {Bala} bala - La bala que impactó
    */
   recibirUnTiro(bala) {
-    console.log("gameObject recibió un tiro", this.id, this.vida);
     // Comportamiento por defecto: reducir vida
     // Las clases hijas pueden sobrescribir este método
     // console.log(`${this.constructor.name} ${this.tipo} recibió un tiro!`);
@@ -845,7 +844,6 @@ class GameObject {
     }, Math.random() * 150 + 50);
   }
   recibirDanio(danio) {
-    console.log("gameObject recibió danio", this.id, this.vida);
     this.vida -= danio;
   }
 
@@ -864,5 +862,14 @@ class GameObject {
         persona.aceleracion.x += this.posicion.x - persona.posicion.x;
         persona.aceleracion.y += this.posicion.y - persona.posicion.y;
       });
+  }
+
+  recibioUnBombazo(bomba) {
+    console.log(
+      this.nombre,
+      "recibio un bombazo de la bomba:",
+      bomba.id,
+      bomba.constructor.name
+    );
   }
 }

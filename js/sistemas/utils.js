@@ -10,6 +10,12 @@ function calcularDistanciaCuadrada(obj1, obj2) {
   return (obj2.x - obj1.x) ** 2 + (obj2.y - obj1.y) ** 2;
 }
 
+function calcularDistanciaCuadrada3D(obj1, obj2) {
+  return (
+    (obj2.x - obj1.x) ** 2 + (obj2.y - obj1.y) ** 2 + (obj2.z - obj1.z) ** 2
+  );
+}
+
 /**
  * Remueve un elemento de un array usando el patrón swap-and-pop para O(1) performance.
  * Este método es mucho más eficiente que splice() o filter() porque:
@@ -579,3 +585,136 @@ function shuffle(array) {
   }
   return array;
 }
+function calculateProjectileVelocity(
+  start,
+  target,
+  gravity = Juego.CONFIG.gravedad.z,
+  angle = Math.PI / 4
+) {
+  // Diferencias de posición
+  const dx = target.x - start.x;
+  const dy = target.y - start.y;
+  const dz = (target.z || 0) - (start.z || 0);
+
+  // Distancia horizontal en el plano XY (Z es vertical ahora)
+  const horizontalDist = Math.sqrt(dx * dx + dy * dy);
+
+  // Ángulo horizontal (dirección en el plano XY)
+  const horizontalAngle = Math.atan2(dy, dx);
+
+  // Calcular velocidad inicial usando la ecuación balística
+  // v² = g * d² / (2 * cos²(θ) * (d * tan(θ) - h))
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const tan = Math.tan(angle);
+
+  const denominator = 2 * cos * cos * (horizontalDist * tan - dz);
+
+  if (denominator <= 0) {
+    console.warn("No hay solución con este ángulo");
+    return null;
+  }
+
+  const v0_squared = (gravity * horizontalDist * horizontalDist) / denominator;
+
+  if (v0_squared < 0) {
+    console.warn("No hay solución física");
+    return null;
+  }
+
+  const v0 = Math.sqrt(v0_squared);
+
+  // Descomponer velocidad en componentes
+  const vHorizontal = v0 * cos;
+  const vVertical = v0 * sin;
+
+  return {
+    x: vHorizontal * Math.cos(horizontalAngle),
+    y: vHorizontal * Math.sin(horizontalAngle),
+    z: vVertical,
+  };
+}
+// /**
+//  * Versión alternativa: calcula velocidad con tiempo de vuelo específico
+//  * @param {Object} start - Posición inicial {x, y, z}
+//  * @param {Object} target - Posición objetivo {x, y, z}
+//  * @param {number} gravity - Aceleración de gravedad
+//  * @param {number} time - Tiempo de vuelo deseado
+//  * @returns {Object} Velocidad inicial {x, y, z}
+//  */
+// function calculateProjectileVelocityWithTime(start, target, gravity, time) {
+//   const dx = target.x - start.x;
+//   const dy = target.y - start.y;
+//   const dz = target.z - start.z;
+
+//   return {
+//     x: dx / time,
+//     y: dy / time + (gravity * time) / 2,
+//     z: dz / time,
+//   };
+// }
+
+// // ========== EJEMPLOS DE USO ==========
+
+// // Ejemplo 1: Usando ángulo de lanzamiento
+// const start1 = { x: 0, y: 0, z: 0 };
+// const target1 = { x: 100, y: 10, z: 50 };
+// const gravity1 = 9.81;
+// const angle1 = Math.PI / 4; // 45 grados
+
+// const velocity1 = calculateProjectileVelocity(
+//   start1,
+//   target1,
+//   gravity1,
+//   angle1
+// );
+// console.log("Velocidad inicial (método ángulo):", velocity1);
+
+// // Ejemplo 2: Usando tiempo de vuelo
+// const start2 = { x: 0, y: 0, z: 0 };
+// const target2 = { x: 100, y: 10, z: 50 };
+// const gravity2 = 9.81;
+// const time2 = 3; // 3 segundos
+
+// const velocity2 = calculateProjectileVelocityWithTime(
+//   start2,
+//   target2,
+//   gravity2,
+//   time2
+// );
+// console.log("Velocidad inicial (método tiempo):", velocity2);
+
+// // Función de ayuda para simular la trayectoria y verificar
+// function simulateTrajectory(
+//   start,
+//   velocity,
+//   gravity,
+//   timeStep = 0.1,
+//   maxTime = 10
+// ) {
+//   const trajectory = [];
+//   let pos = { ...start };
+//   let vel = { ...velocity };
+
+//   for (let t = 0; t <= maxTime; t += timeStep) {
+//     trajectory.push({ ...pos, time: t });
+
+//     // Actualizar posición
+//     pos.x += vel.x * timeStep;
+//     pos.y += vel.y * timeStep;
+//     pos.z += vel.z * timeStep;
+
+//     // Actualizar velocidad (solo Y es afectada por gravedad)
+//     vel.y -= gravity * timeStep;
+
+//     // Detener si toca el suelo
+//     if (pos.y < 0) break;
+//   }
+
+//   return trajectory;
+// }
+
+// // Verificar la trayectoria
+// const trajectory = simulateTrajectory(start1, velocity1, gravity1);
+// console.log("Puntos de la trayectoria:", trajectory.length);
+// console.log("Posición final:", trajectory[trajectory.length - 1]);

@@ -22,7 +22,7 @@ class ParticleSystem {
     this.maxPoolSize = 100; // Tamaño máximo del pool
     this.pregenerarTexturas();
     this.pregenerarPool();
-    this.gravedad = { x: 0, y: 0, z: 0.5 };
+    this.gravedad = Juego.CONFIG.gravedad;
   }
 
   pregenerarPool() {

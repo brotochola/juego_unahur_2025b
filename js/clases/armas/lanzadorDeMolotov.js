@@ -13,34 +13,38 @@ class LanzadorDeMolotov extends Arma {
     this.sonidoDeDisparo = "lanzar_molotov";
   }
 
-  disparar(posicion) {
+  disparar(targetPos) {
     if (this.lastTimeFired + this.cooldown > performance.now()) {
       return;
     }
     this.lastTimeFired = performance.now();
     // Crear una nueva molotov (no usa pooling)
-    const molotov = new Molotov(0, 0, this.owner.juego);
 
     // Calcular dirección del lanzamiento (desde el protagonista hacia la posición)
-    const posicionInicial = this.owner.getPosicionCentral();
-    posicionInicial.y -= this.owner.sprite.height * 0.4;
+    let posicionInicial = this.owner.getPosicionCentral();
+    posicionInicial.z = this.owner.sprite.height * 0.4;
 
-    const dx = posicion.x - posicionInicial.x;
-    const dy = posicion.y - posicionInicial.y;
-    const anguloRadianes = Math.atan2(dy, dx);
+    const distancia = calcularDistancia(posicionInicial, targetPos);
+    const ratio = distancia / this.owner.vision;
 
-    // Posición inicial (desde el centro del protagonista)
+    if (ratio > 1)
+      return console.warn("No se puede lanzar la molotov tan lejos");
 
-    // Calcular la distancia de separación para que la molotov empiece fuera del protagonista
-    const distanciaSeparacion = (this.owner.radio + molotov.radio) * 2;
+    const velocidadInicial = calculateProjectileVelocity(
+      posicionInicial,
+      targetPos,
+      Juego.CONFIG.gravedad.z,
+      ratio * 0.33 + 0.7 //cuanto mas lejos, mas alto el lanzamiento
+    );
 
-    // Desplazar la posición inicial en la dirección del lanzamiento
-    const posX =
-      posicionInicial.x + Math.cos(anguloRadianes) * distanciaSeparacion;
-    const posY =
-      posicionInicial.y + Math.sin(anguloRadianes) * distanciaSeparacion;
-
-    molotov.activar(posX, posY, anguloRadianes, this);
+    new Molotov(
+      posicionInicial.x,
+      posicionInicial.y,
+      posicionInicial.z,
+      this.owner.juego,
+      velocidadInicial,
+      this.owner
+    );
 
     this.owner.animationFSM.setState("shoot");
     this.owner.juego.camara.shake(0.05, 3);
