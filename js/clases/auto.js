@@ -14,16 +14,20 @@ class Auto extends EntidadEstatica {
   }
 
   recibirUnTiro(bala) {
+    console.log("auto recibió un tiro", this.id, this.vida);
     super.recibirUnTiro(bala);
-    if (this.explotado) return;
-
-    if (this.vida <= 0) {
-      this.explotar();
-    }
   }
   cambiarTintParaSimularIluminacion() {
     if (this.explotado) this.container.tint = 0x666666;
     else super.cambiarTintParaSimularIluminacion();
+  }
+  recibirDanio(danio) {
+    console.log("auto recibió danio", this.id, this.vida);
+    super.recibirDanio(danio);
+    if (this.explotado) return;
+    if (this.vida <= 0) {
+      this.explotar();
+    }
   }
 
   explotar() {
@@ -39,28 +43,11 @@ class Auto extends EntidadEstatica {
     }
 
     setTimeout(() => {
-      this.prenderseFuego();
+      this.prenderseFuego(this.sprite.width);
     }, 10);
 
     this.juego.camara.shake(0.2, 7);
-    this.empujarYHerirPersonasCerca();
-  }
-  empujarYHerirPersonasCerca() {
-    this.celdaActual
-      .obtenerEntidadesAcaYEnCEldasVecinas(2)
-      .filter((entidad) => entidad instanceof Persona)
-      .forEach((persona) => {
-        const dist2 = calcularDistanciaCuadrada(
-          this.getPosicionCentral(),
-          persona.getPosicionCentral()
-        );
-        persona.recibirDanio(
-          (this.sprite.width * this.sprite.height) / dist2,
-          this
-        );
-        persona.aceleracion.x += this.posicion.x - persona.posicion.x;
-        persona.aceleracion.y += this.posicion.y - persona.posicion.y;
-      });
+    this.empujarYHerirPersonasCerca(this.radio * 2);
   }
 
   tirarChispasRandom() {
@@ -74,37 +61,6 @@ class Auto extends EntidadEstatica {
       },
       Math.random() * 100 + 100
     );
-  }
-
-  prenderseFuego() {
-    if (this.prendidoEnFuego) return;
-    this.prendidoEnFuego = true;
-    let pos = this.getPosicionCentral();
-
-    this.juego.crearFuego(
-      pos.x + this.radio * 0.66 + (Math.random() - 0.5) * this.radio * 0.4,
-      pos.y - this.radio * 0.25 + (Math.random() - 0.5) * this.radio * 0.3,
-      this.sprite.width * (0.25 + Math.random() * 0.1)
-    );
-    this.tirarChispasRandom();
-
-    setTimeout(() => {
-      this.juego.crearFuego(
-        pos.x - this.radio + (Math.random() - 0.5) * this.radio * 0.5,
-        pos.y + this.radio * 0.66 + (Math.random() - 0.5) * this.radio * 0.3,
-        this.sprite.width * (0.2 + Math.random() * 0.1)
-      );
-      this.tirarChispasRandom();
-    }, Math.random() * 50 + 20);
-
-    setTimeout(() => {
-      this.juego.crearFuego(
-        pos.x + this.radio * 0.33 + (Math.random() - 0.5) * this.radio * 0.4,
-        pos.y + this.radio * 1.25 + (Math.random() - 0.5) * this.radio * 0.3,
-        this.sprite.width * (0.25 + Math.random() * 0.15)
-      );
-      this.tirarChispasRandom();
-    }, Math.random() * 150 + 50);
   }
 
   async crearSprite() {

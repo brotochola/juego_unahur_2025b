@@ -808,7 +808,7 @@ class Persona extends GameObject {
         this.coraje * 1.2 + 0.5
       );
     }
-    this.vida -= danio;
+    super.recibirDanio(danio);
     this.juego.particleSystem.hacerQueLeSalgaSangreAAlguien(this, deQuien);
   }
 

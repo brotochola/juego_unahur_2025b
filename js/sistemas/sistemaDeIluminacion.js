@@ -21,6 +21,7 @@ class SistemaDeIluminacion {
     this.minutoDelDia = 0;
     this.minutosPorDia = 1440;
     this.cantidadDeLuzDelDia = 0.5;
+    this.prevCantidadDeLuzDelDia = 0.5;
   }
 
   inicializar() {
@@ -376,6 +377,7 @@ class SistemaDeIluminacion {
   }
 
   avanzarDia() {
+    this.prevCantidadDeLuzDelDia = this.cantidadDeLuzDelDia;
     this.minutoDelDia += this.juego.deltaTime * 0.01;
     if (this.minutoDelDia >= this.minutosPorDia) {
       this.minutoDelDia = 0;
@@ -410,48 +412,46 @@ class SistemaDeIluminacion {
       this.prenderTodosLosFaroles();
     }
   }
+  queHacerCuandoYaHay1DeLuzDelDia() {
+    console.log("queHacerCuandoYaHay1DeLuzDelDia");
+    if (this.spriteDeIluminacion) {
+      this.spriteDeIluminacion.alpha = 0;
+    }
+
+    for (let obj of this.juego.gameObjects) {
+      obj.cambiarTintParaSimularIluminacion();
+    }
+  }
 
   tick() {
     this.avanzarDia();
 
     // OPTIMIZACIÓN: Si es de día completo, no hacer nada de iluminación
-    if (this.cantidadDeLuzDelDia >= 0.99999) {
-      // Asegurar que todo esté visible al 100%
-      if (this.spriteDeIluminacion) {
-        this.spriteDeIluminacion.alpha = 0;
-      }
-      return; // Skip todo el sistema de iluminación
-    }
+    if (
+      this.cantidadDeLuzDelDia >= 0.99 &&
+      !(this.prevCantidadDeLuzDelDia >= 0.99)
+    ) {
+      return this.queHacerCuandoYaHay1DeLuzDelDia();
+    } else if (this.cantidadDeLuzDelDia == 1) return;
 
-    if (this.graficoSombrasProyectadas) {
-      this.graficoSombrasProyectadas.clear();
-    }
+    if (!this.activo) return;
+    for (let flash of this.juego.flashes) flash.tick();
 
-    if (this.activo) {
-      for (let flash of this.juego.flashes) {
-        flash.tick();
-      }
+    this.actualizarSpriteAmarilloParaElAtardecer();
+    this.prenderOApagarTodosLosFarolesSegunLaHoraDelDia();
 
-      this.actualizarSpriteAmarilloParaElAtardecer();
-      this.prenderOApagarTodosLosFarolesSegunLaHoraDelDia();
+    // Las personas limpian sus propias sombras individualmente
+    // NO llamar a limpiarSombrasActivas() aquí para evitar doble limpieza
+    this.actualizarSombrasDesdeObjetos();
 
-      // Las personas limpian sus propias sombras individualmente
-      // NO llamar a limpiarSombrasActivas() aquí para evitar doble limpieza
-      this.actualizarSombrasDesdeObjetos();
+    this.actualizarGradientsDeLosFaroles();
+    this.actualizarSpriteDeIluminacion();
 
-      this.actualizarGradientsDeLosFaroles();
-      this.actualizarSpriteDeIluminacion();
-
-      // OPTIMIZACIÓN: Actualizar tints solo cada N frames (es muy costoso)
-      const framesEntreUpdates = Juego.CONFIG.frames_entre_updates_tint || 10;
-      if (this.juego.FRAMENUM % framesEntreUpdates === 0) {
-        this.cambiarTintDeTodosLosObjetosParaSimularIluminacion();
-      }
-
-      // OPTIMIZACIÓN: Actualizar sombras de personajes también cada N frames
-      if (this.juego.FRAMENUM % framesEntreUpdates === 0) {
-        this.cambiarElAlphaDeLasSombrasSegunLaCantidadDeLuzDelDia();
-      }
+    // OPTIMIZACIÓN: Actualizar tints solo cada N frames (es muy costoso)
+    const framesEntreUpdates = Juego.CONFIG.frames_entre_updates_tint || 10;
+    if (this.juego.FRAMENUM % framesEntreUpdates === 0) {
+      this.cambiarTintDeTodosLosObjetosParaSimularIluminacion();
+      this.cambiarElAlphaDeLasSombrasSegunLaCantidadDeLuzDelDia();
     }
   }
 
@@ -759,11 +759,6 @@ class SistemaDeIluminacion {
     );
 
     return flash;
-  }
-
-  // Método para obtener el estado actual de la iluminación
-  isActivo() {
-    return this.activo;
   }
 
   // Método para establecer el estado de la iluminación

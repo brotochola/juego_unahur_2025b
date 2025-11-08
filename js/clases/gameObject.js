@@ -29,6 +29,7 @@ class GameObject {
   farolesCercanos = null;
   inventario = [];
   itemActivo = null;
+  prendidoFuego = false;
   constructor(x, y, juego) {
     juego.gameObjects.push(this);
     // Rango de visión aleatorio entre 400-700 píxeles
@@ -457,7 +458,7 @@ class GameObject {
         posicionCentral.x * this.juego.camara.zoom +
         this.juego.containerPrincipal.x,
       y:
-        posicionCentral.y * this.juego.camara.zoom +
+        (posicionCentral.y - (this.z || 0)) * this.juego.camara.zoom +
         this.juego.containerPrincipal.y,
     };
   }
@@ -623,7 +624,9 @@ class GameObject {
     if (!this.sprite || !this.container) return;
     if (
       !this.juego.sistemaDeIluminacion ||
-      !this.juego.sistemaDeIluminacion?.isActivo()
+      !this.juego.sistemaDeIluminacion?.activo ||
+      (this.juego.sistemaDeIluminacion.cantidadDeLuzDelDia === 1 &&
+        !this.prendidoFuego)
     ) {
       this.container.tint = 0xffffff;
       return;
@@ -755,6 +758,7 @@ class GameObject {
    * @param {Bala} bala - La bala que impactó
    */
   recibirUnTiro(bala) {
+    console.log("gameObject recibió un tiro", this.id, this.vida);
     // Comportamiento por defecto: reducir vida
     // Las clases hijas pueden sobrescribir este método
     // console.log(`${this.constructor.name} ${this.tipo} recibió un tiro!`);
@@ -763,15 +767,7 @@ class GameObject {
     if (this.vida !== undefined) {
       const danio = bala.fuerzaDeAtaque; // Daño por defecto de una bala
 
-      // Si el objeto tiene el método recibirDanio, usarlo (usado por Persona y subclases)
-      if (this.recibirDanio instanceof Function) {
-        // Nota: bala en lugar de "quien" para el segundo parámetro
-        // El sistema de partículas usa esto para calcular dirección del efecto
-        this.recibirDanio(danio, bala);
-      } else {
-        // Fallback simple si no tiene recibirDanio
-        this.vida -= danio;
-      }
+      this.recibirDanio(danio, bala);
     }
   }
   invalidarCacheDeFarolesCercanosDeLosObjetosCercanos() {
@@ -816,5 +812,57 @@ class GameObject {
       itemActivoIdx = 0;
     }
     this.itemActivo = this.inventario[itemActivoIdx];
+  }
+  prenderseFuego(width) {
+    if (this.prendidoFuego) return;
+
+    this.prendidoFuego = true;
+    let pos = this.getPosicionCentral();
+
+    this.juego.crearFuego(
+      pos.x + this.radio * 0.66 + (Math.random() - 0.5) * this.radio * 0.4,
+      pos.y - this.radio * 0.25 + (Math.random() - 0.5) * this.radio * 0.3,
+      width * (0.25 + Math.random() * 0.1)
+    );
+    this.tirarChispasRandom();
+
+    setTimeout(() => {
+      this.juego.crearFuego(
+        pos.x - this.radio + (Math.random() - 0.5) * this.radio * 0.5,
+        pos.y + this.radio * 0.66 + (Math.random() - 0.5) * this.radio * 0.3,
+        width * (0.2 + Math.random() * 0.1)
+      );
+      this.tirarChispasRandom();
+    }, Math.random() * 50 + 20);
+
+    setTimeout(() => {
+      this.juego.crearFuego(
+        pos.x + this.radio * 0.33 + (Math.random() - 0.5) * this.radio * 0.4,
+        pos.y + this.radio * 1.25 + (Math.random() - 0.5) * this.radio * 0.3,
+        width * (0.25 + Math.random() * 0.15)
+      );
+      this.tirarChispasRandom();
+    }, Math.random() * 150 + 50);
+  }
+  recibirDanio(danio) {
+    console.log("gameObject recibió danio", this.id, this.vida);
+    this.vida -= danio;
+  }
+
+  empujarYHerirPersonasCerca(radio = this.radio) {
+    this.celdaActual
+      .obtenerEntidadesAcaYEnCEldasVecinas(2)
+      .filter(
+        (entidad) => entidad instanceof Persona || entidad instanceof Auto
+      )
+      .forEach((persona) => {
+        const dist2 = calcularDistanciaCuadrada(
+          this.getPosicionCentral(),
+          persona.getPosicionCentral()
+        );
+        persona.recibirDanio(radio ** 2 / dist2, this);
+        persona.aceleracion.x += this.posicion.x - persona.posicion.x;
+        persona.aceleracion.y += this.posicion.y - persona.posicion.y;
+      });
   }
 }

@@ -58,10 +58,10 @@ class EntidadEstatica extends GameObject {
   }
 
   recibirUnTiro(bala) {
+    console.log("entidadEstatica recibió un tiro", this.id, this.vida);
     super.recibirUnTiro(bala);
     this.sacarChispasDeDondeREcibioUnDisparo(bala);
     this.reproduceSonidoDeGolpeDeBala();
-    this.vida -= bala.fuerzaDeAtaque;
   }
 
   tick() {}

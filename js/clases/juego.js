@@ -391,6 +391,7 @@ class Juego {
       "assets/pixelart/globo_de_dialogo.png",
       "assets/pixelart/fuego/fuego.png",
       "assets/pixelart/fuego/fuego.json",
+      "assets/pixelart/molotov.png",
     ]);
   }
 

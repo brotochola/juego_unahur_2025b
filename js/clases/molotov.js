@@ -12,6 +12,12 @@ class Molotov extends GameObject {
   constructor(x, y, juego) {
     super(x, y, juego);
 
+    this.cantidadDeLuz = 1;
+    this.radioLuz = 300;
+
+    juego.cosasQueDanLuz.push(this);
+    this.color = 0xffaa00;
+
     // Configuración de la molotov
     this.radio = 5; // Radio pequeño para colisión
     this.velocidadMolotov = 6; // Velocidad más lenta que las balas
@@ -31,16 +37,17 @@ class Molotov extends GameObject {
 
     // Crear sprite visual
     this.crearSprite();
+    this.crearSombra();
     this.container.label = "molotov - " + this.id;
   }
 
   async crearSprite() {
     // Por ahora usar un círculo, después se puede cambiar por una imagen
-    this.sprite = new PIXI.Graphics();
-    this.sprite.beginFill(0xff6600); // Color naranja/rojo para molotov
-    this.sprite.drawCircle(0, 0, this.radio);
-    this.sprite.endFill();
-
+    this.sprite = new PIXI.Sprite(
+      PIXI.Assets.get("assets/pixelart/molotov.png")
+    );
+    this.sprite.scale.set(0.5, 0.5);
+    this.sprite.anchor.set(0.5, 0.5);
     this.container.addChild(this.sprite);
     this.tieneSpriteCargado = true;
   }
@@ -85,9 +92,9 @@ class Molotov extends GameObject {
     this.container.visible = true;
     this.container.alpha = 1;
 
-    if (disparadoPor && disparadoPor.container) {
-      this.container.tint = disparadoPor.container.tint;
-    }
+    // if (disparadoPor && disparadoPor.container) {
+    //   this.container.tint = disparadoPor.container.tint;
+    // }
 
     // Agregar al array de molotovs del juego
     if (!this.juego.molotovs.includes(this)) {
@@ -178,6 +185,8 @@ class Molotov extends GameObject {
     // Calcular altura z según la distancia recorrida
     this.calcularAltura();
 
+    this.irDejandoChispasAMedidaQAvanza();
+
     // Si llegó al piso, explotar
     if (this.z <= 0 && this.distanciaRecorrida > 10) {
       // El check de distancia evita explosión instantánea
@@ -189,6 +198,18 @@ class Molotov extends GameObject {
     this.actualizarMiPosicionEnLaGrilla();
   }
 
+  irDejandoChispasAMedidaQAvanza() {
+    this.juego.particleSystem.ponerChispasEnPosicion(
+      { x: this.posicion.x, y: this.posicion.y, z: -this.z },
+      {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+      Math.floor(Math.random() * 2 + 1)
+    );
+  }
+
   /**
    * EXPLOTAR - Al tocar el piso
    * Similar a como explotan los autos
@@ -197,19 +218,21 @@ class Molotov extends GameObject {
     console.log("Molotov explotó en", this.posicion);
 
     // Crear chispas
-    this.tirarChispasRandom();
+    this.tirarChispasRandom(150);
 
     const cant = 15;
     for (let i = 0; i < cant; i++) {
       setTimeout(() => {
-        this.tirarChispasRandom();
+        this.tirarChispasRandom(150);
       }, i * 10);
     }
 
     // Crear fuego en la posición de impacto
     setTimeout(() => {
-      this.prenderseFuego();
+      this.prenderseFuego(100);
     }, 10);
+
+    this.empujarYHerirPersonasCerca(100);
 
     // Efecto de cámara
     this.juego.camara.shake(0.15, 5);
@@ -218,7 +241,7 @@ class Molotov extends GameObject {
     this.desactivar();
   }
 
-  tirarChispasRandom() {
+  tirarChispasRandom(cant = 3) {
     this.juego.particleSystem.ponerChispasEnPosicion(
       this.getPosicionCentral(),
       {
@@ -226,38 +249,38 @@ class Molotov extends GameObject {
         y: Math.random() * 15 - 7.5,
         z: -8 - Math.random() * 5,
       },
-      Math.random() * 150 + 100
+      Math.random() * cant + cant * 0.5
     );
   }
 
-  prenderseFuego() {
-    const pos = this.getPosicionCentral();
+  // prenderseFuego() {
+  //   const pos = this.getPosicionCentral();
 
-    // Crear 2-3 fuegos en la zona de impacto
-    this.juego.crearFuego(
-      pos.x + (Math.random() - 0.5) * 30,
-      pos.y + (Math.random() - 0.5) * 30,
-      40 + Math.random() * 20
-    );
+  //   // Crear 2-3 fuegos en la zona de impacto
+  //   this.juego.crearFuego(
+  //     pos.x + (Math.random() - 0.5) * 30,
+  //     pos.y + (Math.random() - 0.5) * 30,
+  //     40 + Math.random() * 20
+  //   );
 
-    setTimeout(() => {
-      this.juego.crearFuego(
-        pos.x + (Math.random() - 0.5) * 40,
-        pos.y + (Math.random() - 0.5) * 40,
-        35 + Math.random() * 15
-      );
-      this.tirarChispasRandom();
-    }, Math.random() * 50 + 20);
+  //   setTimeout(() => {
+  //     this.juego.crearFuego(
+  //       pos.x + (Math.random() - 0.5) * 40,
+  //       pos.y + (Math.random() - 0.5) * 40,
+  //       35 + Math.random() * 15
+  //     );
+  //     this.tirarChispasRandom();
+  //   }, Math.random() * 50 + 20);
 
-    setTimeout(() => {
-      this.juego.crearFuego(
-        pos.x + (Math.random() - 0.5) * 35,
-        pos.y + (Math.random() - 0.5) * 35,
-        30 + Math.random() * 20
-      );
-      this.tirarChispasRandom();
-    }, Math.random() * 150 + 50);
-  }
+  //   setTimeout(() => {
+  //     this.juego.crearFuego(
+  //       pos.x + (Math.random() - 0.5) * 35,
+  //       pos.y + (Math.random() - 0.5) * 35,
+  //       30 + Math.random() * 20
+  //     );
+  //     this.tirarChispasRandom();
+  //   }, Math.random() * 150 + 50);
+  // }
 
   /**
    * RENDER - Actualizar visualmente
@@ -272,13 +295,18 @@ class Molotov extends GameObject {
     // En isométrico, la altura se representa restando de Y
     this.container.x = this.posicion.x;
     this.container.y = this.posicion.y - this.z; // Más alto = más arriba en pantalla
+    if (this.sombra) {
+      this.sombra.y = this.z;
+      this.sombra.scale.set(this.z * 0.0033 + 0.15);
+    }
+    this.sprite.rotation += this.velocidad.x * 0.05;
 
     this.container.zIndex = this.calcularZindex();
 
     // Escalar según altura para simular perspectiva
     // Más alto = se ve un poco más grande
-    const escala = 1 + (this.z / this.alturaMaxima) * 0.3;
-    this.sprite.scale.set(escala, escala);
+
+    // this.sprite.scale.set(escala, escala);
   }
 
   cambiarTintParaSimularIluminacion() {
